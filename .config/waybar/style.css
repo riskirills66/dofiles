@@ -1,0 +1,196 @@
+@import url('file:///home/riskirills/.cache/wal/colors-waybar.css');
+
+* {
+    font-size: 13px;
+    min-height: 0;
+    border-radius: 5px;
+}
+
+window#waybar {
+    font-family: Fira Code Regular, monospace;
+    background-color: transparent;
+    border-bottom: 0px;
+    color: #FFFFFF;
+    transition-property: background-color;
+    transition-duration: .5s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+window#waybar.empty #window {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: inset 0 0 0 1px transparent;
+}
+
+
+.modules-right {
+    margin: 10px 10px 0 0;
+}
+
+.modules-center {
+    margin: 10px 0 0 0;
+}
+
+.modules-left {
+    margin: 10px 0 0 10px;
+}
+
+button {
+    border: none;
+}
+
+#workspaces {
+    padding: 0px 5px;
+}
+
+#workspaces button {
+    all: unset;
+    padding: 0px 5px;
+    color: alpha(@color9, .4);
+    transition: color 0.2s ease, letter-spacing 0.2s ease;
+    letter-spacing: -9px;
+}
+
+#workspaces button.active {
+    color: @color14;
+    border: none;
+    text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
+    letter-spacing: -5px;
+}
+
+#workspaces button.empty {
+    color: rgba(100, 100, 100, 0.200);
+    border: none;
+    text-shadow: 0px 0px 1.5px rgba(0, 0, 0, .2);
+}
+
+#workspaces button:hover,
+#workspaces button.active:hover,
+#workspaces button.empty:hover {
+    color: rgba(255, 255, 255, 0.5);
+    border: none;
+    text-shadow: 0px 0px 1.5px rgba(0, 0, 0, .5);
+    transition: all 1s ease;
+}
+
+#workspaces button.empty.active {
+    color: @color9;
+    border: none;
+    text-shadow: 0px 0px 2px rgba(0, 0, 0, .5);
+}
+
+#idle_inhibitor,
+#cava,
+#scratchpad,
+#mode,
+#clock,
+#battery,
+#backlight,
+#wireplumber,
+#wireplumber.muted:hover,
+#network,
+#tray,
+#mpris,
+#load,
+#custom-poweroff,
+#custom-bluetooth,
+#custom-appsmenu,
+#workspaces,
+#window {
+    background: @background;
+    background-size: 300% 300%;
+    border: 0;
+    border-radius: 15px;
+    box-shadow: inset 0 0 0 1px @color14;
+    color: @color14;
+    outline: transparent;
+    padding: 0 1rem;
+    text-decoration: none;
+}
+
+#mpris.playing,
+#network:hover,
+#custom-bluetooth:hover,
+#custom-appsmenu:hover,
+#wireplumber:hover,
+#clock:hover {
+    box-shadow: 0 0 .25rem @background, -.125rem -.125rem 1rem @color13, .125rem .125rem 1rem @color0;
+    background: @color14;
+    color: @background;
+    font-weight: 500;
+    box-shadow: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+#custom-poweroff:hover {
+    box-shadow: 0 0 .25rem @background, -.125rem -.125rem 1rem @color13, .125rem .125rem 1rem @color0;
+    background: #cc241d;
+    color: @background;
+    font-weight: 500;
+    box-shadow: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+#mode {
+    background-color: #689d6a;
+    color: #282828;
+}
+
+.modules-left>widget:first-child>#workspaces {
+    margin-left: 0;
+}
+
+.modules-right>widget:last-child>#workspaces {
+    margin-right: 0;
+}
+
+#battery.charging,
+#battery.plugged {
+    background-color: @color13;
+    color: #282828;
+}
+
+@keyframes blink {
+    to {
+        background-color: @background;
+        color: #FFFFFF;
+    }
+}
+
+#battery.critical:not(.charging) {
+    background-color: #cc241d;
+    color: #FFFFFF;
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: steps(12);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+label:focus {
+    background-color: #000000;
+}
+
+#wireplumber.muted {
+    background-color: @color14;
+    color: @background;
+}
+
+#tray>.passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray>.needs-attention {
+    -gtk-icon-effect: highlight;
+}
+
+#tray menu {
+    font-family: sans-serif;
+}
+
+#scratchpad.empty {
+    background: transparent;
+}
