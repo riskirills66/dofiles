@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Hyprshot
+export PATH="$HOME/.local/bin:$PATH"
+
 # Ensure the output directory exists
 output_dir="$HOME/Pictures/Screenshots"
 mkdir -p "$output_dir"
