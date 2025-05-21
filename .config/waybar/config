@@ -17,17 +17,6 @@
         "battery",
         "custom/poweroff",
     ],
-    "hyprland/workspaces": {
-        "format": "{icon}",
-        "format-icons": {
-            "active": "\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f\udb80\udd2f",
-            "default": "\udb80\udd2f",
-            "empty": "\udb80\udd2f"
-        },
-        "persistent-workspaces": {
-            "*": [1, 2, 3, 4, 5]
-        }
-    },
     "hyprland/window": {
         "format": "{title}",
         "max-length": 40,
@@ -65,7 +54,7 @@
         "interval": 5
     },
     "custom/appsmenu": {
-        "exec": "echo Apps",
+        "exec": "echo ",
         "tooltip": "Apps Menu",
         "on-click": "rofi -show drun",
         "on-click-right": "~/scripts/fastfetch.sh",

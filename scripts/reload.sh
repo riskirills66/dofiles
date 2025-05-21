@@ -61,7 +61,9 @@ generate_thumbnails() {
   feh --bg-fill "$TARGET_WALLPAPER" --no-fehbg
   wal -i $HOME/nostalgia.jpg -o ~/.cache/wal/colors-kitty.conf
   wal -i $HOME/nostalgia.jpg -o ~/.cache/wal/colors-waybar.css
-  sed -i "s|/home/.*|/home/$(whoami)/.cache/wal/colors-waybar.css');|" ~/.config/waybar/style.css
+  sed -i "s|\(/home/\)[^/]*/\.cache/wal/colors-waybar\.css|\1$(whoami)/.cache/wal/colors-waybar.css|" ~/.config/waybar/style.css
+
+  #  sed -i "s|/home/.*|/home/$(whoami)/.cache/wal/colors-waybar.css);|" ~/.config/waybar/style.css
   sed -i "s|/home/.*/.cache/wal/colors-waybar.css|/home/$(whoami)/.cache/wal/colors-waybar.css|" ~/.config/wlogout/style.css
   sed -i "s|/home/.*/nostalgia.jpg|/home/$(whoami)/nostalgia.jpg|" ~/.config/wlogout/style.css
 
