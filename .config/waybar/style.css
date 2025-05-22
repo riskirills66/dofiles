@@ -1,188 +1,59 @@
 @import url("file:///home/riskirills/.cache/wal/colors-waybar.css");
 
 * {
-  font-size: 14px;
+  border: none;
+  border-radius: 0;
+  font-family: "JetBrainsMono Nerd Font Mono";
+  font-size: 13px;
   min-height: 0;
-  border-radius: 5px;
 }
 
 window#waybar {
-  font-family: JetBrainsMono Nerd Font;
-  background-color: transparent;
-  border-bottom: 0px;
-  color: #ffffff;
+  background: @background;
+  color: @foreground;
+  margin-bottom: 2px;
+  border-bottom: 2px solid @color14; /* Adjust thickness and color as needed */
 }
 
-window#waybar.hidden {
-  opacity: 0.2;
-}
-
-window#waybar.empty #window {
-  background-color: transparent;
-  border-color: transparent;
-  box-shadow: inset 0 0 0 1px transparent;
-}
-
-.modules-right {
-  margin: 10px 10px 0 0;
-}
-
-.modules-center {
-  margin: 10px 0 0 0;
-}
-
-.modules-left {
-  margin: 10px 0 0 10px;
-}
-button {
-  border: none;
-}
-
-#workspaces {
-  padding: 0px 5px;
-}
-
-#workspaces button {
-  all: unset;
-  padding: 0px 5px;
-  color: alpha(@color9, 0.4);
-  letter-spacing: -9px;
-}
-
-#workspaces button.active {
-  color: @color14;
-  border: none;
-  text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
-  letter-spacing: -5px;
-}
-
-#workspaces button.empty {
-  color: rgba(100, 100, 100, 0.2);
-  border: none;
-  text-shadow: 0px 0px 1.5px rgba(0, 0, 0, 0.2);
-}
-
-#workspaces button:hover,
-#workspaces button.active:hover,
-#workspaces button.empty:hover {
-  color: rgba(255, 255, 255, 0.5);
-  border: none;
-  text-shadow: 0px 0px 1.5px rgba(0, 0, 0, 0.5);
-}
-
-#workspaces button.empty.active {
-  color: @color9;
-  border: none;
-  text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
-}
-
-#idle_inhibitor,
-#cava,
-#scratchpad,
-#mode,
 #clock,
 #battery,
-#backlight,
-#wireplumber,
-#wireplumber.muted:hover,
+#cpu,
+#memory,
 #network,
+#pulseaudio,
+#custom-spotify,
 #tray,
-#mpris,
-#load,
-#custom-poweroff,
-#custom-bluetooth,
-#custom-appsmenu,
-#workspaces,
-#window {
-  background: @background;
-  background-size: 300% 300%;
-  border: 0;
-  border-radius: 0px;
-  box-shadow: inset 0 0 0 1px @color14;
-  color: @color14;
-  outline: transparent;
-  padding: 0 1rem;
-  text-decoration: none;
-}
-
-#mpris.playing,
-#network:hover,
-#custom-bluetooth:hover,
-#custom-appsmenu:hover,
-#wireplumber:hover,
-#clock:hover {
-  box-shadow:
-    0 0 0.25rem @background,
-    -0.125rem -0.125rem 1rem @color13,
-    0.125rem 0.125rem 1rem @color0;
-  background: @color14;
-  color: @background;
-  font-weight: 500;
-  box-shadow: none;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-#custom-poweroff:hover {
-  box-shadow:
-    0 0 0.25rem @background,
-    -0.125rem -0.125rem 1rem @color13,
-    0.125rem 0.125rem 1rem @color0;
-  background: #cc241d;
-  color: @background;
-  font-weight: 500;
-  box-shadow: none;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-}
-
 #mode {
-  background-color: #689d6a;
-  color: #282828;
+  padding: 0 3px;
+  margin: 0 2px;
 }
 
-.modules-left > widget:first-child > #workspaces {
-  margin-left: 0;
+#clock {
+  font-weight: bold;
 }
 
-.modules-right > widget:last-child > #workspaces {
-  margin-right: 0;
+#cpu {
 }
 
-#battery.charging,
-#battery.plugged {
-  background-color: @color13;
-  color: #282828;
+#memory {
 }
 
-@keyframes blink {
-  to {
-    background-color: @background;
-    color: #ffffff;
-  }
+#network {
 }
 
-#battery.critical:not(.charging) {
-  background-color: #cc241d;
-  color: #ffffff;
-  animation-name: blink;
-  animation-duration: 0.5s;
-  animation-timing-function: steps(12);
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
+#network.disconnected {
+  background: @color4;
 }
 
-label:focus {
-  background-color: #000000;
+#pulseaudio {
 }
 
-#wireplumber.muted {
-  background-color: @color14;
-  color: @background;
+#pulseaudio.muted {
 }
 
-#tray menu {
-  font-family: sans-serif;
+#custom-spotify {
+  color: rgb(102, 220, 105);
 }
 
-#scratchpad.empty {
-  background: transparent;
+#tray {
 }
