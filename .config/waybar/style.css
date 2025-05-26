@@ -32,10 +32,6 @@ window#waybar {
   margin: 0 2px;
 }
 
-#clock {
-  font-weight: bold;
-}
-
 #cpu {
 }
 
@@ -60,4 +56,15 @@ window#waybar {
 }
 
 #tray {
+  color: @foreground;
+  background: transparent;
+}
+
+#workspaces {
+  padding: 0px 20px 0px 0px;
+}
+
+#workspaces button {
+  margin: 0 -4px;   /* Minimal horizontal gap */
+  padding: 0 2px;    /* Minimal icon spacing */
 }
