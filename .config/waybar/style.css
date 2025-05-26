@@ -23,7 +23,11 @@ window#waybar {
 #pulseaudio,
 #custom-spotify,
 #tray,
-#mode {
+#mode,
+#temperature,
+#custom-gpu_temp,
+#disk,
+#mpris {
   padding: 0 3px;
   margin: 0 2px;
 }
