@@ -9,10 +9,9 @@
 }
 
 window#waybar {
-  background: @background;
+  background: rgba(0, 0, 0, 0.5);
   color: @foreground;
   margin-bottom: 2px;
-  border-bottom: 2px solid @color14; /* Adjust thickness and color as needed */
 }
 
 #clock,
