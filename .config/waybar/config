@@ -9,14 +9,22 @@
         "hyprland/window",
     ],
     "modules-right": [
-        "mpris",
+        "mpris", 
+        "custom/separator",
         "pulseaudio",
+        "custom/separator",
         "network",
+        "custom/separator",
         "cpu",
+        "custom/separator",
         "temperature",      // CPU temp
+        "custom/separator",
         "memory",
+        "custom/separator",
         "disk",             // Disk usage
+        "custom/separator",
         "tray",
+        "custom/separator",
         "clock",
     ],
     "hyprland/workspaces": {
@@ -25,6 +33,9 @@
 	    "active" : "●",
             "default": "○",
             "empty": "○"
+        },
+        "persistent-workspaces": {
+            "*": [1, 2, 3, 4, 5]
         }
     },
     "tray": {
@@ -81,5 +92,10 @@
         "format": "{player_icon} {title} - {artist}",
         "max-length": 40,
         "on-click": "playerctl play-pause"
+    },
+    "custom/separator": {
+        "format": "|",
+        "interval": "once",
+        "tooltip": false
     }
 }
