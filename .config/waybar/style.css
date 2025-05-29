@@ -32,6 +32,13 @@ window#waybar {
   margin: 0 2px;
 }
 
+#custom-separator {
+  padding: 0 1px;
+  margin: 0 1px;
+  font-size: 10px;
+  color: @color8; /* Using a slightly muted color for the separator */
+}
+
 #cpu {
 }
 
