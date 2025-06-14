@@ -9,8 +9,8 @@
 }
 
 window#waybar {
-  background: rgba(0, 0, 0, 0.5);
-  color: @foreground;
+  background: rgba(255, 255, 255, 0.5);
+  color: #575279;
   margin-bottom: 2px;
 }
 
