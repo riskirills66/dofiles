@@ -1,8 +1,6 @@
-# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
-# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
 "$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
 
-[mgr]
+[manager]
 ratio = [1, 4, 3]
 sort_by = "alphabetical"
 sort_sensitive = false
@@ -31,12 +29,13 @@ ueberzug_offset = [0, 0, 0, 0]
 
 [opener]
 edit = [
-  { run = '${EDITOR:-vi} "$@"', desc = "$EDITOR", block = true, for = "unix" },
+  { run = 'nvim "$@"', desc = "Neovim", block = true, for = "unix" },
   { run = 'code %*', orphan = true, desc = "code", for = "windows" },
   { run = 'code -w %*', block = true, desc = "code (block)", for = "windows" },
 ]
+
 open = [
-  { run = 'xdg-open "$1"', desc = "Open", for = "linux" },
+  { run = 'xdg-open "$1"', desc = "Open with default", for = "linux" },
   { run = 'open "$@"', desc = "Open", for = "macos" },
   { run = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" },
   { run = 'termux-open "$1"', desc = "Open", for = "android" },
@@ -73,6 +72,7 @@ rules = [
   ] },
   # Image
   { mime = "image/*", use = [
+    "swayimg",
     "open",
     "reveal",
   ] },
@@ -248,12 +248,3 @@ sort_by = "none"
 sort_sensitive = false
 sort_reverse = false
 sort_translit = false
-
-[[mgr.prepend_keymap]]
-on = "y"
-run = [
-  '''
-	shell 'for path in "$@"; do echo "file://$path"; done | wl-copy -t text/uri-list'
-''',
-  "yank",
-]
