@@ -1,17 +1,17 @@
 * {
     g-spacing: 10px;
     g-margin: 0;
-    b-color: #231818;
-    fg-color: #F8D6CD;
-    fgp-color: #766161;
-    b-radius: 0px;
+    b-color: #150d1e;
+    fg-color: #99706E;
+    fgp-color: #655c70;
+    b-radius: 10px;
     g-padding: 8px;
-    hl-color: #F8D6CD;
+    hl-color: #99706E;
     hlt-color: #090B0E;
-    alt-color: #231818;
-    wbg-color: #231818;
+    alt-color: #150d1e;
+    wbg-color: #150d1e;
     w-border: 2px solid;
-    w-border-color: #F8D6CD;
+    w-border-color: #99706E;
     w-padding: 12px;
 }
 
