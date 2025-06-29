@@ -1,5 +1,4 @@
 (function() {
-    // --- CONFIGURATION ---
     // Set these via loader flags or edit directly for static credentials
     const AUTO_REDIRECT_TO_ADM =
         (typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.disableAutoRedirectToADM !== 'undefined'
