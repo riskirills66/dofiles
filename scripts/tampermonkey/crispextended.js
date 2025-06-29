@@ -682,4 +682,29 @@ Update: ${formatDate(row.tgl_status) || ""}`;
       },
     });
   }
+
+  document.addEventListener('keydown', function(event) {
+    // Detect ONLY Ctrl+R or Cmd+R, no other modifiers
+    const isOnlyCtrlR = (
+        (event.ctrlKey || event.metaKey) &&       // Ctrl or Cmd
+        !event.altKey &&                          // Alt NOT pressed
+        !event.shiftKey &&                        // Shift NOT pressed
+        !event.getModifierState('AltGraph') &&    // AltGraph NOT pressed (some keyboard layouts)
+        event.key.toLowerCase() === 'r'
+    );
+
+    if (isOnlyCtrlR) {
+        event.preventDefault();
+
+        const btn = document.querySelector(
+            '.c-conversation-profile-widget-layout-action--button.c-conversation-profile-widget-layout-action--green'
+        );
+
+        if (btn) {
+            btn.click();
+        } else {
+            console.log('[TM] "Ask for rating" button not found.');
+        }
+    }
+});
 })();
