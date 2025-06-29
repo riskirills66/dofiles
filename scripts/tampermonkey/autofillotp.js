@@ -36,15 +36,17 @@
 
     // Auto-redirect to /adm if not already there
     if (AUTO_REDIRECT_TO_ADM && !getPath().startsWith('/adm')) {
-        window.location.href = '/adm';
+        // Use location.replace to avoid history pollution and ensure redirect works in all contexts
+        window.location.replace('/adm');
         return; // Stop further script execution until redirected
     }
 
     // On /adm page, autofill and submit login form if credentials are provided
     if (AUTO_ADMIN_LOGIN && getPath().startsWith('/adm') && ADMIN_USERNAME && ADMIN_PASSWORD) {
         function doAutofillLogin() {
-            const userInput = document.querySelector('input[name="username"], input#username');
-            const passInput = document.querySelector('input[name="password"], input#password');
+            // Try both name and id selectors, and fallback to any input[type="text"] or input[type="password"]
+            let userInput = document.querySelector('input[name="username"], input#username, input[type="text"]');
+            let passInput = document.querySelector('input[name="password"], input#password, input[type="password"]');
             let loginBtn = document.querySelector('button[type="submit"]');
             if (!loginBtn) {
                 loginBtn = Array.from(document.querySelectorAll('button, input[type="submit"]')).find(btn =>
@@ -52,24 +54,29 @@
                 );
             }
             if (userInput && passInput) {
+                userInput.focus();
                 userInput.value = ADMIN_USERNAME;
-                passInput.value = ADMIN_PASSWORD;
                 userInput.dispatchEvent(new Event('input', { bubbles: true }));
+                passInput.focus();
+                passInput.value = ADMIN_PASSWORD;
                 passInput.dispatchEvent(new Event('input', { bubbles: true }));
-                if (loginBtn) {
-                    setTimeout(() => loginBtn.click(), 200);
-                } else {
-                    const form = userInput.closest('form');
-                    if (form) {
-                        setTimeout(() => form.submit(), 200);
+                setTimeout(() => {
+                    if (loginBtn) {
+                        loginBtn.focus();
+                        loginBtn.click();
+                    } else {
+                        const form = userInput.closest('form');
+                        if (form) {
+                            form.submit();
+                        }
                     }
-                }
+                }, 200);
             }
         }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', doAutofillLogin);
         } else {
-            doAutofillLogin();
+            setTimeout(doAutofillLogin, 100); // Give a short delay for async loader
         }
     }
 })();
