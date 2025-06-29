@@ -9,8 +9,8 @@
 }
 
 window#waybar {
-  background: rgba(25, 25, 36, 0.8);
-  color: #575279;
+  background: #191724;
+  color: #e0def4;
   margin-bottom: 2px;
 }
 
@@ -71,6 +71,6 @@ window#waybar {
 }
 
 #workspaces button {
-  margin: 0 -4px;   /* Minimal horizontal gap */
-  padding: 0 2px;    /* Minimal icon spacing */
+  margin: 0 -4px; /* Minimal horizontal gap */
+  padding: 0 2px; /* Minimal icon spacing */
 }

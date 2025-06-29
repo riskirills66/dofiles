@@ -43,11 +43,12 @@ listview {
     border: 0px solid;
 }
 
+// background-color used for rose-pine
 window {
     transparency: "real";
     width: 480px;
     border-radius: @b-radius;
-    background-color: @wbg-color;
+    background-color: #191724;
     border: @w-border;
     border-color: @w-border-color;
     padding: @w-padding;
@@ -91,8 +92,9 @@ element normal.normal {
 	text-color: @fg-color;
 }
 
+// background color fitted for rose-pine
 element alternate.normal {
-	background-color: @alt-color;
+	background-color: #191724; 
 	text-color: @fg-color;
 }
 
