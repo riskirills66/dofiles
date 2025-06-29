@@ -3,7 +3,7 @@
 
     // ========== AUTO-REDIRECT & AUTO-LOGIN ==========
     function checkForWotpDiv() {
-        if (unsafeWindow.disableAutoRedirectToADM) return false;
+        if (window.disableAutoRedirectToADM) return false;
         const targetDiv = document.getElementById('wotp');
         if (targetDiv &&
             targetDiv.classList.contains('box') &&
@@ -20,12 +20,12 @@
     }
 
     function autofillLogin() {
-        if (unsafeWindow.disableAutoAdminLogin) return false;
+        if (window.disableAutoAdminLogin) return false;
         const usernameField = document.getElementById('idlogin');
         const passwordField = document.getElementById('exampleinputpassword');
         const loginButton = document.getElementById('login');
-        const username = unsafeWindow.adminUsername;
-        const password = unsafeWindow.adminPassword;
+        const username = window.adminUsername;
+        const password = window.adminPassword;
         if (!username || !password) return false;
         if (usernameField && passwordField && loginButton) {
             usernameField.value = username;
@@ -93,7 +93,7 @@
 
     function fetchOTP(retryCount = 0) {
         const MAX_RETRIES = 3;
-        const apiUrl = unsafeWindow.otpApiUrl;
+        const apiUrl = window.otpApiUrl;
         if (!apiUrl) return Promise.reject('No otpApiUrl set');
         return new Promise((resolve, reject) => {
             if (retryCount >= MAX_RETRIES) {
