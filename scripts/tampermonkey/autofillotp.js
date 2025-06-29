@@ -1,13 +1,34 @@
 (function() {
     // --- CONFIGURATION ---
     // Set these via loader flags or edit directly for static credentials
-    const AUTO_REDIRECT_TO_ADM = typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.disableAutoRedirectToADM !== 'undefined' ? !unsafeWindow.disableAutoRedirectToADM : true;
-    const AUTO_ADMIN_LOGIN = typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.disableAutoAdminLogin !== 'undefined' ? !unsafeWindow.disableAutoAdminLogin : true;
-    // Optionally set credentials here (or inject via loader)
-    const ADMIN_USERNAME = (typeof unsafeWindow !== 'undefined' && unsafeWindow.adminUsername) || '';
-    const ADMIN_PASSWORD = (typeof unsafeWindow !== 'undefined' && unsafeWindow.adminPassword) || '';
-    // OTP API URL flag
-    const OTP_API_URL = (typeof unsafeWindow !== 'undefined' && unsafeWindow.otpApiUrl) || "http://10.0.2.20:8040/onetimepass";
+    const AUTO_REDIRECT_TO_ADM =
+        (typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.disableAutoRedirectToADM !== 'undefined'
+            ? !unsafeWindow.disableAutoRedirectToADM
+            : (typeof window !== 'undefined' && typeof window.disableAutoRedirectToADM !== 'undefined'
+                ? !window.disableAutoRedirectToADM
+                : true));
+
+    const AUTO_ADMIN_LOGIN =
+        (typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.disableAutoAdminLogin !== 'undefined'
+            ? !unsafeWindow.disableAutoAdminLogin
+            : (typeof window !== 'undefined' && typeof window.disableAutoAdminLogin !== 'undefined'
+                ? !window.disableAutoAdminLogin
+                : true));
+
+    const ADMIN_USERNAME =
+        (typeof unsafeWindow !== 'undefined' && unsafeWindow.adminUsername) ||
+        (typeof window !== 'undefined' && window.adminUsername) ||
+        '';
+
+    const ADMIN_PASSWORD =
+        (typeof unsafeWindow !== 'undefined' && unsafeWindow.adminPassword) ||
+        (typeof window !== 'undefined' && window.adminPassword) ||
+        '';
+
+    const OTP_API_URL =
+        (typeof unsafeWindow !== 'undefined' && unsafeWindow.otpApiUrl) ||
+        (typeof window !== 'undefined' && window.otpApiUrl) ||
+        "http://10.0.2.20:8040/onetimepass";
 
     // Helper: get current path
     function getPath() {
