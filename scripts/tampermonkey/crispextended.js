@@ -1,8 +1,8 @@
 (function () {
-  const API_URL = window.trx_monitor_url || "localhost:8040";
-  const TG_API_URL = window.tg_api_url || "localhost:4040";
-  const apiBase = `http://${API_URL}`;
-  const tgApi = `http://${TG_API_URL}`;
+  const API_URL = window.trx_monitor_url || "http://localhost:8040";
+  const TG_API_URL = window.tg_api_url || "http://localhost:4040";
+  const apiBase = `${API_URL}`;
+  const tgApi = `${TG_API_URL}`;
 
   ("use strict");
 
@@ -135,7 +135,7 @@
         const message = `${formatDate(row.tgl_entri || "")} %20${encodeURIComponent(row.tujuan || "")} %20${encodeURIComponent(row.sn || "")} %20${encodeURIComponent(row.status || "")} %20${encodeURIComponent(row.kode_reseller || "")} %20${encodeURIComponent(row.kode_modul_label || "")}`;
         GM_xmlhttpRequest({
           method: "GET",
-          url: `http://${tgApi}/send?message=${message}`,
+          url: `${tgApi}/send?message=${message}`,
           onload: function (response) {
             console.log("Report sent successfully");
           },
@@ -384,7 +384,7 @@ Update: ${formatDate(row.tgl_status) || ""}`;
         const saldo = Number(row.jumlah) || 0;
         const poin = calculatePoin(saldo);
 
-        const url = `http://${apiBase}/submit?kode=${kode}&nama=${nama}&saldo=${saldo}&poin=${poin}`;
+        const url = `${apiBase}/submit?kode=${kode}&nama=${nama}&saldo=${saldo}&poin=${poin}`;
         submitPoinBtn.disabled = true;
         submitPoinBtn.innerText = "⏳";
 
@@ -640,7 +640,7 @@ Update: ${formatDate(row.tgl_status) || ""}`;
   function checkTransaction(dest) {
     GM_xmlhttpRequest({
       method: "GET",
-      url: `http://${apiBase}/trx?dest=${dest}`,
+      url: `${apiBase}/trx?dest=${dest}`,
       onload: function (response) {
         try {
           const data = JSON.parse(response.responseText);
@@ -660,7 +660,7 @@ Update: ${formatDate(row.tgl_status) || ""}`;
   function checkDeposit(identifier) {
     GM_xmlhttpRequest({
       method: "GET",
-      url: `http://${apiBase}/deposit?identifier=${identifier}`,
+      url: `${apiBase}/deposit?identifier=${identifier}`,
       onload: function (response) {
         try {
           const data = JSON.parse(response.responseText);
