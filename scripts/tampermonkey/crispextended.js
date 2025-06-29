@@ -707,7 +707,7 @@ Update: ${formatDate(row.tgl_status) || ""}`;
     }
   });
 
-  if (!window.disableDetachEditor) {
+  if (!unsafeWindow.disableDetachEditor) {
     // --- Detach Crisp Chatbox Feature ---
     let originalParent = null;
     let originalNextSibling = null;
