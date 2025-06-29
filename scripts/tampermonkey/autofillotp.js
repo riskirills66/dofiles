@@ -47,7 +47,14 @@
             // Try to find username and password fields
             const userInput = document.querySelector('input[name="username"], input#username');
             const passInput = document.querySelector('input[name="password"], input#password');
-            const loginBtn = document.querySelector('button[type="submit"], button.btn-primary, button:contains("Login")');
+            // Find login button by type or text
+            let loginBtn = document.querySelector('button[type="submit"]');
+            if (!loginBtn) {
+                // Try to find by text content (case-insensitive)
+                loginBtn = Array.from(document.querySelectorAll('button, input[type="submit"]')).find(btn =>
+                    btn.textContent && btn.textContent.toLowerCase().includes('login')
+                );
+            }
             if (userInput && passInput) {
                 userInput.value = ADMIN_USERNAME;
                 passInput.value = ADMIN_PASSWORD;
@@ -55,6 +62,12 @@
                 passInput.dispatchEvent(new Event('input', { bubbles: true }));
                 if (loginBtn) {
                     setTimeout(() => loginBtn.click(), 200); // Small delay for UI
+                } else {
+                    // Try submitting the form directly if button not found
+                    const form = userInput.closest('form');
+                    if (form) {
+                        setTimeout(() => form.submit(), 200);
+                    }
                 }
             }
         });
