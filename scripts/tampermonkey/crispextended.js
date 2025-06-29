@@ -1,6 +1,12 @@
 (function () {
-  const API_URL = window.trx_monitor_url || "http://localhost:8040";
-  const TG_API_URL = window.tg_api_url || "http://localhost:4040";
+  const API_URL =
+    (typeof unsafeWindow !== "undefined"
+      ? unsafeWindow.trx_monitor_url
+      : window.trx_monitor_url) || "http://localhost:8040";
+  const TG_API_URL =
+    (typeof unsafeWindow !== "undefined"
+      ? unsafeWindow.tg_api_url
+      : window.tg_api_url) || "http://localhost:4040";
   const apiBase = `${API_URL}`;
   const tgApi = `${TG_API_URL}`;
 
@@ -132,7 +138,13 @@
                 width: 100%;
             `;
       reportButton.onclick = () => {
-        const message = `${formatDate(row.tgl_entri || "")} %20${encodeURIComponent(row.tujuan || "")} %20${encodeURIComponent(row.sn || "")} %20${encodeURIComponent(row.status || "")} %20${encodeURIComponent(row.kode_reseller || "")} %20${encodeURIComponent(row.kode_modul_label || "")}`;
+        const message = `${formatDate(
+          row.tgl_entri || ""
+        )} %20${encodeURIComponent(row.tujuan || "")} %20${encodeURIComponent(
+          row.sn || ""
+        )} %20${encodeURIComponent(row.status || "")} %20${encodeURIComponent(
+          row.kode_reseller || ""
+        )} %20${encodeURIComponent(row.kode_modul_label || "")}`;
         GM_xmlhttpRequest({
           method: "GET",
           url: `${tgApi}/send?message=${message}`,
