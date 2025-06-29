@@ -683,154 +683,163 @@ Update: ${formatDate(row.tgl_status) || ""}`;
     });
   }
 
-  document.addEventListener('keydown', function(event) {
+  document.addEventListener("keydown", function (event) {
     // Detect ONLY Ctrl+R or Cmd+R, no other modifiers
-    const isOnlyCtrlR = (
-        (event.ctrlKey || event.metaKey) &&       // Ctrl or Cmd
-        !event.altKey &&                          // Alt NOT pressed
-        !event.shiftKey &&                        // Shift NOT pressed
-        !event.getModifierState('AltGraph') &&    // AltGraph NOT pressed (some keyboard layouts)
-        event.key.toLowerCase() === 'r'
-    );
+    const isOnlyCtrlR =
+      (event.ctrlKey || event.metaKey) && // Ctrl or Cmd
+      !event.altKey && // Alt NOT pressed
+      !event.shiftKey && // Shift NOT pressed
+      !event.getModifierState("AltGraph") && // AltGraph NOT pressed (some keyboard layouts)
+      event.key.toLowerCase() === "r";
 
     if (isOnlyCtrlR) {
-        event.preventDefault();
+      event.preventDefault();
 
-        const btn = document.querySelector(
-            '.c-conversation-profile-widget-layout-action--button.c-conversation-profile-widget-layout-action--green'
-        );
+      const btn = document.querySelector(
+        ".c-conversation-profile-widget-layout-action--button.c-conversation-profile-widget-layout-action--green"
+      );
 
-        if (btn) {
-            btn.click();
-        } else {
-            console.log('[TM] "Ask for rating" button not found.');
-        }
+      if (btn) {
+        btn.click();
+      } else {
+        console.log('[TM] "Ask for rating" button not found.');
+      }
     }
-});
+  });
 
-// --- Detach Crisp Chatbox Feature ---
-let originalParent = null;
-let originalNextSibling = null;
-let isDetached = false;
-let isHidden = true;
+  if (!window.disableDetachEditor) {
+    // --- Detach Crisp Chatbox Feature ---
+    let originalParent = null;
+    let originalNextSibling = null;
+    let isDetached = false;
+    let isHidden = true;
 
-function isInboxPage() {
-    return window.location.pathname.includes('/inbox/');
-}
+    function isInboxPage() {
+      return window.location.pathname.includes("/inbox/");
+    }
 
-function focusInputField() {
-    const inputField = document.querySelector('.c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field');
-    if (inputField) {
+    function focusInputField() {
+      const inputField = document.querySelector(
+        ".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field"
+      );
+      if (inputField) {
         inputField.focus();
+      }
     }
-}
 
-function detachEditor() {
-    const editor = document.querySelector('.c-conversation-box__editor');
-    const parent = document.querySelector('.c-conversation-box.js-conversation-wrapper.c-conversation-box--default');
+    function detachEditor() {
+      const editor = document.querySelector(".c-conversation-box__editor");
+      const parent = document.querySelector(
+        ".c-conversation-box.js-conversation-wrapper.c-conversation-box--default"
+      );
 
-    if (!editor || !parent || isDetached) return;
+      if (!editor || !parent || isDetached) return;
 
-    // Store original position
-    originalParent = parent;
-    originalNextSibling = editor.nextSibling;
+      // Store original position
+      originalParent = parent;
+      originalNextSibling = editor.nextSibling;
 
-    // Remove from current parent
-    editor.remove();
+      // Remove from current parent
+      editor.remove();
 
-    // Style for bottom positioning
-    editor.style.position = 'fixed';
-    editor.style.bottom = '0';
-    editor.style.left = '0';
-    editor.style.right = '0';
-    editor.style.zIndex = '9999';
-    editor.style.backgroundColor = 'white';
-    editor.style.borderTop = '1px solid #ccc';
-    editor.style.display = isHidden ? 'none' : '';
+      // Style for bottom positioning
+      editor.style.position = "fixed";
+      editor.style.bottom = "0";
+      editor.style.left = "0";
+      editor.style.right = "0";
+      editor.style.zIndex = "9999";
+      editor.style.backgroundColor = "white";
+      editor.style.borderTop = "1px solid #ccc";
+      editor.style.display = isHidden ? "none" : "";
 
-    // Append to body
-    document.body.appendChild(editor);
-    isDetached = true;
+      // Append to body
+      document.body.appendChild(editor);
+      isDetached = true;
 
-    // Focus input field if editor is visible
-    if (!isHidden) {
+      // Focus input field if editor is visible
+      if (!isHidden) {
         setTimeout(focusInputField, 50);
+      }
     }
-}
 
-function restoreEditor() {
-    const editor = document.querySelector('body > .c-conversation-box__editor');
+    function restoreEditor() {
+      const editor = document.querySelector(
+        "body > .c-conversation-box__editor"
+      );
 
-    if (!editor || !originalParent || !isDetached) return;
+      if (!editor || !originalParent || !isDetached) return;
 
-    // Reset styles
-    editor.style.position = '';
-    editor.style.bottom = '';
-    editor.style.left = '';
-    editor.style.right = '';
-    editor.style.zIndex = '';
-    editor.style.backgroundColor = '';
-    editor.style.borderTop = '';
-    editor.style.display = '';
+      // Reset styles
+      editor.style.position = "";
+      editor.style.bottom = "";
+      editor.style.left = "";
+      editor.style.right = "";
+      editor.style.zIndex = "";
+      editor.style.backgroundColor = "";
+      editor.style.borderTop = "";
+      editor.style.display = "";
 
-    // Remove from body
-    editor.remove();
+      // Remove from body
+      editor.remove();
 
-    // Restore to original position
-    if (originalNextSibling) {
+      // Restore to original position
+      if (originalNextSibling) {
         originalParent.insertBefore(editor, originalNextSibling);
-    } else {
+      } else {
         originalParent.appendChild(editor);
+      }
+
+      isDetached = false;
+      isHidden = true; // Reset hidden state for next time
     }
 
-    isDetached = false;
-    isHidden = true; // Reset hidden state for next time
-}
+    function toggleEditor() {
+      if (!isInboxPage() || !isDetached) return;
 
-function toggleEditor() {
-    if (!isInboxPage() || !isDetached) return;
-
-    const editor = document.querySelector('body > .c-conversation-box__editor');
-    if (editor) {
+      const editor = document.querySelector(
+        "body > .c-conversation-box__editor"
+      );
+      if (editor) {
         isHidden = !isHidden;
-        editor.style.display = isHidden ? 'none' : '';
+        editor.style.display = isHidden ? "none" : "";
 
         // Focus input field when showing the editor
         if (!isHidden) {
-            setTimeout(focusInputField, 50);
+          setTimeout(focusInputField, 50);
         }
+      }
     }
-}
 
-function handleRouteChange() {
-    if (isInboxPage()) {
+    function handleRouteChange() {
+      if (isInboxPage()) {
         setTimeout(detachEditor, 100);
-    } else {
+      } else {
         restoreEditor();
+      }
     }
-}
 
-// Initial check
-handleRouteChange();
+    // Initial check
+    handleRouteChange();
 
-// Watch for URL changes (SPA navigation)
-let currentUrl = window.location.href;
-setInterval(() => {
-    if (currentUrl !== window.location.href) {
+    // Watch for URL changes (SPA navigation)
+    let currentUrl = window.location.href;
+    setInterval(() => {
+      if (currentUrl !== window.location.href) {
         currentUrl = window.location.href;
         handleRouteChange();
-    }
-}, 100);
+      }
+    }, 100);
 
-// Watch for DOM changes
-const observer = new MutationObserver(() => {
-    if (isInboxPage() && !isDetached) {
+    // Watch for DOM changes
+    const observer = new MutationObserver(() => {
+      if (isInboxPage() && !isDetached) {
         setTimeout(detachEditor, 100);
-    }
-});
+      }
+    });
 
-observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
 
-// Expose toggleEditor function globally for Tridactyl
-window.toggleEditor = toggleEditor;
+    // Expose toggleEditor function globally for Tridactyl
+    window.toggleEditor = toggleEditor;
+  }
 })();
