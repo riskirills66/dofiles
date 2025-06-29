@@ -707,4 +707,130 @@ Update: ${formatDate(row.tgl_status) || ""}`;
         }
     }
 });
+
+// --- Detach Crisp Chatbox Feature ---
+let originalParent = null;
+let originalNextSibling = null;
+let isDetached = false;
+let isHidden = true;
+
+function isInboxPage() {
+    return window.location.pathname.includes('/inbox/');
+}
+
+function focusInputField() {
+    const inputField = document.querySelector('.c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field');
+    if (inputField) {
+        inputField.focus();
+    }
+}
+
+function detachEditor() {
+    const editor = document.querySelector('.c-conversation-box__editor');
+    const parent = document.querySelector('.c-conversation-box.js-conversation-wrapper.c-conversation-box--default');
+
+    if (!editor || !parent || isDetached) return;
+
+    // Store original position
+    originalParent = parent;
+    originalNextSibling = editor.nextSibling;
+
+    // Remove from current parent
+    editor.remove();
+
+    // Style for bottom positioning
+    editor.style.position = 'fixed';
+    editor.style.bottom = '0';
+    editor.style.left = '0';
+    editor.style.right = '0';
+    editor.style.zIndex = '9999';
+    editor.style.backgroundColor = 'white';
+    editor.style.borderTop = '1px solid #ccc';
+    editor.style.display = isHidden ? 'none' : '';
+
+    // Append to body
+    document.body.appendChild(editor);
+    isDetached = true;
+
+    // Focus input field if editor is visible
+    if (!isHidden) {
+        setTimeout(focusInputField, 50);
+    }
+}
+
+function restoreEditor() {
+    const editor = document.querySelector('body > .c-conversation-box__editor');
+
+    if (!editor || !originalParent || !isDetached) return;
+
+    // Reset styles
+    editor.style.position = '';
+    editor.style.bottom = '';
+    editor.style.left = '';
+    editor.style.right = '';
+    editor.style.zIndex = '';
+    editor.style.backgroundColor = '';
+    editor.style.borderTop = '';
+    editor.style.display = '';
+
+    // Remove from body
+    editor.remove();
+
+    // Restore to original position
+    if (originalNextSibling) {
+        originalParent.insertBefore(editor, originalNextSibling);
+    } else {
+        originalParent.appendChild(editor);
+    }
+
+    isDetached = false;
+    isHidden = true; // Reset hidden state for next time
+}
+
+function toggleEditor() {
+    if (!isInboxPage() || !isDetached) return;
+
+    const editor = document.querySelector('body > .c-conversation-box__editor');
+    if (editor) {
+        isHidden = !isHidden;
+        editor.style.display = isHidden ? 'none' : '';
+
+        // Focus input field when showing the editor
+        if (!isHidden) {
+            setTimeout(focusInputField, 50);
+        }
+    }
+}
+
+function handleRouteChange() {
+    if (isInboxPage()) {
+        setTimeout(detachEditor, 100);
+    } else {
+        restoreEditor();
+    }
+}
+
+// Initial check
+handleRouteChange();
+
+// Watch for URL changes (SPA navigation)
+let currentUrl = window.location.href;
+setInterval(() => {
+    if (currentUrl !== window.location.href) {
+        currentUrl = window.location.href;
+        handleRouteChange();
+    }
+}, 100);
+
+// Watch for DOM changes
+const observer = new MutationObserver(() => {
+    if (isInboxPage() && !isDetached) {
+        setTimeout(detachEditor, 100);
+    }
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
+
+// Expose toggleEditor function globally for Tridactyl
+window.toggleEditor = toggleEditor;
 })();
