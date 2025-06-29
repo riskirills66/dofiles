@@ -1,12 +1,6 @@
 (function () {
-  const API_URL =
-    (typeof unsafeWindow !== "undefined"
-      ? unsafeWindow.trx_monitor_url
-      : window.trx_monitor_url) || "http://localhost:8040";
-  const TG_API_URL =
-    (typeof unsafeWindow !== "undefined"
-      ? unsafeWindow.tg_api_url
-      : window.tg_api_url) || "http://localhost:4040";
+  const API_URL = unsafeWindow.trx_monitor_url || "http://localhost:8040";
+  const TG_API_URL = unsafeWindow.tg_api_url || "http://localhost:4040";
   const apiBase = `${API_URL}`;
   const tgApi = `${TG_API_URL}`;
 
