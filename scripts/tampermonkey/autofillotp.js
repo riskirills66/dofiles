@@ -1,123 +1,112 @@
 (function() {
-    // Set these via loader flags or edit directly for static credentials
-    const AUTO_REDIRECT_TO_ADM =
-        (typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.disableAutoRedirectToADM !== 'undefined'
-            ? !unsafeWindow.disableAutoRedirectToADM
-            : (typeof window !== 'undefined' && typeof window.disableAutoRedirectToADM !== 'undefined'
-                ? !window.disableAutoRedirectToADM
-                : true));
-
-    const AUTO_ADMIN_LOGIN =
-        (typeof unsafeWindow !== 'undefined' && typeof unsafeWindow.disableAutoAdminLogin !== 'undefined'
-            ? !unsafeWindow.disableAutoAdminLogin
-            : (typeof window !== 'undefined' && typeof window.disableAutoAdminLogin !== 'undefined'
-                ? !window.disableAutoAdminLogin
-                : true));
-
-    const ADMIN_USERNAME =
-        (typeof unsafeWindow !== 'undefined' && unsafeWindow.adminUsername) ||
-        (typeof window !== 'undefined' && window.adminUsername) ||
-        '';
-
-    const ADMIN_PASSWORD =
-        (typeof unsafeWindow !== 'undefined' && unsafeWindow.adminPassword) ||
-        (typeof window !== 'undefined' && window.adminPassword) ||
-        '';
-
-    const OTP_API_URL =
-        (typeof unsafeWindow !== 'undefined' && unsafeWindow.otpApiUrl) ||
-        (typeof window !== 'undefined' && window.otpApiUrl) ||
-        "http://10.0.2.20:8040/onetimepass";
-
-    // Helper: get current path
-    function getPath() {
-        return window.location.pathname;
-    }
-
-    // Auto-redirect to /adm if not already there
-    if (AUTO_REDIRECT_TO_ADM && !getPath().startsWith('/adm')) {
-        // Use location.replace to avoid history pollution and ensure redirect works in all contexts
-        window.location.replace('/adm');
-        return; // Stop further script execution until redirected
-    }
-
-    // On /adm page, autofill and submit login form if credentials are provided
-    if (AUTO_ADMIN_LOGIN && getPath().startsWith('/adm') && ADMIN_USERNAME && ADMIN_PASSWORD) {
-        function doAutofillLogin() {
-            // Try both name and id selectors, and fallback to any input[type="text"] or input[type="password"]
-            let userInput = document.querySelector('input[name="username"], input#username, input[type="text"]');
-            let passInput = document.querySelector('input[name="password"], input#password, input[type="password"]');
-            let loginBtn = document.querySelector('button[type="submit"]');
-            if (!loginBtn) {
-                loginBtn = Array.from(document.querySelectorAll('button, input[type="submit"]')).find(btn =>
-                    btn.textContent && btn.textContent.toLowerCase().includes('login')
-                );
-            }
-            if (userInput && passInput) {
-                userInput.focus();
-                userInput.value = ADMIN_USERNAME;
-                userInput.dispatchEvent(new Event('input', { bubbles: true }));
-                passInput.focus();
-                passInput.value = ADMIN_PASSWORD;
-                passInput.dispatchEvent(new Event('input', { bubbles: true }));
-                setTimeout(() => {
-                    if (loginBtn) {
-                        loginBtn.focus();
-                        loginBtn.click();
-                    } else {
-                        const form = userInput.closest('form');
-                        if (form) {
-                            form.submit();
-                        }
-                    }
-                }, 200);
-            }
-        }
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', doAutofillLogin);
-        } else {
-            setTimeout(doAutofillLogin, 100); // Give a short delay for async loader
-        }
-    }
-})();
-
-(function() {
     'use strict';
 
-    // Flag to track if OTP has been submitted already
+    // ========== AUTO-REDIRECT & AUTO-LOGIN ==========
+    function checkForWotpDiv() {
+        if (unsafeWindow.disableAutoRedirectToADM) return false;
+        const targetDiv = document.getElementById('wotp');
+        if (targetDiv &&
+            targetDiv.classList.contains('box') &&
+            targetDiv.classList.contains('box-block') &&
+            targetDiv.classList.contains('tile') &&
+            targetDiv.classList.contains('tile-2') &&
+            targetDiv.classList.contains('bg-primary') &&
+            targetDiv.classList.contains('mb-2') &&
+            targetDiv.style.cursor === 'pointer') {
+            window.location.href = 'https://rmwapps.otoreport.com/adm/';
+            return true;
+        }
+        return false;
+    }
+
+    function autofillLogin() {
+        if (unsafeWindow.disableAutoAdminLogin) return false;
+        const usernameField = document.getElementById('idlogin');
+        const passwordField = document.getElementById('exampleinputpassword');
+        const loginButton = document.getElementById('login');
+        const username = unsafeWindow.adminUsername;
+        const password = unsafeWindow.adminPassword;
+        if (!username || !password) return false;
+        if (usernameField && passwordField && loginButton) {
+            usernameField.value = username;
+            passwordField.value = password;
+            usernameField.dispatchEvent(new Event('input', { bubbles: true }));
+            passwordField.dispatchEvent(new Event('input', { bubbles: true }));
+            setTimeout(() => {
+                loginButton.click();
+            }, 500);
+            return true;
+        }
+        return false;
+    }
+
+    if (window.location.href.includes('/adm/')) {
+        if (autofillLogin()) return;
+        const adminObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    if (autofillLogin()) {
+                        adminObserver.disconnect();
+                    }
+                }
+            });
+        });
+        adminObserver.observe(document.body, { childList: true, subtree: true });
+        const adminIntervalCheck = setInterval(function() {
+            if (autofillLogin()) {
+                clearInterval(adminIntervalCheck);
+                adminObserver.disconnect();
+            }
+        }, 1000);
+        // Continue to OTP logic below
+    } else {
+        if (checkForWotpDiv()) return;
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    checkForWotpDiv();
+                }
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        const intervalCheck = setInterval(function() {
+            if (checkForWotpDiv()) {
+                clearInterval(intervalCheck);
+                observer.disconnect();
+            }
+        }, 1000);
+    }
+
+    // ========== OTP AUTO-FILLER ==========
     let otpSubmitted = false;
 
-    // Helper function to find elements by text content (similar to jQuery :contains)
     function findElementsByText(selector, text) {
         return Array.from(document.querySelectorAll(selector))
             .filter(el => el.textContent.includes(text));
     }
 
-    // Function to extract the OTP code from the message
     function extractOTPCode(message) {
-        // Regular expression to find a 6-digit number in the message
         const otpRegex = /(\d{6})/;
         const match = message.match(otpRegex);
-
-        if (match && match[1]) {
-            return match[1];
-        }
-        return null;
+        return match && match[1] ? match[1] : null;
     }
 
-    // Function to fetch OTP from the local server
     function fetchOTP(retryCount = 0) {
         const MAX_RETRIES = 3;
-
+        const apiUrl = unsafeWindow.otpApiUrl;
+        if (!apiUrl) return Promise.reject('No otpApiUrl set');
         return new Promise((resolve, reject) => {
             if (retryCount >= MAX_RETRIES) {
                 reject(`Exceeded maximum retry attempts (${MAX_RETRIES})`);
                 return;
             }
-
+            if (typeof GM_xmlhttpRequest !== 'function') {
+                reject('GM_xmlhttpRequest is not available.');
+                return;
+            }
             GM_xmlhttpRequest({
-                method: "GET",
-                url: OTP_API_URL, // <-- Use the flag here
+                method: 'GET',
+                url: apiUrl,
                 timeout: 5000,
                 onload: function(response) {
                     try {
@@ -128,26 +117,20 @@
                             const otpDate = new Date(otpData.tgl_entri);
                             const currentDate = new Date();
                             const timeDiffSeconds = (currentDate - otpDate) / 1000;
-
-                            // Check if OTP is fresh (less than 5 seconds old)
                             if (timeDiffSeconds <= 5) {
                                 const otpCode = extractOTPCode(otpMessage);
                                 if (otpCode) {
                                     resolve(otpCode);
                                 } else {
-                                    reject("OTP code not found in the message");
+                                    reject('OTP code not found in the message');
                                 }
                             } else {
-                                console.log(`OTP is ${timeDiffSeconds.toFixed(1)} seconds old, retrying to get fresh OTP...`);
-                                // Retry after a short delay
                                 setTimeout(() => {
-                                    fetchOTP(retryCount + 1)
-                                        .then(resolve)
-                                        .catch(reject);
+                                    fetchOTP(retryCount + 1).then(resolve).catch(reject);
                                 }, 500);
                             }
                         } else {
-                            reject("No OTP data found in the response");
+                            reject('No OTP data found in the response');
                         }
                     } catch (error) {
                         reject(`Error parsing response: ${error.message}`);
@@ -158,55 +141,34 @@
                 },
                 ontimeout: function() {
                     if (retryCount < MAX_RETRIES - 1) {
-                        console.log(`Request timed out, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
                         setTimeout(() => {
-                            fetchOTP(retryCount + 1)
-                                .then(resolve)
-                                .catch(reject);
+                            fetchOTP(retryCount + 1).then(resolve).catch(reject);
                         }, 500);
                     } else {
-                        reject("Request timed out after multiple attempts");
+                        reject('Request timed out after multiple attempts');
                     }
                 }
             });
         });
     }
 
-    // Function to fill the OTP input and click submit button
     function fillOTPAndSubmit(otpCode) {
         const otpInput = document.querySelector('input[name="otp"]');
         if (!otpInput) return false;
-
-        // Fill the input with OTP code
         otpInput.value = otpCode;
-
-        // Trigger input event to notify any listeners
-        const inputEvent = new Event('input', { bubbles: true });
-        otpInput.dispatchEvent(inputEvent);
-
-        // Find the submit button (assuming it's next to the OTP input)
-        // Try different methods to find the button
-        let submitButton = null;
-
-        // Method 1: If it has a specific ID or text - Based on your screenshot
-        submitButton = findElementsByText('button', 'SUBMIT')[0] ||
-                       findElementsByText('.btn', 'SUBMIT')[0];
-
-        // Method 2: If it's a sibling or nearby element
+        otpInput.dispatchEvent(new Event('input', { bubbles: true }));
+        let submitButton = findElementsByText('button', 'SUBMIT')[0] ||
+                           findElementsByText('.btn', 'SUBMIT')[0];
         if (!submitButton) {
             let parent = otpInput.parentElement;
-            submitButton = parent.querySelector('button[type="submit"]');
+            submitButton = parent ? parent.querySelector('button[type="submit"]') : null;
         }
-
-        // Method 3: If it's not found, look for a button in the form
         if (!submitButton) {
             const form = otpInput.closest('form');
             if (form) {
                 submitButton = form.querySelector('button[type="submit"]');
             }
         }
-
-        // Method 4: Look for a button with common submit text
         if (!submitButton) {
             const buttons = document.querySelectorAll('button, .btn');
             for (const button of buttons) {
@@ -219,207 +181,78 @@
                 }
             }
         }
-          // Click the button if found
         if (submitButton) {
-            console.log('Found submit button, clicking...');
             submitButton.click();
-            otpSubmitted = true; // Mark as submitted once we click the submit button
+            otpSubmitted = true;
             return true;
         }
-
-        console.warn('Submit button not found, looking for it by text content');
-        // Last resort - find by text content in any element
         const submitElements = findElementsByText('*', 'SUBMIT').filter(el => el.textContent.trim() === 'SUBMIT');
-          if (submitElements.length > 0) {
-            console.log('Found submit element by text content, clicking...');
+        if (submitElements.length > 0) {
             submitElements[0].click();
-            otpSubmitted = true; // Mark as submitted once we click the submit button
+            otpSubmitted = true;
             return true;
         }
-
         return false;
     }
-      // Function removed - "Kirim OTP ke saya" functionality has been removed
 
-    // Function to add "Fill OTP" button next to the input field
-    function addFillOTPButton(otpInput) {
-        // Check if button already exists
-        if (document.getElementById('fillOTPButton')) {
-            return;
-        }
-          // Create button element
-        const fillButton = document.createElement('button');
-        fillButton.id = 'fillOTPButton';
-        fillButton.textContent = 'Fill & Submit OTP';
-        fillButton.className = 'btn btn-primary btn-sm';
-        fillButton.style.marginLeft = '5px';
-        fillButton.style.marginTop = '5px';
-        fillButton.style.padding = '3px 10px';
-          // Add click event listener
-        fillButton.addEventListener('click', function(e) {
-            e.preventDefault();
-
-            // Show loading state
-            const originalText = fillButton.textContent;
-            fillButton.textContent = 'Loading...';
-            fillButton.disabled = true;
-
-            // Fetch and fill OTP
-            fetchOTP()
-                .then(otpCode => {
-                    console.log('Fresh OTP code retrieved:', otpCode);
-
-                    // Fill the input with OTP code and submit
-                    const success = fillOTPAndSubmit(otpCode);
-
-                    // Reset button (this may not be visible if submission was successful)
-                    fillButton.textContent = success ? 'Submitted' : originalText;
-                    fillButton.disabled = false;
-
-                    if (!success) {
-                        console.error('Failed to find submit button');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error handling OTP:', error);
-                    fillButton.textContent = 'Error';
-                    setTimeout(() => {
-                        fillButton.textContent = originalText;
-                        fillButton.disabled = false;
-                    }, 1500);
-                });
-        });
-
-        // Insert button after the OTP input, on its right side
-        if (otpInput.parentNode) {
-            // Check if input is in a container
-            const inputContainer = otpInput.parentNode;
-
-            // Insert button right after the input
-            if (otpInput.nextSibling) {
-                inputContainer.insertBefore(fillButton, otpInput.nextSibling);
-            } else {
-                inputContainer.appendChild(fillButton);            }
-        }
-    }    // Function to check for and click the "Kirim OTP ke saya" button
-    // Then automatically fetch and fill OTP after a delay
-    // Only runs once until page refresh
     function clickKirimOTPButton() {
-        // Don't proceed if OTP has already been submitted
-        if (otpSubmitted) {
-            return false;
-        }
-
-        // Look for the specific button with the ID and text
+        if (otpSubmitted) return false;
         const kirimButton = document.querySelector('a#kirimotp.btn.btn-outline-primary');
-
-        // If the button is not found by ID, try to find it by text content
         let button = kirimButton;
         if (!button) {
             button = findElementsByText('a.btn', 'Kirim OTP ke saya')[0];
         }
-
-        // If the button is found, click it
         if (button) {
-            console.log('Found "Kirim OTP ke saya" button, clicking...');
             button.click();
-
-            // Disable the button from being clicked again
             button.style.pointerEvents = 'none';
             button.style.opacity = '0.5';
-
-            // After clicking the button, wait 1 second and then auto-fill OTP
-            // EDIT THIS VALUE to change how long to wait after clicking the button before getting the OTP
-            const waitTimeAfterButtonClickMs = 200; // 1000ms = 1 second
-
             setTimeout(() => {
-                if (!otpSubmitted) {  // Double-check we haven't submitted yet
-                    console.log('Auto-fetching OTP after clicking the button...');
-                    fetchOTP()
-                        .then(otpCode => {
-                            console.log('Fresh OTP code retrieved:', otpCode);
-
-                            // Fill the input with OTP code and submit
-                            const success = fillOTPAndSubmit(otpCode);
-
-                            if (!success) {
-                                console.error('Failed to find submit button');
-                            } else {
-                                console.log('Successfully auto-filled and submitted OTP');
-                                // Mark as submitted to prevent further attempts
-                                otpSubmitted = true;
-
-                                // Clear any periodic checks
-                                if (window.otpCheckInterval) {
-                                    clearInterval(window.otpCheckInterval);
-                                    window.otpCheckInterval = null;
-                                    console.log('Disabled periodic OTP checks - task completed');
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error handling OTP:', error);
-                            // Don't mark as submitted if there was an error
-                        });
+                if (!otpSubmitted) {
+                    fetchOTP().then(otpCode => {
+                        fillOTPAndSubmit(otpCode);
+                        otpSubmitted = true;
+                        if (window.otpCheckInterval) {
+                            clearInterval(window.otpCheckInterval);
+                            window.otpCheckInterval = null;
+                        }
+                    }).catch(() => {});
                 }
-            }, waitTimeAfterButtonClickMs); // Wait 1 second
-
+            }, 200);
             return true;
         }
-
         return false;
-    }// Main function that checks for OTP input field and "Kirim OTP ke saya" button
-    function processOTPInput() {
-        // Check if the OTP input field exists
-        const otpInput = document.querySelector('input[name="otp"]#exampleInputPassword');
+    }
 
+    function processOTPInput() {
+        const otpInput = document.querySelector('input[name="otp"]#exampleInputPassword');
         if (otpInput) {
-            // Disconnect the observer since we've found the input
             if (observer) {
                 observer.disconnect();
                 observer = null;
             }
         }
-
-        // Check and click "Kirim OTP ke saya" button if it exists
-        // This will automatically trigger OTP fetch, fill and submit
         clickKirimOTPButton();
     }
 
-    // Setup MutationObserver to watch for the OTP input
     let observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                 processOTPInput();
             }
         }
-    });    // Start observing the document
+    });
     observer.observe(document, { childList: true, subtree: true });
-
-    // Also check immediately in case the element is already present
     processOTPInput();
-
-    // Reset flag when page is unloaded (e.g., on refresh)
     window.addEventListener('beforeunload', () => {
         otpSubmitted = false;
     });
-
-    // Set up a periodic check for the "Kirim OTP ke saya" button
-    // This is helpful in case the button appears after page loads or during interactions
-    // When button is found, it will automatically click it, wait 1 second, then fill & submit the OTP
     window.otpCheckInterval = setInterval(() => {
-        // If we've already submitted the OTP, stop checking
         if (otpSubmitted) {
             clearInterval(window.otpCheckInterval);
             window.otpCheckInterval = null;
-            console.log('Disabled periodic OTP checks - task completed');
             return;
         }
+        clickKirimOTPButton();
+    }, 2000);
 
-        const clicked = clickKirimOTPButton();
-        // If button was clicked and OTP process started, we can reduce the check frequency
-        if (clicked) {
-            console.log('Button click initiated - reducing check frequency');
-        }
-    }, 2000); // Check every 2 seconds
 })();
