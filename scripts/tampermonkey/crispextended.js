@@ -843,7 +843,12 @@ Update: ${formatDate(row.tgl_status) || ""}`;
     window.toggleEditor = toggleEditor;
   }
 
-  if (!unsafeWindow.disableCrispMods) {
+  function isCrispModsDisabled() {
+    return (typeof unsafeWindow !== 'undefined' && unsafeWindow.disableCrispMods) ||
+           (typeof window !== 'undefined' && window.disableCrispMods);
+  }
+
+  if (!isCrispModsDisabled()) {
     let sidebarHidden = true; // Initially hidden
 
     // ---- Change theme color ----
