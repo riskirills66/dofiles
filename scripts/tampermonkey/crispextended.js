@@ -842,4 +842,153 @@ Update: ${formatDate(row.tgl_status) || ""}`;
     // Expose toggleEditor function globally for Tridactyl
     window.toggleEditor = toggleEditor;
   }
+
+  if (!unsafeWindow.disableCrispMods) {
+    let sidebarHidden = true; // Initially hidden
+
+    // ---- Change theme color ----
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', '#b4637a');
+
+    // ---- Change favicon ----
+    const newFavicon = "https://www.svgrepo.com/show/194023/message-mail.svg";
+    document.querySelectorAll('link[rel*="icon"]').forEach(el => el.parentNode.removeChild(el));
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/png';
+    link.href = newFavicon;
+    document.head.appendChild(link);
+
+    // ---- Force sidebar width & add slide animation ----
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .c-conversation-menu.c-inbox-index__menu {
+            width: 200px !important;
+            min-width: 200px !important;
+            max-width: 200px !important;
+            flex-basis: 200px !important;
+        }
+        .c-inbox-conversation__pane {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out !important;
+            overflow: hidden !important;
+            transform-origin: right center !important;
+        }
+        .c-inbox-conversation__pane.sidebar-hidden {
+            transform: translateX(100%) !important;
+            opacity: 0 !important;
+        }
+        .sidebar-toggle-btn {
+            position: fixed !important;
+            top: 50% !important;
+            right: 0px !important;
+            transform: translateY(-50%) !important;
+            z-index: 9999 !important;
+            background: #b4637a !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px 0 0 8px !important;
+            width: 25px !important;
+            height: 60px !important;
+            cursor: pointer !important;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.2) !important;
+            font-size: 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.3s ease !important;
+            writing-mode: vertical-rl !important;
+            text-orientation: mixed !important;
+            font-weight: bold !important;
+            letter-spacing: 1px !important;
+        }
+        .sidebar-toggle-btn:hover {
+            background: #9d5568 !important;
+            width: 30px !important;
+            box-shadow: -3px 0 12px rgba(0,0,0,0.3) !important;
+        }
+        .sidebar-toggle-btn.pane-hidden {
+            right: 0px !important;
+        }
+        .sidebar-toggle-btn::before {
+            content: '' !important;
+            position: absolute !important;
+            top: -2px !important;
+            left: -2px !important;
+            right: 0 !important;
+            bottom: -2px !important;
+            background: linear-gradient(135deg, #b4637a 0%, #9d5568 100%) !important;
+            border-radius: 8px 0 0 8px !important;
+            z-index: -1 !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    function createToggleButton() {
+        if (document.querySelector('.sidebar-toggle-btn')) return;
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'sidebar-toggle-btn';
+        toggleBtn.innerHTML = sidebarHidden ? 'Details' : 'Hide';
+        toggleBtn.title = 'Toggle Conversation Pane';
+        if (sidebarHidden) {
+            toggleBtn.classList.add('pane-hidden');
+        }
+        toggleBtn.addEventListener('click', toggleSidebar);
+        document.body.appendChild(toggleBtn);
+    }
+
+    function toggleSidebar() {
+        sidebarHidden = !sidebarHidden;
+        const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+        document.querySelectorAll('.c-inbox-conversation__pane').forEach(el => {
+            if (sidebarHidden) {
+                el.classList.add('sidebar-hidden');
+                setTimeout(() => {
+                    if (el.classList.contains('sidebar-hidden')) {
+                        el.style.setProperty('position', 'absolute', 'important');
+                        el.style.setProperty('visibility', 'hidden', 'important');
+                    }
+                }, 300);
+            } else {
+                el.style.removeProperty('position');
+                el.style.removeProperty('visibility');
+                setTimeout(() => {
+                    el.classList.remove('sidebar-hidden');
+                }, 10);
+            }
+        });
+        if (toggleBtn) {
+            toggleBtn.innerHTML = sidebarHidden ? 'Details' : 'Hide';
+            if (sidebarHidden) {
+                toggleBtn.classList.add('pane-hidden');
+            } else {
+                toggleBtn.classList.remove('pane-hidden');
+            }
+        }
+    }
+
+    function setupSidebar() {
+        document.querySelectorAll('.c-conversation-menu.c-inbox-index__menu').forEach(el => {
+            el.style.setProperty('width', '200px', 'important');
+            el.style.setProperty('min-width', '200px', 'important');
+            el.style.setProperty('max-width', '200px', 'important');
+            el.style.setProperty('flex-basis', '200px', 'important');
+        });
+        document.querySelectorAll('.c-inbox-conversation__pane').forEach(el => {
+            if (sidebarHidden) {
+                el.classList.add('sidebar-hidden');
+                el.style.setProperty('position', 'absolute', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+            } else {
+                el.classList.remove('sidebar-hidden');
+                el.style.removeProperty('position');
+                el.style.removeProperty('visibility');
+            }
+        });
+        createToggleButton();
+    }
+
+    setupSidebar();
+    const observer = new MutationObserver(setupSidebar);
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
 })();
