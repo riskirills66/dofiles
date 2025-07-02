@@ -10,7 +10,7 @@
   const BUTTON_CLICK_DELAY = unsafeWindow.click_delay || 200;
   const AUTO_USERNAME = unsafeWindow.username || "administrator";
   const AUTO_PASSWORD = unsafeWindow.password || "password";
-  const REDIRECT_ALLOWED = unsafeWindow.redirect || true;
+  const REDIRECT_ALLOWED = unsafeWindow.redirect !== false;
   // ══════════════════════════════════════════════════════
 
   let otpSubmitted = false;
