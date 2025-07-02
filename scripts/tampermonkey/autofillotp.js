@@ -10,6 +10,7 @@
   const BUTTON_CLICK_DELAY = unsafeWindow.click_delay || 200;
   const AUTO_USERNAME = unsafeWindow.username || "administrator";
   const AUTO_PASSWORD = unsafeWindow.password || "password";
+  const REDIRECT_ALLOWED = unsafeWindow.redirect || true;
   // ══════════════════════════════════════════════════════
 
   let otpSubmitted = false;
@@ -183,7 +184,9 @@
       target.classList.contains("bg-primary") &&
       target.style.cursor === "pointer"
     ) {
-      window.location.href = "https://rmwapps.otoreport.com/adm/";
+      if (REDIRECT_ALLOWED) {
+        window.location.href = "https://rmwapps.otoreport.com/adm/";
+      }
       return true;
     }
     return false;
@@ -224,7 +227,7 @@
       }
     }, 1000);
   } else {
-    if (checkForWOTPDiv()) return;
+    if (REDIRECT_ALLOWED && checkForWOTPDiv()) return;
 
     const detectObserver = new MutationObserver((muts) => {
       muts.forEach(() => checkForWOTPDiv());
