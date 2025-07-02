@@ -184,9 +184,7 @@
       target.classList.contains("bg-primary") &&
       target.style.cursor === "pointer"
     ) {
-      if (REDIRECT_ALLOWED) {
-        window.location.href = "https://rmwapps.otoreport.com/adm/";
-      }
+      window.location.href = "https://rmwapps.otoreport.com/adm/";
       return true;
     }
     return false;
@@ -226,8 +224,8 @@
         adminObserver.disconnect();
       }
     }, 1000);
-  } else {
-    if (REDIRECT_ALLOWED && checkForWOTPDiv()) return;
+  } else if (REDIRECT_ALLOWED) {
+    if (checkForWOTPDiv()) return;
 
     const detectObserver = new MutationObserver((muts) => {
       muts.forEach(() => checkForWOTPDiv());
