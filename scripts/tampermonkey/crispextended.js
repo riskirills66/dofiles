@@ -55,6 +55,7 @@
       "SN",
       "Status",
       "Reseller",
+      "Nama",
       "Harga",
       "Modul",
       "",
@@ -62,16 +63,17 @@
     ];
     const headerRow = document.createElement("tr");
     const columnWidths = [
-      "12%",
       "10%",
-      "20%",
+      "9%",
+      "18%",
+      "13%",
+      "7%",
+      "9%",
       "15%",
+      "9%",
       "8%",
-      "10%",
-      "10%",
-      "10%",
-      "2.5%",
-      "2.5%",
+      "2%",
+      "2%",
     ];
 
     headers.forEach((headerText, index) => {
@@ -100,6 +102,7 @@
         row.sn || "",
         row.status || "",
         row.kode_reseller || "",
+        row.nama_reseller || "",
         new Intl.NumberFormat("id-ID").format(row.harga) || "",
         row.kode_modul_label || "",
       ];
@@ -138,7 +141,7 @@
           row.sn || ""
         )} %20${encodeURIComponent(row.status || "")} %20${encodeURIComponent(
           row.kode_reseller || ""
-        )} %20${encodeURIComponent(row.kode_modul_label || "")}`;
+        )} %20${encodeURIComponent(row.nama_reseller || "")} %20${encodeURIComponent(row.kode_modul_label || "")}`;
         GM_xmlhttpRequest({
           method: "GET",
           url: `${tgApi}/send?message=${message}`,
@@ -154,7 +157,7 @@
       reportCell.style.cssText = `
                 border: 1px solid #ccc;
                 padding: 2px;
-                width: ${columnWidths[8]};
+                width: ${columnWidths[9]};
                 text-align: center;
             `;
       reportCell.appendChild(reportButton);
@@ -176,6 +179,8 @@
 Kode: ${row.kode_produk || ""}.
 Tujuan: ${row.tujuan || ""}.
 Ref: ${row.sn || ""}.
+Reseller: ${row.kode_reseller || ""}.
+Nama: ${row.nama_reseller || ""}.
 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
 Status: ${row.status || ""}`;
         navigator.clipboard
@@ -187,7 +192,7 @@ Status: ${row.status || ""}`;
       copyCell.style.cssText = `
                 border: 1px solid #ccc;
                 padding: 2px;
-                width: ${columnWidths[9]};
+                width: ${columnWidths[10]};
                 text-align: center;
             `;
       copyCell.appendChild(copyButton);
