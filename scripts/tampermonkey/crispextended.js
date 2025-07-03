@@ -189,8 +189,7 @@
 📦 Kode: ${row.kode_produk || ""}.
 📱 Tujuan: ${row.tujuan || ""}.
 🔢 Ref: ${row.sn || ""}.
-🏪 Reseller: ${row.kode_reseller || ""}.
-👤 Nama: ${row.nama_reseller || ""}.
+👤 Reseller: ${row.kode_reseller || ""} - ${row.nama_reseller || ""}.
 💰 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
 ⚠️ Status: Dalam pengecekan lebih lanjut`;
         
