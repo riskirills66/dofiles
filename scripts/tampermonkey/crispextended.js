@@ -63,15 +63,15 @@
     ];
     const headerRow = document.createElement("tr");
     const columnWidths = [
-      "10%",
-      "9%",
-      "18%",
-      "13%",
+      "12%",
       "7%",
-      "9%",
+      "12%",
       "15%",
-      "9%",
       "8%",
+      "10%",
+      "18%",
+      "10%",
+      "6%",
       "2%",
       "2%",
     ];
@@ -175,14 +175,14 @@
                 width: 100%;
             `;
       copyButton.onclick = () => {
-        const formattedText = `Tanggal: ${formatDate(row.tgl_entri) || ""}.
-Kode: ${row.kode_produk || ""}.
-Tujuan: ${row.tujuan || ""}.
-Ref: ${row.sn || ""}.
-Reseller: ${row.kode_reseller || ""}.
-Nama: ${row.nama_reseller || ""}.
-Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
-Status: ${row.status || ""}`;
+        const formattedText = `📅 Tanggal: ${formatDate(row.tgl_entri) || ""}.
+📦 Kode: ${row.kode_produk || ""}.
+📱 Tujuan: ${row.tujuan || ""}.
+🔢 Ref: ${row.sn || ""}.
+🏪 Reseller: ${row.kode_reseller || ""}.
+👤 Nama: ${row.nama_reseller || ""}.
+💰 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
+✅ Status: ${row.status || ""}`;
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying text:", error));
@@ -347,12 +347,12 @@ Status: ${row.status || ""}`;
                 width: 100%;
             `;
       copyButton.onclick = () => {
-        const formattedText = `Tanggal: ${formatDate(row.waktu) || ""}.
-Reseller: ${row.kode_reseller || ""}.
-Nama: ${row.nama_reseller || ""}.
-Jumlah: ${new Intl.NumberFormat("id-ID").format(row.jumlah) || ""}.
-Status: ${row.status || ""}.
-Update: ${formatDate(row.tgl_status) || ""}`;
+        const formattedText = `📅 Tanggal: ${formatDate(row.waktu) || ""}.
+🏪 Reseller: ${row.kode_reseller || ""}.
+👤 Nama: ${row.nama_reseller || ""}.
+💰 Jumlah: ${new Intl.NumberFormat("id-ID").format(row.jumlah) || ""}.
+✅ Status: ${row.status || ""}.
+🔄 Update: ${formatDate(row.tgl_status) || ""}`;
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying text:", error));
