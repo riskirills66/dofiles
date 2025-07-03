@@ -68,6 +68,16 @@
     return statusMap[status] || "❓";
   }
 
+  function getDepositStatusEmoji(status) {
+    const statusMap = {
+      "Open": "🔄",
+      "Cancelled": "❌", 
+      "Settled": "✅"
+    };
+    
+    return statusMap[status] || "❓";
+  }
+
   function displayTransactionModal(data) {
     const modal = document.createElement("div");
     modal.id = "transactionModal";
@@ -494,12 +504,18 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
                 width: 100%;
             `;
       copyButton.onclick = () => {
-        const formattedText = `📅 Tanggal: ${formatDate(row.waktu) || ""}.
+        let formattedText = `📅 Tanggal: ${formatDate(row.waktu) || ""}.
 🏪 Reseller: ${row.kode_reseller || ""}.
 👤 Nama: ${row.nama_reseller || ""}.
 💰 Jumlah: ${new Intl.NumberFormat("id-ID").format(row.jumlah) || ""}.
-✅ Status: ${row.status || ""}.
+${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
+        
+        // Only show Update line for Cancelled or Settled status
+        if (row.status === "Cancelled" || row.status === "Settled") {
+          formattedText += `.
 🔄 Update: ${formatDate(row.tgl_status) || ""}`;
+        }
+        
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying text:", error));
