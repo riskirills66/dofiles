@@ -158,7 +158,48 @@
 
       rowData.forEach((cellData, index) => {
         const td = document.createElement("td");
-        td.innerText = cellData;
+        
+        // Create a container div for cell content and copy button
+        const cellContainer = document.createElement("div");
+        cellContainer.style.cssText = `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        `;
+        
+        // Create text span for the cell data
+        const textSpan = document.createElement("span");
+        textSpan.innerText = cellData;
+        textSpan.style.cssText = `
+          flex: 1;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        `;
+        
+        // Create small copy button for each cell
+        const cellCopyBtn = document.createElement("button");
+        cellCopyBtn.innerText = "📋";
+        cellCopyBtn.style.cssText = `
+          background: transparent;
+          border: none;
+          padding: 1px;
+          font-size: 10px;
+          cursor: pointer;
+          opacity: 0.6;
+          margin-left: 4px;
+          flex-shrink: 0;
+        `;
+        cellCopyBtn.title = "Copy cell content";
+        cellCopyBtn.onclick = (e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(cellData).catch((error) => console.error("Error copying cell:", error));
+        };
+        
+        cellContainer.appendChild(textSpan);
+        cellContainer.appendChild(cellCopyBtn);
+        td.appendChild(cellContainer);
+        
         td.style.cssText = `
                     border: 1px solid #ccc;
                     padding: 4px 6px;
@@ -385,7 +426,48 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
       rowData.forEach((cellData, index) => {
         const td = document.createElement("td");
-        td.innerText = cellData;
+        
+        // Create a container div for cell content and copy button
+        const cellContainer = document.createElement("div");
+        cellContainer.style.cssText = `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        `;
+        
+        // Create text span for the cell data
+        const textSpan = document.createElement("span");
+        textSpan.innerText = cellData;
+        textSpan.style.cssText = `
+          flex: 1;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        `;
+        
+        // Create small copy button for each cell
+        const cellCopyBtn = document.createElement("button");
+        cellCopyBtn.innerText = "📋";
+        cellCopyBtn.style.cssText = `
+          background: transparent;
+          border: none;
+          padding: 1px;
+          font-size: 10px;
+          cursor: pointer;
+          opacity: 0.6;
+          margin-left: 4px;
+          flex-shrink: 0;
+        `;
+        cellCopyBtn.title = "Copy cell content";
+        cellCopyBtn.onclick = (e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(cellData).catch((error) => console.error("Error copying cell:", error));
+        };
+        
+        cellContainer.appendChild(textSpan);
+        cellContainer.appendChild(cellCopyBtn);
+        td.appendChild(cellContainer);
+        
         td.style.cssText = `
                     border: 1px solid #ccc;
                     padding: 6px 8px;
