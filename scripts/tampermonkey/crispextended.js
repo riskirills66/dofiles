@@ -19,6 +19,55 @@
     return document.querySelector(".userscript-modal") !== null;
   }
 
+  function getStatusEmoji(status) {
+    const statusMap = {
+      "Sedang Diproses": "⏳",
+      "Menunggu Jawaban": "⏰",
+      "Belum Diproses": "📋",
+      "Tidak ada parsing": "❓",
+      "Terjadwal": "📅",
+      "Sukses": "✅",
+      "Sukses Masuk Outbox": "✅",
+      "Sukses Masuk Transaksi": "✅",
+      "Sukses Masuk CS": "✅",
+      "Gagal": "❌",
+      "Bukan Reseller": "🚫",
+      "Format Salah": "📝",
+      "Saldo Tidak Cukup": "💸",
+      "Produk Salah": "📦",
+      "Stok Kosong": "📭",
+      "Transaksi Dobel": "🔄",
+      "Produk Gangguan": "⚠️",
+      "Parameter Salah": "⚙️",
+      "Pin Salah": "🔒",
+      "Dibatalkan": "🚫",
+      "Reseller Tidak Aktif": "😴",
+      "Tujuan Salah": "🎯",
+      "Tujuan Di Luar Wilayah": "🌍",
+      "Kode Area Tidak Cocok": "📍",
+      "Timeout": "⏱️",
+      "Nomor Blacklist": "🚫",
+      "Wrong Signature": "✍️",
+      "Nomor Tidak Aktif": "📵",
+      "Harga Tidak Sesuai": "💰",
+      "Tidak Ada Data": "📂",
+      "Qty Tidak Sesuai": "🔢",
+      "Limit Harian": "📊",
+      "Reseller Suspend": "⏸️",
+      "Diabaikan": "👁️‍🗨️",
+      "Unit Tidak Cukup": "📉",
+      "Invalid Terminal": "💻",
+      "Group Dissallow": "👥",
+      "Access Denied": "🔐",
+      "Cutoff": "✂️",
+      "Harus Ubah Pin": "🔑",
+      "Nomor Hangus": "🗑️",
+      "Nomor Masa Tenggang": "⏳"
+    };
+    
+    return statusMap[status] || "❓";
+  }
+
   function displayTransactionModal(data) {
     const modal = document.createElement("div");
     modal.id = "transactionModal";
@@ -135,6 +184,24 @@
                 width: 100%;
             `;
       reportButton.onclick = () => {
+        // Copy formatted text to clipboard with custom status
+        const formattedText = `📅 Tanggal: ${formatDate(row.tgl_entri) || ""}.
+📦 Kode: ${row.kode_produk || ""}.
+📱 Tujuan: ${row.tujuan || ""}.
+🔢 Ref: ${row.sn || ""}.
+🏪 Reseller: ${row.kode_reseller || ""}.
+👤 Nama: ${row.nama_reseller || ""}.
+💰 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
+⚠️ Status: Dalam pengecekan lebih lanjut`;
+        
+        navigator.clipboard
+          .writeText(formattedText)
+          .then(() => {
+            console.log("Report copied to clipboard");
+          })
+          .catch((error) => console.error("Error copying report:", error));
+
+        // Send to Telegram (original functionality)
         const message = `${formatDate(
           row.tgl_entri || ""
         )} %20${encodeURIComponent(row.tujuan || "")} %20${encodeURIComponent(
@@ -182,7 +249,7 @@
 🏪 Reseller: ${row.kode_reseller || ""}.
 👤 Nama: ${row.nama_reseller || ""}.
 💰 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
-✅ Status: ${row.status || ""}`;
+${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying text:", error));
