@@ -4,7 +4,7 @@
   // ══════════════════════════════════════════════════════
   // 🔧 CONFIGURATION
   const OTP_SERVER_URL =
-    unsafeWindow.otp_server_url || "http://localhost:8040/onetimepass";
+    unsafeWindow.otp_server_url || "http://10.0.2.20:8040/onetimepass";
   const OTP_VALIDITY_SECONDS = unsafeWindow.otp_validity || 5;
   const OTP_FETCH_RETRIES = unsafeWindow.fetct_retries || 3;
   const BUTTON_CLICK_DELAY = unsafeWindow.click_delay || 200;
