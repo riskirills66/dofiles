@@ -17,6 +17,7 @@
 @define-color highlightLow    #21202e;
 @define-color highlightMed    #403d52;
 @define-color highlightHigh   #524f67;
+@define-color border          #99706E;
 
 * {
   border: none;
@@ -52,20 +53,19 @@ window#waybar {
   color: @text;
 }
 
-/* Window title - no background */
 #window {
   background: transparent;
   color: @text;
   padding: 0 8px;
 }
 
-/* MPRIS - no background */
 #mpris {
   padding: 0 3px;
   margin: 0 2px;
-  background: @surface; /* keep container background */
+  background: @surface;
   border-radius: 8px;
   color: @iris;
+  border: 2px solid @border;
 }
 
 #custom-separator {
@@ -161,8 +161,9 @@ window#waybar {
 #workspaces {
   padding: 0px 8px 0px 0px;
   margin: 0;
-  background: @surface; /* keep container background */
+  background: @surface;
   border-radius: 8px;
+  border: 2px solid @border; /* Add border */
 }
 
 #workspaces button {
@@ -202,4 +203,5 @@ window#waybar {
   border-radius: 8px;
   padding: 0 8px;
   margin-right: 8px;
+  border: 2px solid @border; /* Add border */
 }
