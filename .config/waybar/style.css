@@ -63,7 +63,8 @@ window#waybar {
 #mpris {
   padding: 0 3px;
   margin: 0 2px;
-  background: transparent;
+  background: @surface; /* keep container background */
+  border-radius: 8px;
   color: @iris;
 }
 

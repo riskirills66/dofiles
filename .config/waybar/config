@@ -7,23 +7,17 @@
     // Choose the order of the modules
     "modules-left": [
         "hyprland/workspaces",
+        "mpris",
+    ],
+    "modules-center": [
         "hyprland/window",
     ],
     "modules-right": [
-        "mpris", 
-        "custom/separator",
         "pulseaudio",
-        "custom/separator",
         "network",
-        "custom/separator",
         "cpu",
-        "custom/separator",
         "temperature",      // CPU temp
-        "custom/separator",
         "memory",
-        "custom/separator",
-        "disk",             // Disk usage
-        "custom/separator",
         "tray",
         "custom/separator",
         "clock",
@@ -83,10 +77,6 @@
         "hwmon-path": "/sys/class/hwmon/hwmon1/temp1_input", // Adjust as needed
         "critical-threshold": 80,
         "format": "{temperatureC}°C "
-    },
-    "disk": {
-        "format": "{used}/{total} ({percentage_used}%) ",
-        "path": "/"
     },
     "mpris": {
         "player-icons": true,
