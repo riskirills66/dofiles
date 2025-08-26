@@ -1,4 +1,22 @@
-@import url("file:///home/riskirills/.cache/wal/colors-waybar.css");
+/*
+ * Variant: Rosé Pine
+ * Maintainer: DankChoir
+ */
+@define-color base            #191724;
+@define-color surface         #1f1d2e;
+@define-color overlay         #26233a;
+@define-color muted           #6e6a86;
+@define-color subtle          #908caa;
+@define-color text            #e0def4;
+@define-color love            #eb6f92;
+@define-color gold            #f6c177;
+@define-color rose            #ebbcba;
+@define-color pine            #31748f;
+@define-color foam            #9ccfd8;
+@define-color iris            #c4a7e7;
+@define-color highlightLow    #21202e;
+@define-color highlightMed    #403d52;
+@define-color highlightHigh   #524f67;
 
 * {
   border: none;
@@ -10,9 +28,10 @@
 
 window#waybar {
   background: transparent;
-  color: #e0def4;
+  color: @text;
   margin-bottom: 2px;
-  /* border-bottom: 2px solid @color14; */
+  margin-top: 8px;
+  padding-top: 8px;
 }
 
 #clock,
@@ -26,52 +45,160 @@ window#waybar {
 #mode,
 #temperature,
 #custom-gpu_temp,
-#disk,
+#disk {
+  padding: 0 3px;
+  margin: 0 2px;
+  background: transparent;
+  color: @text;
+}
+
+/* Window title - no background */
+#window {
+  background: transparent;
+  color: @text;
+  padding: 0 8px;
+}
+
+/* MPRIS - no background */
 #mpris {
   padding: 0 3px;
   margin: 0 2px;
+  background: transparent;
+  color: @iris;
 }
 
 #custom-separator {
   padding: 0 1px;
   margin: 0 1px;
   font-size: 10px;
-  color: @color8; /* Using a slightly muted color for the separator */
+  color: @muted;
+  background: transparent;
 }
 
 #cpu {
+  color: @foam;
 }
 
 #memory {
+  color: @iris;
 }
 
 #network {
+  color: @pine;
 }
 
 #network.disconnected {
-  background: @color4;
+  background: @love;
+  color: @text;
 }
 
 #pulseaudio {
+  color: @gold;
 }
 
 #pulseaudio.muted {
+  color: @muted;
+  background: @highlightLow;
+}
+
+#battery {
+  color: @rose;
+}
+
+#battery.charging {
+  color: @foam;
+}
+
+#battery.warning:not(.charging) {
+  color: @gold;
+  background: @highlightMed;
+}
+
+#battery.critical:not(.charging) {
+  color: @love;
+  background: @highlightHigh;
+  animation: blink 0.5s linear infinite alternate;
+}
+
+@keyframes blink {
+  to {
+    background-color: @love;
+    color: @text;
+  }
+}
+
+#clock {
+  color: @text;
+  font-weight: bold;
+}
+
+#temperature {
+  color: @gold;
+}
+
+#custom-gpu_temp {
+  color: @love;
+}
+
+#disk {
+  color: @subtle;
 }
 
 #custom-spotify {
-  color: rgb(102, 220, 105);
+  color: @foam;
+}
+
+#mpris {
+  color: @iris;
 }
 
 #tray {
-  color: @foreground;
+  color: @text;
   background: transparent;
 }
 
 #workspaces {
-  padding: 0px 20px 0px 0px;
+  padding: 0px 8px 0px 0px;
+  margin: 0;
+  background: @surface; /* keep container background */
+  border-radius: 8px;
 }
 
 #workspaces button {
-  margin: 0 -2px; /* Minimal horizontal gap */
-  padding: 0 2px; /* Minimal icon spacing */
+  margin: 0 -5px;
+  padding: 4px 4px;
+  background: transparent; /* no background ever */
+  color: @subtle;
+  border-radius: 6px;
+  transition: color 0.2s ease; /* only animate color */
+}
+
+#workspaces button:hover {
+  background: transparent; /* keep transparent */
+  color: @text;
+}
+
+#workspaces button.active {
+  background: transparent; /* no background */
+  color: @text;
+}
+
+#workspaces button.urgent {
+  background: transparent; /* disable background flashing */
+  color: @love; /* urgent = only text color */
+}
+
+/* Group styling for sections */
+.modules-left {
+  background: transparent;
+  border-radius: 8px;
+  padding: 0;
+  margin-left: 8px;
+}
+
+.modules-right {
+  background: @surface;
+  border-radius: 8px;
+  padding: 0 8px;
+  margin-right: 8px;
 }
