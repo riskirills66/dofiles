@@ -81,7 +81,7 @@
     "mpris": {
         "player-icons": true,
         "format": "{player_icon} {title} - {artist}",
-        "max-length": 40,
+        "max-length": 35,
         "on-click": "playerctl play-pause"
     },
     "custom/separator": {
