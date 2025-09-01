@@ -154,6 +154,80 @@ generate_thumbnails() {
   sed -i "s/^cursor-color = .*/cursor-color = $cursor/" "$THEME_PYWAL_FILE"
 }
 
+# Function to change wallpaper only (without pywal)
+change_wallpaper_only() {
+  # Generate thumbnails
+  for img in "$WALLPAPER_DIR"/*.{jpg,jpeg,png}; do
+    thumbnail="$THUMBNAIL_DIR/$(basename "$img")"
+    if [ ! -f "$thumbnail" ]; then
+      convert "$img" -resize 300x300 "$thumbnail" 2>/dev/null
+    fi
+  done
+
+  # Combine thumbnails and names
+  OPTIONS=""
+  for img in "$WALLPAPER_DIR"/*.{jpg,jpeg,png}; do
+    thumbnail="$THUMBNAIL_DIR/$(basename "$img")"
+    OPTIONS+="$(basename "$img")\0icon\x1f$thumbnail\n"
+  done
+
+  # Use Rofi to select wallpaper
+  SELECTED=$(echo -e "$OPTIONS" | rofi -dmenu -p "Select Wallpaper (No Pywal)")
+
+  # Check wallpaper selection
+  if [ -z "$SELECTED" ]; then
+    echo "No wallpaper selected. Exiting..."
+    exit 1
+  fi
+
+  # Full path to the selected wallpaper
+  SELECTED_WALLPAPER_PATH="$WALLPAPER_DIR/$SELECTED"
+
+  # Ensure the selected wallpaper exists
+  if [ ! -f "$SELECTED_WALLPAPER_PATH" ]; then
+    echo "Wallpaper not found: $SELECTED_WALLPAPER_PATH"
+    exit 1
+  fi
+
+  # Path to replace nostalgia.jpg
+  TARGET_WALLPAPER="$HOME/nostalgia.jpg"
+
+  # Convert to JPG if needed
+  FILE_EXTENSION="${SELECTED_WALLPAPER_PATH##*.}"
+  if [[ "$FILE_EXTENSION" != "jpg" ]]; then
+    echo "Converting $SELECTED to JPG format..."
+    magick "$SELECTED_WALLPAPER_PATH" "$TARGET_WALLPAPER"
+  else
+    cp "$SELECTED_WALLPAPER_PATH" "$TARGET_WALLPAPER"
+  fi
+
+  echo "Replaced nostalgia.jpg with $SELECTED"
+
+  mkdir -p ~/.config/hypr # Create the directory if it doesn't exist
+
+  # Get the list of connected monitors
+  connected_monitors=$(xrandr | grep " connected" | awk '{print $1}')
+
+  # Clear the hyprpaper.conf file and set preload
+  echo "preload = $HOME/nostalgia.jpg" >~/.config/hypr/hyprpaper.conf
+
+  # Loop through each connected monitor and set the wallpaper for it
+  for monitor in $connected_monitors; do
+    echo "wallpaper = $monitor, $HOME/nostalgia.jpg" >>~/.config/hypr/hyprpaper.conf
+  done
+
+  # Disable splash screen
+  echo "splash = false" >>~/.config/hypr/hyprpaper.conf
+
+  # Kill existing instances of hyprpaper only
+  killall hyprpaper
+
+  # Restart hyprpaper only
+  hyprpaper &
+
+  echo "Wallpaper changed to $SELECTED without color scheme changes."
+}
+
 # Function to select and apply an icon theme
 select_icon_theme() {
   # Step 1: List available icon themes from both directories
@@ -249,12 +323,14 @@ change_sddm_wallpaper() {
 "
 }
 
-# Main menu to choose between wallpaper + wal, icon theme, or change SDDM wallpaper
-MAIN_MENU=$(echo -e "Wallpaper + Wal\nIcons Selector\nChange SDDM Wallpaper" | rofi -dmenu -p "Select Option")
+# Main menu to choose between wallpaper + wal, wallpaper only, icon theme, or change SDDM wallpaper
+MAIN_MENU=$(echo -e "Wallpaper + Wal\nWallpaper Only\nIcons Selector\nChange SDDM Wallpaper" | rofi -dmenu -p "Select Option")
 
 # Run the selected option
 if [ "$MAIN_MENU" == "Wallpaper + Wal" ]; then
   generate_thumbnails
+elif [ "$MAIN_MENU" == "Wallpaper Only" ]; then
+  change_wallpaper_only
 elif [ "$MAIN_MENU" == "Icons Selector" ]; then
   select_icon_theme
 elif [ "$MAIN_MENU" == "Change SDDM Wallpaper" ]; then
