@@ -1,0 +1,15 @@
+[Unit]
+Description=Hyprland Auto-Restart Service
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/bin/true
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

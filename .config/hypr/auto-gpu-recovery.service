@@ -1,0 +1,16 @@
+[Unit]
+Description=Automatic GPU Recovery Service
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+User=%i
+Environment=DISPLAY=:0
+Environment=WAYLAND_DISPLAY=wayland-1
+ExecStart=/home/riskirills/.config/hypr/auto-gpu-recovery.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=graphical-session.target
