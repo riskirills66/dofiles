@@ -12,5 +12,20 @@ if [[ "$TARGET_DIR" =~ ^file:// ]]; then
     TARGET_DIR="${TARGET_DIR:7}"
 fi
 
-# Open the terminal and run Yazi in the specified directory using zsh
-kitty -- zsh -c "cd '$TARGET_DIR' && yazi; exec zsh"
+# Create a temporary script to avoid command parsing issues
+TEMP_SCRIPT=$(mktemp)
+cat > "$TEMP_SCRIPT" << EOF
+#!/bin/zsh
+source ~/.zshrc
+cd '$TARGET_DIR'
+y
+exec zsh
+EOF
+
+chmod +x "$TEMP_SCRIPT"
+
+# Open the terminal and run the temporary script
+ghostty -e "$TEMP_SCRIPT"
+
+# Clean up the temporary script after a short delay
+(sleep 2 && rm -f "$TEMP_SCRIPT") &
