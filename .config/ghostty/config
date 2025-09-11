@@ -10,7 +10,7 @@ font-family-italic = auto
 font-family-bold-italic = auto
 
 # Font rendering settings for smoother text
-font-size = 11
+font-size = 10
 
 # Font thickness for better rendering
 font-thicken = true
