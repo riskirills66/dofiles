@@ -1,7 +1,6 @@
 background-opacity = 0.8
 window-decoration = false
-theme = rose-pine
-gtk-adwaita = false
+theme = Rose Pine
 confirm-close-surface = false
 
 font-family = JetBrainsMono Nerd Font Mono
