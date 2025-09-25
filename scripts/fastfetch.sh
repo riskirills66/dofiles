@@ -1,2 +1,2 @@
-#!/bin/bash
-kitty --title "Fastfetch" --hold fastfetch -l "Fedora_small"
+#!/usr/bin/env bash
+fastfetch -l "arch_small"
