@@ -69,8 +69,8 @@ generate_thumbnails() {
 
   mkdir -p ~/.config/hypr # Create the directory if it doesn't exist
 
-  # Get the list of connected monitors
-  connected_monitors=$(xrandr | grep " connected" | awk '{print $1}')
+  # Get the list of connected monitors using hyprctl
+  connected_monitors=$(hyprctl monitors | grep "Monitor" | awk '{print $2}')
 
   # Clear the hyprpaper.conf file and set preload
   echo "preload = $HOME/nostalgia.jpg" >~/.config/hypr/hyprpaper.conf
@@ -205,8 +205,8 @@ change_wallpaper_only() {
 
   mkdir -p ~/.config/hypr # Create the directory if it doesn't exist
 
-  # Get the list of connected monitors
-  connected_monitors=$(xrandr | grep " connected" | awk '{print $1}')
+  # Get the list of connected monitors using hyprctl
+  connected_monitors=$(hyprctl monitors | grep "Monitor" | awk '{print $2}')
 
   # Clear the hyprpaper.conf file and set preload
   echo "preload = $HOME/nostalgia.jpg" >~/.config/hypr/hyprpaper.conf
