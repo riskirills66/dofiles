@@ -6,7 +6,7 @@
     // "width": 1366, // Waybar width
     // Choose the order of the modules
     "modules-left": [
-        "hyprland/workspaces",
+        "ext/workspaces",
         "mpris",
     ],
     "modules-center": [
@@ -22,17 +22,12 @@
         "custom/separator",
         "clock",
     ],
-    "hyprland/workspaces": {
-        "format": "{icon}",
-        "format-icons": {
-	    "active" : "●",
-            "default": "○",
-            "empty": "○"
-        },
-        "persistent-workspaces": {
-            "*": [1, 2, 3, 4, 5]
-        }
-    },
+    "ext/workspaces": {
+      "format": "{icon}",
+      "ignore-hidden": true,
+      "on-click": "activate",
+      "sort-by-id": true,
+      },
     "tray": {
         // "icon-size": 21,
         "spacing": 10
