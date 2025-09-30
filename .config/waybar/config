@@ -10,7 +10,7 @@
         "mpris",
     ],
     "modules-center": [
-        "hyprland/window",
+        "dwl/window",
     ],
     "modules-right": [
         "pulseaudio",

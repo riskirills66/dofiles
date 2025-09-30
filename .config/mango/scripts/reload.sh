@@ -286,6 +286,22 @@ select_icon_theme() {
   echo "Rofi icon theme updated to $SELECTED_ICON_THEME."
 }
 
+# Function to restart waybar
+restart_waybar() {
+  echo "Restarting waybar..."
+  
+  # Kill existing waybar processes
+  killall waybar 2>/dev/null
+  
+  # Wait a moment for processes to terminate
+  sleep 0.5
+  
+  # Start waybar
+  waybar &
+  
+  echo "Waybar restarted successfully."
+}
+
 # Function to change the SDDM wallpaper
 change_sddm_wallpaper() {
   # Launch a new terminal (kitty in this case) and run the script
@@ -361,8 +377,8 @@ change_sddm_wallpaper() {
 "
 }
 
-# Main menu to choose between wallpaper + wal, wallpaper only, icon theme, or change SDDM wallpaper
-MAIN_MENU=$(echo -e "Wallpaper + Wal\nWallpaper Only\nIcons Selector\nChange SDDM Wallpaper" | rofi -dmenu -p "Select Option")
+# Main menu to choose between wallpaper + wal, wallpaper only, icon theme, restart waybar, or change SDDM wallpaper
+MAIN_MENU=$(echo -e "Wallpaper + Wal\nWallpaper Only\nIcons Selector\nRestart Waybar\nChange SDDM Wallpaper" | rofi -dmenu -p "Select Option")
 
 # Run the selected option
 if [ "$MAIN_MENU" == "Wallpaper + Wal" ]; then
@@ -371,6 +387,8 @@ elif [ "$MAIN_MENU" == "Wallpaper Only" ]; then
   change_wallpaper_only
 elif [ "$MAIN_MENU" == "Icons Selector" ]; then
   select_icon_theme
+elif [ "$MAIN_MENU" == "Restart Waybar" ]; then
+  restart_waybar
 elif [ "$MAIN_MENU" == "Change SDDM Wallpaper" ]; then
   change_sddm_wallpaper
 else
