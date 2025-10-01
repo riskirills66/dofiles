@@ -92,6 +92,11 @@ c.url.searchengines = {
     "!apkg": "https://archlinux.org/packages/?sort=&q={}&maintainer=&flagged=",
     "!gh": "https://github.com/search?o=desc&q={}&s=stars",
     "!yt": "https://www.youtube.com/results?search_query={}",
+    "!aur": "https://aur.archlinux.org/packages?K={}",
+    "!shopee": "https://shopee.co.id/search?keyword={}",
+    "!ps": "https://play.google.com/store/search?q={}",
+    "!svg": "https://www.svgrepo.com/vectors/{}",
+    "!wiki": "https://wikipedia.org/wiki/{}",
 }
 
 c.completion.open_categories = [
@@ -197,4 +202,3 @@ c.content.user_stylesheets = []
 #         "https://github.com/uBlockOrigin/uAssets/raw/master/filters/quick-fixes.txt",
 #         "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt",
 #         "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"]
-
