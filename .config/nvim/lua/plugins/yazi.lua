@@ -14,11 +14,6 @@ return {
       desc = "Open yazi at the current file",
     },
     {
-      "<leader>gy",
-      "<cmd>Yazi cwd<cr>",
-      desc = "Open the file manager in nvim's working directory",
-    },
-    {
       "<c-up>",
       "<cmd>Yazi toggle<cr>",
       desc = "Resume the last yazi session",
