@@ -11,6 +11,7 @@ settings:
       Gecko) Chrome/118.0.5993.90 Safari/537.36
   content.javascript.clipboard:
     https://chatgpt.com: access-paste
+    https://cursor.com: access-paste
     https://github.com: access-paste
   content.notifications.enabled:
     https://app.crisp.chat: true
