@@ -12,6 +12,7 @@ settings:
   content.javascript.clipboard:
     https://chatgpt.com: access-paste
     https://claude.ai: access-paste
+    https://cloud.hexaloom.com: access-paste
     https://cursor.com: access-paste
     https://github.com: access-paste
   content.notifications.enabled:

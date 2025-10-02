@@ -38,8 +38,16 @@ return {
         on_open = function(term)
           -- Force resize the window
           vim.cmd("vertical resize 50")
-          vim.cmd("startinsert!")
+          
+          -- Ensure we start in insert mode with a slight delay
+          vim.defer_fn(function()
+            vim.cmd("startinsert!")
+          end, 10)
+          
+          -- Escape to normal mode
           vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<esc>", "<C-\\><C-n>", { noremap = true, silent = true })
+          
+          -- Close terminal
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",
@@ -47,6 +55,12 @@ return {
             "<C-\\><C-n>:close<CR>",
             { noremap = true, silent = true }
           )
+          
+          -- Window navigation directly from terminal mode (return to insert mode after navigation)
+          vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<C-h>", "<C-\\><C-n><C-w>h:startinsert<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<C-j>", "<C-\\><C-n><C-w>j:startinsert<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<C-k>", "<C-\\><C-n><C-w>k:startinsert<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<C-l>", "<C-\\><C-n><C-w>l:startinsert<CR>", { noremap = true, silent = true })
         end,
         on_close = function(term)
           vim.cmd("startinsert!")
