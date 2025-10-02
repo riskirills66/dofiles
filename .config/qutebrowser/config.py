@@ -79,6 +79,16 @@ c.colors.tooltip.bg = colors["background"]
 c.colors.webpage.bg = colors["background"]
 c.hints.border = colors["foreground"]
 
+# Additional hint configuration
+c.hints.chars = "asdfghjkl"
+c.hints.min_chars = 1
+c.hints.auto_follow = "unique-match"
+c.hints.auto_follow_timeout = 0
+c.hints.scatter = True
+c.hints.uppercase = True
+c.hints.mode = "letter"
+c.hints.radius = 0
+
 c.url.start_pages = "https://www.google.com"
 c.url.default_page = "https://www.google.com"
 
@@ -182,6 +192,64 @@ c.content.blocking.enabled = True
 
 # Greasemonkey scripts are automatically enabled when placed in ~/.config/qutebrowser/greasemonkey/
 c.content.user_stylesheets = []
+
+# Hint configuration for better element selection
+c.hints.selectors = {
+    "all": [
+        "a",
+        "area",
+        "textarea",
+        "select",
+        "input:not([type=hidden])",
+        "button",
+        "iframe",
+        "object",
+        "embed",
+        "[onclick]",
+        "[onmousedown]",
+        "[onmouseup]",
+        "[onkeydown]",
+        "[onkeyup]",
+        "[role=button]",
+        "[role=link]",
+        "[role=menuitem]",
+        "[role=tab]",
+        "[role=option]",
+        "[contenteditable]",
+        "[draggable]",
+        "[tabindex]",
+        # Custom selectors for dropdown elements
+        ".c-base-dropdown__button",
+        ".u-has-tooltip",
+        "[class*='dropdown']",
+        "[class*='button']",
+        "[class*='btn']",
+        "[class*='menu']",
+        "[class*='select']",
+    ],
+    "links": [
+        "a[href]",
+        "area[href]",
+        "link[href]",
+        "[role=link][href]",
+    ],
+    "images": [
+        "img",
+        "[role=img]",
+        "[aria-label*='image' i]",
+    ],
+    "media": [
+        "video",
+        "audio",
+        "[role=video]",
+        "[role=audio]",
+    ],
+    "url": [
+        "a[href^='http']",
+        "[data-url]",
+        "[data-href]",
+    ],
+}
 # c.content.blocking.method = 'adblock' # uncomment this if you install python-adblock
 # c.content.blocking.adblock.lists = [
 #         "https://github.com/ewpratten/youtube_ad_blocklist/blob/master/blocklist.txt",
