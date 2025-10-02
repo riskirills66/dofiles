@@ -157,6 +157,10 @@ config.bind(
     "scroll up ;; scroll up ;; scroll up ;; scroll up ;; scroll up ;; scroll up",
 )  # Smooth scroll up 9x
 
+# Tab navigation with Shift+Arrow keys
+config.bind("<Shift+Left>", "tab-prev")  # Navigate to previous tab
+config.bind("<Shift+Right>", "tab-next")  # Navigate to next tab
+
 # Reduce tab and status bar height
 c.statusbar.padding = {"top": 2, "bottom": 2, "left": 4, "right": 4}
 
