@@ -14,7 +14,17 @@ filepath="$output_dir/$filename"
 
 # Use slurp to select which monitor to capture (click anywhere on the monitor)
 monitor=$(slurp -o)
+if [ $? -ne 0 ] || [ -z "$monitor" ]; then
+    # User cancelled or slurp failed, exit silently
+    exit 0
+fi
+
 grim -g "$monitor" "$filepath"
+if [ $? -ne 0 ]; then
+    # grim failed, show error notification
+    notify-send "Screenshot failed" "Failed to capture screenshot"
+    exit 1
+fi
 
 # Copy to clipboard
 wl-copy < "$filepath"
