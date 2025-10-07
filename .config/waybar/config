@@ -18,6 +18,7 @@
         "cpu",
         "temperature",      // CPU temp
         "memory",
+        "battery",
         "tray",
         "custom/separator",
         "clock",
@@ -72,6 +73,17 @@
         "hwmon-path": "/sys/class/hwmon/hwmon1/temp1_input", // Adjust as needed
         "critical-threshold": 80,
         "format": "{temperatureC}°C "
+    },
+    "battery": {
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{capacity}% {icon}",
+        "format-charging": "{capacity}% 󰂄",
+        "format-plugged": "{capacity}% 󰂄",
+        "format-alt": "{time} {icon}",
+        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
     },
     "mpris": {
         "player-icons": true,
