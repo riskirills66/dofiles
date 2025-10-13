@@ -25,14 +25,17 @@
   font-family: "JetBrainsMono Nerd Font Mono";
   font-size: 13px;
   min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 window#waybar {
-  background: transparent;
+  background: @surface;
   color: @text;
-  margin-bottom: 2px;
-  margin-top: 8px;
-  padding-top: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
 }
 
 #clock,
@@ -47,8 +50,8 @@ window#waybar {
 #temperature,
 #custom-gpu_temp,
 #disk {
-  padding: 0 3px;
-  margin: 0 2px;
+  padding: 0 8px;
+  margin: 0;
   background: transparent;
   color: @text;
 }
@@ -63,17 +66,15 @@ window#waybar {
 }
 
 #mpris {
-  padding: 0 3px;
-  margin: 0 2px;
-  background: @surface;
-  border-radius: 8px;
+  padding: 0 8px;
+  margin: 0;
+  background: transparent;
   color: @iris;
-  border: 2px solid @border;
 }
 
 #custom-separator {
-  padding: 0 1px;
-  margin: 0 1px;
+  padding: 0 4px;
+  margin: 0;
   font-size: 10px;
   color: @muted;
   background: transparent;
@@ -162,20 +163,17 @@ window#waybar {
 }
 
 #workspaces {
-  padding: 0px 8px 0px 0px;
+  padding: 0 8px;
   margin: 0;
-  background: @surface;
-  border-radius: 8px;
-  border: 2px solid @border; /* Add border */
+  background: transparent;
 }
 
 #workspaces button {
-  margin: 0 -5px;
-  padding: 4px 4px;
-  background: transparent; /* no background ever */
+  margin: 0;
+  padding: 0 4px;
+  background: transparent;
   color: @subtle;
-  border-radius: 6px;
-  transition: color 0.2s ease; /* only animate color */
+  transition: color 0.2s ease;
 }
 
 #workspaces button:hover {
@@ -196,15 +194,12 @@ window#waybar {
 /* Group styling for sections */
 .modules-left {
   background: transparent;
-  border-radius: 8px;
   padding: 0;
-  margin-left: 8px;
+  margin: 0;
 }
 
 .modules-right {
-  background: @surface;
-  border-radius: 8px;
-  padding: 0 8px;
-  margin-right: 8px;
-  border: 2px solid @border; /* Add border */
+  background: transparent;
+  padding: 0;
+  margin: 0;
 }
