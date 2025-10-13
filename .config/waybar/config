@@ -5,11 +5,11 @@
     // "width": 1366, // Waybar width
     // Choose the order of the modules
     "modules-left": [
-        "ext/workspaces",
+        "hyprland/workspaces",
         "mpris",
     ],
     "modules-center": [
-        "dwl/window",
+        "hyprland/window",
     ],
     "modules-right": [
         "pulseaudio",
@@ -22,7 +22,7 @@
         "custom/separator",
         "clock",
     ],
-    "ext/workspaces": {
+    "hyprland/workspaces": {
       "format": "{icon}",
       "ignore-hidden": true,
       "on-click": "activate",

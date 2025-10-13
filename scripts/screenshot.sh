@@ -1,30 +1,36 @@
 #!/bin/bash
 
-# Hyprshot
+# Grim screenshot tool
 export PATH="$HOME/.local/bin:$PATH"
 
 # Ensure the output directory exists
 output_dir="$HOME/Pictures/Screenshots"
 mkdir -p "$output_dir"
 
-# Define the options for the menu
-options="Screenshot Fullscreen\nScreenshot Window\nScreenshot Region"
+# Generate timestamp for filename
+timestamp=$(date +"%Y%m%d_%H%M%S")
+filename="screenshot_${timestamp}.png"
+filepath="$output_dir/$filename"
 
-# Show the rofi menu and get the selected option
-chosen=$(echo -e "$options" | rofi -dmenu -p "Screenshot")
+# Use slurp to select which monitor to capture (click anywhere on the monitor)
+monitor=$(slurp -o)
+if [ $? -ne 0 ] || [ -z "$monitor" ]; then
+    # User cancelled or slurp failed, exit silently
+    exit 0
+fi
 
-# Check the user's selection and run the corresponding command
-case "$chosen" in
-"Screenshot Fullscreen")
-  hyprshot -m output -o "$output_dir"
-  ;;
-"Screenshot Window")
-  hyprshot -m window -o "$output_dir"
-  ;;
-"Screenshot Region")
-  hyprshot -m region -o "$output_dir"
-  ;;
-*)
-  echo "No valid option selected"
-  ;;
-esac
+grim -g "$monitor" "$filepath"
+if [ $? -ne 0 ]; then
+    # grim failed, show error notification
+    notify-send "Screenshot failed" "Failed to capture screenshot"
+    exit 1
+fi
+
+# Copy to clipboard
+wl-copy < "$filepath"
+
+# Show notification with preview
+notify-send -i "$filepath" "Screenshot saved" "Saved to $filename and copied to clipboard"
+
+# Open swappy for editing
+swappy -f "$filepath"
