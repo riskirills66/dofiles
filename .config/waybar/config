@@ -6,7 +6,6 @@
     // Choose the order of the modules
     "modules-left": [
         "hyprland/workspaces",
-        "mpris",
     ],
     "modules-center": [
         "hyprland/window",
@@ -15,11 +14,8 @@
         "pulseaudio",
         "network",
         "cpu",
-        "temperature",      // CPU temp
         "memory",
         "battery",
-        "tray",
-        "custom/separator",
         "clock",
     ],
     "hyprland/workspaces": {
@@ -48,14 +44,14 @@
     },
     "network": {
         // "interface": "wlp2s0", // (Optional) To force the use of this interface
-        "format-wifi": "{essid} ({signalStrength}%)",
+        "format-wifi": "{essid}",
         "format-ethernet": "{ifname}",
-        "format-disconnected": "Disconnected ⚠"
+        "format-disconnected": "⚠"
     },
     "pulseaudio": {
         //"scroll-step": 1,
-        "format": "{volume}% {icon}",
-        "format-bluetooth": "{volume}% {icon}",
+        "format": "{volume} {icon}",
+        "format-bluetooth": "{volume} {icon}",
         "format-muted": "",
         "format-icons": {
             "headphones": "",
@@ -68,11 +64,6 @@
         },
         "on-click": "pavucontrol"
     },
-    "temperature": {
-        "hwmon-path": "/sys/class/hwmon/hwmon1/temp1_input", // Adjust as needed
-        "critical-threshold": 80,
-        "format": "{temperatureC}°C "
-    },
     "battery": {
         "states": {
             "warning": 30,
@@ -83,16 +74,5 @@
         "format-plugged": "{capacity}% 󰂄",
         "format-alt": "{time} {icon}",
         "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
-    },
-    "mpris": {
-        "player-icons": true,
-        "format": "{player_icon} {title} - {artist}",
-        "max-length": 35,
-        "on-click": "playerctl play-pause"
-    },
-    "custom/separator": {
-        "format": "|",
-        "interval": "once",
-        "tooltip": false
     }
 }
