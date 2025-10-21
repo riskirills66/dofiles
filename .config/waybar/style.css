@@ -35,6 +35,7 @@ window#waybar {
   margin: 0;
   padding: 0;
   border: none;
+  border-bottom: 1px solid @rose;
   box-shadow: none;
 }
 
