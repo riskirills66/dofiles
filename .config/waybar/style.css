@@ -23,7 +23,7 @@
   border: none;
   border-radius: 0;
   font-family: "JetBrainsMono Nerd Font Mono";
-  font-size: 13px;
+  font-size: 11px;
   min-height: 0;
   margin: 0;
   padding: 0;
@@ -164,7 +164,7 @@ window#waybar {
 }
 
 #workspaces {
-  padding: 0 8px;
+  padding: 0 2px;
   margin: 0;
   background: transparent;
 }
