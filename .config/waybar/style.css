@@ -30,7 +30,7 @@
 }
 
 window#waybar {
-  background: rgba(0, 0, 0, 0);
+  background: rgba(25, 23, 36, 255);
   color: @text;
   margin: 0;
   padding: 0;
