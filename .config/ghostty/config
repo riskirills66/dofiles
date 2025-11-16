@@ -1,4 +1,4 @@
-background-opacity = 1
+background-opacity = 0.7
 window-decoration = false
 theme = Rose Pine
 confirm-close-surface = false
@@ -9,7 +9,7 @@ font-family-italic = auto
 font-family-bold-italic = auto
 
 # Font rendering settings for smoother text
-font-size = 9
+font-size = 11
 
 # Font thickness for better rendering
 font-thicken = true
