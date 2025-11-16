@@ -35,7 +35,7 @@ window#waybar {
   margin: 0;
   padding: 0;
   border: none;
-  /* border-bottom: 1px solid @rose; */
+  border-bottom: 2px solid @rose;
   box-shadow: none;
   text-shadow:
     2px 2px 0px rgba(0, 0, 0, 1),
