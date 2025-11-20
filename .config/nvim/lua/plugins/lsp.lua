@@ -154,15 +154,14 @@ return {
       vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
 
       if opts.capabilities then
+        opts.capabilities = require("blink.cmp").get_lsp_capabilities(opts.capabilities)
         vim.lsp.config("*", { capabilities = opts.capabilities })
       end
 
       -- get all the servers that are available through mason-lspconfig
       -- FIXED: Use the correct API for newer mason-lspconfig versions
       local have_mason = LazyVim.has("mason-lspconfig.nvim")
-      local mason_all = have_mason
-          and vim.tbl_keys(require("mason-lspconfig").get_mappings().lspconfig_to_mason)
-        or {} --[[ @as string[] ]]
+      local mason_all = have_mason and vim.tbl_keys(require("mason-lspconfig").get_mappings().lspconfig_to_mason) or {} --[[ @as string[] ]]
       local mason_exclude = {} ---@type string[]
 
       ---@return boolean? exclude automatic setup
