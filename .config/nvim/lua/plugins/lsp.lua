@@ -104,11 +104,11 @@ return {
       LazyVim.format.register(LazyVim.lsp.formatter())
 
       -- setup keymaps
-      LazyVim.lsp.on_dynamic_capability(require("lazyvim.plugins.lsp.keymaps").on_attach)
+      Snacks.util.lsp.on(require("lazyvim.plugins.lsp.keymaps").on_attach)
 
       -- inlay hints
       if opts.inlay_hints.enabled then
-        LazyVim.lsp.on_supports_method("textDocument/inlayHint", function(client, buffer)
+        Snacks.util.lsp.on({ method = "textDocument/inlayHint" }, function(buffer, client)
           if
             vim.api.nvim_buf_is_valid(buffer)
             and vim.bo[buffer].buftype == ""
@@ -121,7 +121,7 @@ return {
 
       -- folds
       if opts.folds.enabled then
-        LazyVim.lsp.on_supports_method("textDocument/foldingRange", function(client, buffer)
+        Snacks.util.lsp.on({ method = "textDocument/foldingRange" }, function(buffer, client)
           if LazyVim.set_default("foldmethod", "expr") then
             LazyVim.set_default("foldexpr", "v:lua.vim.lsp.foldexpr()")
           end
@@ -130,7 +130,7 @@ return {
 
       -- code lens
       if opts.codelens.enabled and vim.lsp.codelens then
-        LazyVim.lsp.on_supports_method("textDocument/codeLens", function(client, buffer)
+        Snacks.util.lsp.on({ method = "textDocument/codeLens" }, function(buffer, client)
           vim.lsp.codelens.refresh()
           vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
             buffer = buffer,
