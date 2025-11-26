@@ -31,7 +31,7 @@ return {
 
       -- Create a dedicated cursor-agent terminal
       local cursor_agent_term = Terminal:new({
-        cmd = "cursor-agent",
+        cmd = "droid",
         hidden = true,
         direction = "vertical",
         auto_scroll = true,

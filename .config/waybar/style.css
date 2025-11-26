@@ -171,10 +171,13 @@ window#waybar {
 
 #workspaces button {
   margin: 0;
-  padding: 0 4px;
+  padding: 0 8px;
   background: transparent;
   color: @subtle;
   transition: color 0.2s ease;
+  text-shadow:
+    2px 2px 0px rgba(0, 0, 0, 1),
+    /* strong crisp shadow */ 3px 3px 2px rgba(0, 0, 0, 0.8); /* softer second layer */
 }
 
 #workspaces button:hover {
