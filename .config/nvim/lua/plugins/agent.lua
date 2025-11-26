@@ -33,19 +33,14 @@ return {
       local cursor_agent_term = Terminal:new({
         cmd = "droid",
         hidden = true,
-        direction = "vertical",
+        direction = "float",
         auto_scroll = true,
         on_open = function(term)
-          -- Force resize the window
-          vim.cmd("vertical resize 50")
 
           -- Ensure we start in insert mode with a slight delay
           vim.defer_fn(function()
             vim.cmd("startinsert!")
           end, 10)
-
-          -- Escape to normal mode
-          vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<esc>", "<C-\\><C-n>", { noremap = true, silent = true })
 
           -- Close terminal
           vim.api.nvim_buf_set_keymap(
