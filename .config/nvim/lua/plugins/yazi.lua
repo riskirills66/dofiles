@@ -13,11 +13,6 @@ return {
       "<cmd>Yazi<cr>",
       desc = "Open yazi at the current file",
     },
-    {
-      "<c-up>",
-      "<cmd>Yazi toggle<cr>",
-      desc = "Resume the last yazi session",
-    },
   },
   opts = {
     open_for_directories = false,
