@@ -1,19 +1,21 @@
 return {
   "nvimdev/dashboard-nvim",
-  lazy = false, -- As https://github.com/nvimdev/dashboard-nvim/pull/450, dashboard-nvim shouldn't be lazy-loaded to properly handle stdin.
+  lazy = false,
   opts = function()
-    -- NEOVIM ASCII art header
     local header = {
       "",
       "",
       "",
       "",
-      "████████    ██████████  ██████████  ██      ██  ██  ████████",
-      " ██      ██  ██      ██  ██      ██  ██      ██  ██  ██  ██  ██",
-      " ██      ██  ██████████  ██      ██   ██    ██   ██  ██  ██  ██",
-      " ██░░░░░░██  ██░░░░░░░░  ██░░░░░░██    ██░░██    ██  ██░░██░░██",
-      " ██░░░░░░██  ██████████  ██████████     ████     ██  ██░░██░░██",
       "",
+      "██████   █████                                ███                 ",
+      "░░██████ ░░███                                ░░░                  ",
+      " ░███░███ ░███   ██████   ██████  █████ █████ ████  █████████████  ",
+      " ░███░░███░███  ███░░███ ███░░███░░███ ░░███ ░░███ ░░███░░███░░███ ",
+      " ░███ ░░██████ ░███████ ░███ ░███ ░███  ░███  ░███  ░███ ░███ ░███ ",
+      " ░███  ░░█████ ░███░░░  ░███ ░███ ░░███ ███   ░███  ░███ ░███ ░███ ",
+      " █████  ░░█████░░██████ ░░██████   ░░█████    █████ █████░███ █████",
+      "░░░░░    ░░░░░  ░░░░░░   ░░░░░░     ░░░░░    ░░░░░ ░░░░░ ░░░ ░░░░░ ",
       "",
       "",
     }
@@ -21,8 +23,6 @@ return {
     local opts = {
       theme = "doom",
       hide = {
-        -- this is taken care of by lualine
-        -- enabling this messes up the actual laststatus setting after loading a file
         statusline = false,
       },
       config = {
@@ -30,7 +30,6 @@ return {
         -- stylua: ignore
         center = {
           { action = 'lua LazyVim.pick()()',                           desc = " Find File",       icon = " ", key = "f" },
-          { action = function() vim.api.nvim_input("<cmd>Yazi<cr>") end, desc = " Yazi",            icon = " ", key = "y" },
           { action = "ene | startinsert",                              desc = " New File",        icon = " ", key = "n" },
           { action = 'lua LazyVim.pick("oldfiles")()',                 desc = " Recent Files",    icon = " ", key = "r" },
           { action = 'lua LazyVim.pick("live_grep")()',                desc = " Find Text",       icon = " ", key = "g" },
@@ -53,7 +52,6 @@ return {
       button.key_format = "  %s"
     end
 
-    -- open dashboard after closing lazy
     if vim.o.filetype == "lazy" then
       vim.api.nvim_create_autocmd("WinClosed", {
         pattern = tostring(vim.api.nvim_get_current_win()),
