@@ -25,7 +25,7 @@ EOF
 chmod +x "$TEMP_SCRIPT"
 
 # Open the terminal and run the temporary script
-kitty -e "$TEMP_SCRIPT"
+alacritty -e "$TEMP_SCRIPT"
 
 # Clean up the temporary script after a short delay
 (sleep 2 && rm -f "$TEMP_SCRIPT") &
