@@ -560,6 +560,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         const poin = calculatePoin(saldo);
 
         const url = `${apiBase}/submit?kode=${kode}&nama=${nama}&saldo=${saldo}&poin=${poin}`;
+        console.log("Submit clicked, URL:", url);
         submitPoinBtn.disabled = true;
         submitPoinBtn.innerText = "⏳";
 
