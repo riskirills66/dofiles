@@ -1,88 +1,51 @@
-@import url('file:///home/riskirills/.cache/wal/colors-waybar.css');
-
 * {
-    font-family: "Fira Sans Semibold", FontAwesome, Roboto, Helvetica, Arial, sans-serif;
     background-image: none;
-    transition: 20ms;
-    box-shadow: none;
+    font-family: "JetBrainsMono Nerd Font", monospace;
 }
 
 window {
-    background: url("file:///home/riskirills/nostalgia.jpg");
-    background-size: cover;
-    font-size: 16pt;
-    color: @foreground;
+    background-color: rgba(12, 12, 12, 0.9);
 }
 
 button {
+    color: #FFFFFF;
+    background-color: #1e1e2e;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #45475a;
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 20%;
-    background-color: rgba(200, 220, 255, 0);
-    color: #FFFFFF;
-    animation: gradient_f 20s ease-in infinite;
-    border-radius: 80px;
-    border: 0px;
-    transition: all 0.3s cubic-bezier(.55, 0.0, .28, 1.682), box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+    background-size: 25%;
+    border-radius: 12px;
+    margin: 10px;
 }
 
-button:focus {
-    background-size: 22%;
-    border: 0px;
+button:focus, button:active, button:hover {
+    background-color: #313244;
+    border-color: #89b4fa;
+    outline-style: none;
 }
-
-button:hover {
-    background-color: @color4;
-    opacity: 0.8;
-    color: #FFFFFF;
-    background-size: 30%;
-    margin: 30px;
-    border-radius: 80px;
-    box-shadow: 0 0 50px @background;
-}
-
-button span {
-    font-size: 1.2em;
-}
-
-/* 
------------------------------------------------------ 
-Buttons
------------------------------------------------------ 
-*/
 
 #lock {
-    margin: 10px;
-    border-radius: 20px;
-    background-image: image(url("icons/lock.png"));
+    background-image: image(url("/usr/share/wlogout/icons/lock.png"));
 }
 
 #logout {
-    margin: 10px;
-    border-radius: 20px;
-    background-image: image(url("icons/logout.png"));
+    background-image: image(url("/usr/share/wlogout/icons/logout.png"));
 }
 
 #suspend {
-    margin: 10px;
-    border-radius: 20px;
-    background-image: image(url("icons/suspend.png"));
+    background-image: image(url("/usr/share/wlogout/icons/suspend.png"));
 }
 
 #hibernate {
-    margin: 10px;
-    border-radius: 20px;
-    background-image: image(url("icons/hibernate.png"));
+    background-image: image(url("/usr/share/wlogout/icons/hibernate.png"));
 }
 
 #shutdown {
-    margin: 10px;
-    border-radius: 20px;
-    background-image: image(url("icons/shutdown.png"));
+    background-image: image(url("/usr/share/wlogout/icons/shutdown.png"));
 }
 
 #reboot {
-    margin: 10px;
-    border-radius: 20px;
-    background-image: image(url("icons/reboot.png"));
+    background-image: image(url("/usr/share/wlogout/icons/reboot.png"));
 }
