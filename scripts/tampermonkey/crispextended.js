@@ -223,7 +223,7 @@
         tr.appendChild(td);
       });
 
-      // Report button
+      // Report button - Forward to Telegram via module
       const reportButton = document.createElement("button");
       reportButton.innerText = "🚩";
       reportButton.style.cssText = `
@@ -235,38 +235,25 @@
                 width: 100%;
             `;
       reportButton.onclick = () => {
-        // Copy formatted text to clipboard with custom status
-        const formattedText = `📅 Tanggal: ${formatDate(row.tgl_entri) || ""}.
-📦 Kode: ${row.kode_produk || ""}.
-📱 Tujuan: ${row.tujuan || ""}.
-🔢 Ref: ${row.sn || ""}.
-👤 Reseller: ${row.kode_reseller || ""} - ${row.nama_reseller || ""}.
-💰 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
-⚠️ Status: Dalam pengecekan lebih lanjut`;
+        const module = row.kode_modul_label || "";
+        const message = `${formatDate(row.tgl_entri) || ""} ${row.tujuan || ""} ${row.sn || ""} ${row.status || ""} bantu cek, kak`;
         
-        navigator.clipboard
-          .writeText(formattedText)
-          .then(() => {
-            console.log("Report copied to clipboard");
-          })
-          .catch((error) => console.error("Error copying report:", error));
-
-        // Send to Telegram (original functionality)
-        const message = `${formatDate(
-          row.tgl_entri || ""
-        )} %20${encodeURIComponent(row.tujuan || "")} %20${encodeURIComponent(
-          row.sn || ""
-        )} %20${encodeURIComponent(row.status || "")} %20${encodeURIComponent(
-          row.kode_reseller || ""
-        )} %20${encodeURIComponent(row.nama_reseller || "")} %20${encodeURIComponent(row.kode_modul_label || "")}`;
+        reportButton.innerText = "⏳";
         GM_xmlhttpRequest({
           method: "GET",
-          url: `${tgApi}/send?message=${message}`,
+          url: `${apiBase}/forward?module=${encodeURIComponent(module)}&message=${encodeURIComponent(message)}`,
           onload: function (response) {
-            console.log("Report sent successfully");
+            reportButton.innerText = "✅";
+            setTimeout(() => {
+              reportButton.innerText = "🚩";
+            }, 2000);
           },
           onerror: function (error) {
-            console.error("Error sending report:", error);
+            console.error("Error forwarding:", error);
+            reportButton.innerText = "❌";
+            setTimeout(() => {
+              reportButton.innerText = "🚩";
+            }, 2000);
           },
         });
       };
