@@ -223,7 +223,7 @@
         tr.appendChild(td);
       });
 
-      // Report button - Forward to Telegram via module
+      // Report button - Forward to Telegram via module and copy to clipboard
       const reportButton = document.createElement("button");
       reportButton.innerText = "🚩";
       reportButton.style.cssText = `
@@ -235,6 +235,20 @@
                 width: 100%;
             `;
       reportButton.onclick = () => {
+        // Copy formatted text to clipboard
+        const formattedText = `📅 Tanggal: ${formatDate(row.tgl_entri) || ""}.
+📦 Kode: ${row.kode_produk || ""}.
+📱 Tujuan: ${row.tujuan || ""}.
+🔢 Ref: ${row.sn || ""}.
+👤 Reseller: ${row.kode_reseller || ""} - ${row.nama_reseller || ""}.
+💰 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
+⚠️ Status: Dalam pengecekan lebih lanjut`;
+        
+        navigator.clipboard
+          .writeText(formattedText)
+          .catch((error) => console.error("Error copying report:", error));
+
+        // Forward to Telegram
         const module = row.kode_modul_label || "";
         const message = `${formatDate(row.tgl_entri) || ""} ${row.tujuan || ""} ${row.sn || ""} ${row.status || ""} bantu cek, kak`;
         
