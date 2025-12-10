@@ -1,6 +1,7 @@
 {
     "layer": "top", // Waybar at top layer
     "position": "top", // Waybar at the bottom of your screen
+    "height": 24, // Fixed height to prevent resizing from different fonts
     // "width": 1366, // Waybar width
     // Choose the order of the modules
     "modules-left": [
