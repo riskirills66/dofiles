@@ -8,7 +8,7 @@
         "hyprland/workspaces",
     ],
     "modules-center": [
-        "hyprland/window",
+        "clock",
     ],
     "modules-right": [
         "pulseaudio",
@@ -16,7 +16,6 @@
         "cpu",
         "memory",
         "battery",
-        "clock",
     ],
     "hyprland/workspaces": {
       "format": "{icon}",
@@ -29,7 +28,7 @@
         "spacing": 10
     },
     "clock": {
-        "format": "{:%d-%m-%Y %H:%M}",
+        "format": "{:%A, %d-%m-%Y %H:%M}",
         "tooltip": true,
         "tooltip-format": "<tt><small>{calendar}</small></tt>"
     },

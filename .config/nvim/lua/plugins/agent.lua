@@ -33,7 +33,7 @@ return {
 
       -- Create a dedicated cursor-agent terminal
       local cursor_agent_term = Terminal:new({
-        cmd = "droid",
+        cmd = "kiro-cli",
         hidden = true,
         direction = "float",
         auto_scroll = true,
