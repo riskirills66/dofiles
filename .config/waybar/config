@@ -28,7 +28,7 @@
         "spacing": 10
     },
     "clock": {
-        "format": "{:%A, %d-%m-%Y %H:%M}",
+        "format": "{:%A, %H:%M - %d-%m-%Y}",
         "tooltip": true,
         "tooltip-format": "<tt><small>{calendar}</small></tt>"
     },
