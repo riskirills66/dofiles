@@ -4,7 +4,7 @@
     b-color: #ebbcba;
     fg-color: #ebbcba;
     fgp-color: #5c5a6f;
-    b-radius: 0px;
+    b-radius: 15px;
     g-padding: 8px;
     hl-color: #ebbcba;
     hlt-color: #090B0E;
@@ -13,6 +13,7 @@
     w-border: 1px solid;
     w-border-color: #ebbcba;
     w-padding: 12px;
+    muted-color: #6E6A86;
 }
 
 configuration {
@@ -50,7 +51,7 @@ window {
     border-radius: @b-radius;
     background-color: #191724;
     border: @w-border;
-    border-color: @w-border-color;
+    border-color: @muted-color;
     padding: @w-padding;
 }
 
