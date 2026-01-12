@@ -5,6 +5,7 @@ killall waybar
 killall hyprpaper
 killall swaybg
 killall dunst
+killall quickshell
 
 # Wait a moment for processes to terminate
 sleep 1
@@ -13,6 +14,7 @@ sleep 1
 waybar &
 hyprpaper &
 dunst &
+quickshell &
 
 # Find and use the nostalgia image
 if [ -f ~/nostalgia.jpg ]; then
