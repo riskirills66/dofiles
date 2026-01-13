@@ -113,19 +113,30 @@ ShellRoot {
                 intersection: Intersection.Xor
             }
 
-            // Frame with rounded inner corners using mask
-            Rectangle {
-                id: frame
+            // Frame container with shadow - shadow is cast by the frame shape
+            Item {
                 anchors.fill: parent
-                color: Qt.rgba(25/255, 23/255, 36/255, 0.7)
-
                 layer.enabled: true
                 layer.effect: MultiEffect {
-                    maskSource: innerMask
-                    maskEnabled: true
-                    maskInverted: true
-                    maskThresholdMin: 0.5
-                    maskSpreadAtMin: 1
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.8)
+                    blurMax: 30
+                }
+
+                // Frame with rounded inner corners using mask
+                Rectangle {
+                    id: frame
+                    anchors.fill: parent
+                    color: root.baseColor
+
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        maskSource: innerMask
+                        maskEnabled: true
+                        maskInverted: true
+                        maskThresholdMin: 0.5
+                        maskSpreadAtMin: 1
+                    }
                 }
             }
 
@@ -147,29 +158,6 @@ ShellRoot {
                 }
             }
 
-            // Inner border (1px) with centered drop shadow
-            Rectangle {
-                anchors.fill: parent
-                anchors.topMargin: root.barHeight - 1
-                anchors.leftMargin: root.borderThickness - 1
-                anchors.rightMargin: root.borderThickness - 1
-                anchors.bottomMargin: root.borderThickness - 1
-                radius: root.cornerRadius
-                color: "transparent"
-                border.width: 1
-                border.color: "#6E6A86"
-
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: Qt.rgba(0, 0, 0, 0.5)
-                    shadowBlur: 0.8
-                    shadowHorizontalOffset: 0
-                    shadowVerticalOffset: 0
-                    shadowScale: 1.02
-                }
-            }
-
             // Top bar content
             Item {
                 id: barContent
@@ -186,7 +174,7 @@ ShellRoot {
                     height: 24
                     width: workspacesRow.width + 10
                     radius: 12
-                    color: Qt.rgba(255/255, 255/255, 255/255, 0.1)
+                    color: Qt.rgba(255/255, 255/255, 255/255, 0.15)
 
                     RowLayout {
                         id: workspacesRow
@@ -280,8 +268,8 @@ ShellRoot {
                         width: calendarText.width + 24
                         height: calendarText.height + 16
                         radius: 8
-                        color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
-                        border.width: 1
+                        color: root.baseColor
+                        border.width: 0
                         border.color: root.mutedColor
 
                         property string calendarOutput: ""
@@ -464,8 +452,8 @@ ShellRoot {
                             width: volumePopupText.width + 16
                             height: volumePopupText.height + 8
                             radius: 6
-                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
-                            border.width: 1
+                            color: root.baseColor
+                            border.width: 0
                             border.color: root.mutedColor
 
                             Text {
@@ -560,8 +548,8 @@ ShellRoot {
                             width: networkPopupText.width + 16
                             height: networkPopupText.height + 8
                             radius: 6
-                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
-                            border.width: 1
+                            color: root.baseColor
+                            border.width: 0
                             border.color: root.mutedColor
 
                             Text {
@@ -632,8 +620,8 @@ ShellRoot {
                             width: cpuPopupText.width + 16
                             height: cpuPopupText.height + 8
                             radius: 6
-                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
-                            border.width: 1
+                            color: root.baseColor
+                            border.width: 0
                             border.color: root.mutedColor
 
                             Text {
@@ -704,8 +692,8 @@ ShellRoot {
                             width: memPopupText.width + 16
                             height: memPopupText.height + 8
                             radius: 6
-                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
-                            border.width: 1
+                            color: root.baseColor
+                            border.width: 0
                             border.color: root.mutedColor
 
                             Text {
@@ -828,8 +816,8 @@ ShellRoot {
                             width: batteryPopupText.width + 16
                             height: batteryPopupText.height + 8
                             radius: 6
-                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
-                            border.width: 1
+                            color: root.baseColor
+                            border.width: 0
                             border.color: root.mutedColor
 
                             Text {
