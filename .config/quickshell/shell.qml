@@ -1,7 +1,9 @@
+//@ pragma UseQApplication
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
@@ -24,7 +26,7 @@ ShellRoot {
     readonly property int borderThickness: 8
     readonly property int cornerRadius: 16
     readonly property int barHeight: 32
-    readonly property int fontSize: 13
+    readonly property int fontSize: 20
 
     // Exclusion zones to push windows away from the frame
     Variants {
@@ -227,32 +229,97 @@ ShellRoot {
                 }
 
                 // Center: Clock (absolutely centered)
-                Text {
-                    id: clock
+                Item {
+                    id: clockContainer
                     anchors.centerIn: parent
-                    color: root.textColor
-                    font.family: "JetBrainsMono Nerd Font Mono"
-                    font.pixelSize: root.fontSize
-                    font.bold: true
-                    property string time: ""
+                    width: clock.width
+                    height: clock.height
 
-                    Process {
-                        id: clockProcess
-                        command: ["date", "+%A, %H:%M - %d-%m-%Y"]
-                        running: true
-                        stdout: SplitParser {
-                            onRead: data => clock.time = data
+                    Text {
+                        id: clock
+                        anchors.centerIn: parent
+                        color: root.textColor
+                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.pixelSize: 13
+                        font.bold: true
+                        property string time: ""
+
+                        Process {
+                            id: clockProcess
+                            command: ["date", "+%A, %H:%M - %d-%m-%Y"]
+                            running: true
+                            stdout: SplitParser {
+                                onRead: data => clock.time = data
+                            }
+                        }
+
+                        Timer {
+                            interval: 1000
+                            running: true
+                            repeat: true
+                            onTriggered: clockProcess.running = true
+                        }
+
+                        text: time
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: calendarPopup.visible = true
+                        onExited: calendarPopup.visible = false
+                    }
+
+                    // Calendar popup on hover
+                    Rectangle {
+                        id: calendarPopup
+                        visible: false
+                        anchors.top: parent.bottom
+                        anchors.topMargin: 8
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: calendarText.width + 24
+                        height: calendarText.height + 16
+                        radius: 8
+                        color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                        border.width: 1
+                        border.color: root.mutedColor
+
+                        property string calendarOutput: ""
+
+                        Process {
+                            id: calendarProcess
+                            command: ["cal"]
+                            running: true
+                            stdout: SplitParser {
+                                splitMarker: ""
+                                onRead: data => calendarPopup.calendarOutput = data
+                            }
+                        }
+
+                        Timer {
+                            interval: 60000
+                            running: true
+                            repeat: true
+                            onTriggered: calendarProcess.running = true
+                        }
+
+                        Text {
+                            id: calendarText
+                            anchors.centerIn: parent
+                            text: calendarPopup.calendarOutput
+                            color: root.textColor
+                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.pixelSize: 11
+                            lineHeight: 1.2
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: calendarPopup.visible = true
+                            onExited: calendarPopup.visible = false
                         }
                     }
-
-                    Timer {
-                        interval: 1000
-                        running: true
-                        repeat: true
-                        onTriggered: clockProcess.running = true
-                    }
-
-                    text: time
                 }
 
                 // Right: System info
@@ -262,16 +329,78 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 0
 
-                    Text {
-                        id: volumeText
-                        color: root.goldColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
-                        font.pixelSize: root.fontSize
-                        leftPadding: 8
-                        rightPadding: 8
-                        verticalAlignment: Text.AlignVCenter
+                    // System Tray
+                    RowLayout {
+                        spacing: 8
+
+                        Repeater {
+                            model: SystemTray.items
+
+                            Item {
+                                id: trayItemContainer
+                                required property var modelData
+                                width: 24
+                                height: 24
+
+                                Image {
+                                    id: trayIcon
+                                    anchors.centerIn: parent
+                                    width: 14
+                                    height: 14
+                                    source: modelData.icon
+                                    sourceSize.width: 14
+                                    sourceSize.height: 14
+                                    fillMode: Image.PreserveAspectFit
+                                    visible: false
+                                }
+
+                                MultiEffect {
+                                    anchors.centerIn: parent
+                                    width: 14
+                                    height: 14
+                                    source: trayIcon
+                                    saturation: -1.0
+                                    brightness: 0.1
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: mouse => {
+                                        if (modelData.hasMenu) {
+                                            var pos = trayItemContainer.mapToItem(null, 0, 0)
+                                            modelData.display(win, pos.x, root.barHeight)
+                                        } else if (mouse.button === Qt.LeftButton) {
+                                            modelData.activate()
+                                        } else {
+                                            modelData.secondaryActivate()
+                                        }
+                                    }
+                                    onWheel: wheel => {
+                                        modelData.scroll(wheel.angleDelta.y / 120, false)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: root.mutedColor
+                        visible: SystemTray.items.count > 0
+                        Layout.leftMargin: 16
+                        Layout.rightMargin: 16
+                    }
+
+                    Item {
+                        id: volumeContainer
+                        width: volumeText.width
                         height: root.barHeight
-                        property string volume: ""
+
+                        property int volumeLevel: 0
                         property bool muted: false
 
                         Process {
@@ -279,7 +408,7 @@ ShellRoot {
                             command: ["sh", "-c", "pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\\d+%' | head -1"]
                             running: true
                             stdout: SplitParser {
-                                onRead: data => volumeText.volume = data.trim()
+                                onRead: data => volumeContainer.volumeLevel = parseInt(data.trim()) || 0
                             }
                         }
 
@@ -288,7 +417,7 @@ ShellRoot {
                             command: ["sh", "-c", "pactl get-sink-mute @DEFAULT_SINK@ | grep -oP 'yes|no'"]
                             running: true
                             stdout: SplitParser {
-                                onRead: data => volumeText.muted = data.trim() === "yes"
+                                onRead: data => volumeContainer.muted = data.trim() === "yes"
                             }
                         }
 
@@ -302,29 +431,88 @@ ShellRoot {
                             }
                         }
 
-                        text: (muted ? "󰝟 " : "󰕾 ") + volume
+                        Text {
+                            id: volumeText
+                            anchors.centerIn: parent
+                            color: root.textColor
+                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.pixelSize: root.fontSize
+                            leftPadding: 8
+                            rightPadding: 8
+
+                            text: getVolumeIcon()
+
+                            function getVolumeIcon() {
+                                if (volumeContainer.muted || volumeContainer.volumeLevel === 0) return "󰖁"
+                                return "󰕾"
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: volumePopup.visible = true
+                            onExited: volumePopup.visible = false
+                        }
+
+                        Rectangle {
+                            id: volumePopup
+                            visible: false
+                            anchors.top: parent.bottom
+                            anchors.topMargin: 4
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: volumePopupText.width + 16
+                            height: volumePopupText.height + 8
+                            radius: 6
+                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                            border.width: 1
+                            border.color: root.mutedColor
+
+                            Text {
+                                id: volumePopupText
+                                anchors.centerIn: parent
+                                text: volumeContainer.muted ? "Muted" : volumeContainer.volumeLevel + "%"
+                                color: root.textColor
+                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.pixelSize: 11
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: volumePopup.visible = true
+                                onExited: volumePopup.visible = false
+                            }
+                        }
                     }
 
-                    Text {
-                        id: networkText
-                        color: root.pineColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
-                        font.pixelSize: root.fontSize
-                        leftPadding: 8
-                        rightPadding: 8
-                        verticalAlignment: Text.AlignVCenter
+                    Item {
+                        id: networkContainer
+                        width: networkText.width
                         height: root.barHeight
+
                         property string network: ""
                         property bool connected: false
+                        property string connType: "none"
 
                         Process {
                             id: networkProcess
-                            command: ["sh", "-c", "nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes' | cut -d: -f2 || nmcli -t -f TYPE,STATE dev | grep -q 'ethernet:connected' && echo 'Ethernet'"]
+                            command: ["sh", "-c", "ip -o link show up | grep -E 'state UP|state UNKNOWN' | grep -vE 'lo:|docker|br-|veth|flannel' | head -1 | awk -F': ' '{print $2}'"]
                             running: true
                             stdout: SplitParser {
                                 onRead: data => {
-                                    networkText.network = data.trim()
-                                    networkText.connected = data.trim().length > 0
+                                    var iface = data.trim()
+                                    if (iface.length > 0) {
+                                        networkContainer.network = iface
+                                        networkContainer.connected = true
+                                        if (iface.startsWith("wl")) networkContainer.connType = "wifi"
+                                        else if (iface.startsWith("en") || iface.startsWith("eth")) networkContainer.connType = "ethernet"
+                                        else if (iface.startsWith("tun") || iface.startsWith("tailscale")) networkContainer.connType = "vpn"
+                                        else networkContainer.connType = "other"
+                                    } else {
+                                        networkContainer.connected = false
+                                        networkContainer.connType = "none"
+                                    }
                                 }
                             }
                         }
@@ -336,26 +524,77 @@ ShellRoot {
                             onTriggered: networkProcess.running = true
                         }
 
-                        text: connected ? "󰤨 " + network : "󰤭 "
+                        Text {
+                            id: networkText
+                            anchors.centerIn: parent
+                            color: root.textColor
+                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.pixelSize: root.fontSize
+                            leftPadding: 8
+                            rightPadding: 8
+
+                            text: getNetworkIcon()
+
+                            function getNetworkIcon() {
+                                if (!networkContainer.connected) return "󰤭"
+                                if (networkContainer.connType === "wifi") return "󰤨"
+                                if (networkContainer.connType === "ethernet") return "󰈀"
+                                if (networkContainer.connType === "vpn") return "󰦝"
+                                return "󰛳"
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: networkPopup.visible = true
+                            onExited: networkPopup.visible = false
+                        }
+
+                        Rectangle {
+                            id: networkPopup
+                            visible: false
+                            anchors.top: parent.bottom
+                            anchors.topMargin: 4
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: networkPopupText.width + 16
+                            height: networkPopupText.height + 8
+                            radius: 6
+                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                            border.width: 1
+                            border.color: root.mutedColor
+
+                            Text {
+                                id: networkPopupText
+                                anchors.centerIn: parent
+                                text: networkContainer.connected ? networkContainer.network : "Disconnected"
+                                color: root.textColor
+                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.pixelSize: 11
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: networkPopup.visible = true
+                                onExited: networkPopup.visible = false
+                            }
+                        }
                     }
 
-                    Text {
-                        id: cpuText
-                        color: root.foamColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
-                        font.pixelSize: root.fontSize
-                        leftPadding: 8
-                        rightPadding: 8
-                        verticalAlignment: Text.AlignVCenter
+                    Item {
+                        id: cpuContainer
+                        width: cpuText.width
                         height: root.barHeight
-                        property string cpu: ""
+
+                        property int cpuLevel: 0
 
                         Process {
                             id: cpuProcess
                             command: ["sh", "-c", "top -bn1 | grep 'Cpu(s)' | awk '{print int($2)}'"]
                             running: true
                             stdout: SplitParser {
-                                onRead: data => cpuText.cpu = data.trim()
+                                onRead: data => cpuContainer.cpuLevel = parseInt(data.trim()) || 0
                             }
                         }
 
@@ -366,26 +605,68 @@ ShellRoot {
                             onTriggered: cpuProcess.running = true
                         }
 
-                        text: " " + cpu + "%"
+                        Text {
+                            id: cpuText
+                            anchors.centerIn: parent
+                            color: root.textColor
+                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.pixelSize: root.fontSize
+                            leftPadding: 8
+                            rightPadding: 8
+                            text: "󰻠"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: cpuPopup.visible = true
+                            onExited: cpuPopup.visible = false
+                        }
+
+                        Rectangle {
+                            id: cpuPopup
+                            visible: false
+                            anchors.top: parent.bottom
+                            anchors.topMargin: 4
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: cpuPopupText.width + 16
+                            height: cpuPopupText.height + 8
+                            radius: 6
+                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                            border.width: 1
+                            border.color: root.mutedColor
+
+                            Text {
+                                id: cpuPopupText
+                                anchors.centerIn: parent
+                                text: cpuContainer.cpuLevel + "%"
+                                color: root.textColor
+                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.pixelSize: 11
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: cpuPopup.visible = true
+                                onExited: cpuPopup.visible = false
+                            }
+                        }
                     }
 
-                    Text {
-                        id: memText
-                        color: root.irisColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
-                        font.pixelSize: root.fontSize
-                        leftPadding: 8
-                        rightPadding: 8
-                        verticalAlignment: Text.AlignVCenter
+                    Item {
+                        id: memContainer
+                        width: memText.width
                         height: root.barHeight
-                        property string mem: ""
+
+                        property int memLevel: 0
 
                         Process {
                             id: memProcess
                             command: ["sh", "-c", "free | awk '/Mem:/ {printf \"%.0f\", $3/$2 * 100}'"]
                             running: true
                             stdout: SplitParser {
-                                onRead: data => memText.mem = data.trim()
+                                onRead: data => memContainer.memLevel = parseInt(data.trim()) || 0
                             }
                         }
 
@@ -396,20 +677,62 @@ ShellRoot {
                             onTriggered: memProcess.running = true
                         }
 
-                        text: "󰍛 " + mem + "%"
+                        Text {
+                            id: memText
+                            anchors.centerIn: parent
+                            color: root.textColor
+                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.pixelSize: root.fontSize
+                            leftPadding: 8
+                            rightPadding: 8
+                            text: "󰍛"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: memPopup.visible = true
+                            onExited: memPopup.visible = false
+                        }
+
+                        Rectangle {
+                            id: memPopup
+                            visible: false
+                            anchors.top: parent.bottom
+                            anchors.topMargin: 4
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: memPopupText.width + 16
+                            height: memPopupText.height + 8
+                            radius: 6
+                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                            border.width: 1
+                            border.color: root.mutedColor
+
+                            Text {
+                                id: memPopupText
+                                anchors.centerIn: parent
+                                text: memContainer.memLevel + "%"
+                                color: root.textColor
+                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.pixelSize: 11
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: memPopup.visible = true
+                                onExited: memPopup.visible = false
+                            }
+                        }
                     }
 
-                    Text {
-                        id: batteryText
-                        color: root.roseColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
-                        font.pixelSize: root.fontSize
-                        leftPadding: 8
-                        rightPadding: 8
-                        verticalAlignment: Text.AlignVCenter
+                    Item {
+                        id: batteryContainer
+                        width: batteryText.width
                         height: root.barHeight
                         visible: hasBattery
-                        property string battery: ""
+
+                        property int batteryLevel: 0
                         property bool charging: false
                         property bool hasBattery: false
 
@@ -419,8 +742,8 @@ ShellRoot {
                             running: true
                             stdout: SplitParser {
                                 onRead: data => {
-                                    batteryText.battery = data.trim()
-                                    batteryText.hasBattery = data.trim().length > 0
+                                    batteryContainer.batteryLevel = parseInt(data.trim()) || 0
+                                    batteryContainer.hasBattery = data.trim().length > 0
                                 }
                             }
                         }
@@ -430,7 +753,7 @@ ShellRoot {
                             command: ["sh", "-c", "cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -1"]
                             running: true
                             stdout: SplitParser {
-                                onRead: data => batteryText.charging = data.trim() === "Charging"
+                                onRead: data => batteryContainer.charging = data.trim() === "Charging"
                             }
                         }
 
@@ -444,19 +767,86 @@ ShellRoot {
                             }
                         }
 
-                        text: (charging ? "󰂄 " : getBatteryIcon(parseInt(battery) || 0) + " ") + battery + "%"
+                        Text {
+                            id: batteryText
+                            anchors.centerIn: parent
+                            color: getBatteryColor()
+                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.pixelSize: root.fontSize
+                            leftPadding: 8
+                            rightPadding: 8
 
-                        function getBatteryIcon(level) {
-                            if (level >= 95) return "󰁹"
-                            if (level >= 85) return "󰂂"
-                            if (level >= 75) return "󰂁"
-                            if (level >= 65) return "󰂀"
-                            if (level >= 55) return "󰁿"
-                            if (level >= 45) return "󰁾"
-                            if (level >= 35) return "󰁽"
-                            if (level >= 25) return "󰁼"
-                            if (level >= 15) return "󰁻"
-                            return "󰁺"
+                            text: getBatteryIcon()
+
+                            function getBatteryIcon() {
+                                if (batteryContainer.charging) {
+                                    if (batteryContainer.batteryLevel >= 90) return "󰂅"
+                                    if (batteryContainer.batteryLevel >= 80) return "󰂋"
+                                    if (batteryContainer.batteryLevel >= 70) return "󰂊"
+                                    if (batteryContainer.batteryLevel >= 60) return "󰢞"
+                                    if (batteryContainer.batteryLevel >= 50) return "󰂉"
+                                    if (batteryContainer.batteryLevel >= 40) return "󰢝"
+                                    if (batteryContainer.batteryLevel >= 30) return "�"
+                                    if (batteryContainer.batteryLevel >= 20) return "�"
+                                    if (batteryContainer.batteryLevel >= 10) return "�"
+                                    return "󰢜"
+                                }
+                                if (batteryContainer.batteryLevel >= 95) return "�"
+                                if (batteryContainer.batteryLevel >= 85) return "�"
+                                if (batteryContainer.batteryLevel >= 75) return "�"
+                                if (batteryContainer.batteryLevel >= 65) return "�"
+                                if (batteryContainer.batteryLevel >= 55) return "�"
+                                if (batteryContainer.batteryLevel >= 45) return "�"
+                                if (batteryContainer.batteryLevel >= 35) return "󰁽"
+                                if (batteryContainer.batteryLevel >= 25) return "󰁼"
+                                if (batteryContainer.batteryLevel >= 15) return "󰁻"
+                                if (batteryContainer.batteryLevel >= 5) return "󰁺"
+                                return "󰂎"
+                            }
+
+                            function getBatteryColor() {
+                                if (batteryContainer.charging) return root.foamColor
+                                if (batteryContainer.batteryLevel <= 15) return root.loveColor
+                                if (batteryContainer.batteryLevel <= 30) return root.goldColor
+                                return root.textColor
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: batteryPopup.visible = true
+                            onExited: batteryPopup.visible = false
+                        }
+
+                        Rectangle {
+                            id: batteryPopup
+                            visible: false
+                            anchors.top: parent.bottom
+                            anchors.topMargin: 4
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: batteryPopupText.width + 16
+                            height: batteryPopupText.height + 8
+                            radius: 6
+                            color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                            border.width: 1
+                            border.color: root.mutedColor
+
+                            Text {
+                                id: batteryPopupText
+                                anchors.centerIn: parent
+                                text: batteryContainer.batteryLevel + "%" + (batteryContainer.charging ? " ⚡" : "")
+                                color: root.textColor
+                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.pixelSize: 11
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: batteryPopup.visible = true
+                                onExited: batteryPopup.visible = false
+                            }
                         }
                     }
                 }
