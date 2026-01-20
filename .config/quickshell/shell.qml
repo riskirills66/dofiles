@@ -419,6 +419,12 @@ ShellRoot {
                             }
                         }
 
+                        // Function to update volume status immediately
+                        function updateVolumeStatus() {
+                            volumeProcess.running = true
+                            mutedProcess.running = true
+                        }
+
                         Text {
                             id: volumeText
                             anchors.centerIn: parent
@@ -436,11 +442,57 @@ ShellRoot {
                             }
                         }
 
+                        // Process for toggling mute
+                        Process {
+                            id: toggleMuteProcess
+                            command: ["pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"]
+                        }
+
+                        // Process for volume adjustment
+                        Process {
+                            id: volumeAdjustProcess
+                            property string adjustment: ""
+                            command: ["pactl", "set-sink-volume", "@DEFAULT_SINK@", adjustment]
+                        }
+
+                        // Timer for quick status updates after user actions
+                        Timer {
+                            id: quickUpdateTimer
+                            interval: 100
+                            repeat: false
+                            onTriggered: volumeContainer.updateVolumeStatus()
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton
                             onEntered: volumePopup.visible = true
                             onExited: volumePopup.visible = false
+                            onClicked: {
+                                // Toggle mute/unmute
+                                toggleMuteProcess.running = true
+                                // Update status after a short delay
+                                quickUpdateTimer.start()
+                            }
+                            onWheel: function(wheel) {
+                                // Adjust volume with scroll wheel
+                                var delta = wheel.angleDelta.y / 120 // Standard wheel step
+                                var volumeChange = delta * 5 // 5% per scroll step
+                                
+                                if (volumeChange > 0) {
+                                    // Scroll up - increase volume
+                                    volumeAdjustProcess.adjustment = "+" + Math.abs(volumeChange) + "%"
+                                    volumeAdjustProcess.running = true
+                                } else if (volumeChange < 0) {
+                                    // Scroll down - decrease volume
+                                    volumeAdjustProcess.adjustment = "-" + Math.abs(volumeChange) + "%"
+                                    volumeAdjustProcess.running = true
+                                }
+                                
+                                // Update status after a short delay
+                                quickUpdateTimer.start()
+                            }
                         }
 
                         Rectangle {
@@ -809,6 +861,161 @@ ShellRoot {
                                 onExited: batteryPopup.visible = false
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // Volume OSD Window
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            id: volumeOSD
+            property var modelData
+            screen: modelData
+            
+            anchors {
+                top: true
+            }
+            
+            margins {
+                top: 100
+            }
+            
+            width: 300
+            height: 80
+            color: "transparent"
+            visible: false
+            
+            WlrLayershell.exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: Layer.Overlay
+
+            property int osdVolume: 0
+            property bool osdMuted: false
+            property alias osdVisible: volumeOSD.visible
+
+            // Auto-hide timer
+            Timer {
+                id: osdTimer
+                interval: 2000
+                repeat: false
+                onTriggered: volumeOSD.visible = false
+            }
+
+            // Monitor volume changes from media keys
+            Process {
+                id: volumeMonitor
+                command: ["sh", "-c", "pactl subscribe | grep --line-buffered \"Event 'change' on sink\""]
+                running: true
+                stdout: SplitParser {
+                    onRead: {
+                        // Volume changed, update OSD
+                        volumeOSD.updateOSD()
+                    }
+                }
+            }
+
+            function updateOSD() {
+                // Get current volume
+                var volumeCmd = Qt.createQmlObject('
+                    import Quickshell.Io
+                    Process {
+                        command: ["sh", "-c", "pactl get-sink-volume @DEFAULT_SINK@ | grep -oP \'\\\\d+%\' | head -1"]
+                        running: true
+                        stdout: SplitParser {
+                            onRead: data => {
+                                volumeOSD.osdVolume = parseInt(data.trim()) || 0
+                            }
+                        }
+                    }
+                ', volumeOSD)
+                
+                // Get mute status
+                var muteCmd = Qt.createQmlObject('
+                    import Quickshell.Io
+                    Process {
+                        command: ["sh", "-c", "pactl get-sink-mute @DEFAULT_SINK@ | grep -oP \'yes|no\'"]
+                        running: true
+                        stdout: SplitParser {
+                            onRead: data => {
+                                volumeOSD.osdMuted = data.trim() === "yes"
+                            }
+                        }
+                    }
+                ', volumeOSD)
+                
+                // Show OSD and reset timer
+                volumeOSD.visible = true
+                osdTimer.restart()
+            }
+
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                width: 280
+                height: 60
+                radius: 12
+                color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                border.width: 1
+                border.color: root.mutedColor
+                clip: true
+
+                // Drop shadow effect
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.6)
+                    blurMax: 20
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    anchors.margins: 12
+                    spacing: 12
+
+                    // Volume icon
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: volumeOSD.osdMuted ? root.mutedColor : root.textColor
+                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.pixelSize: 20
+                        text: volumeOSD.osdMuted ? "󰖁" : (volumeOSD.osdVolume === 0 ? "󰖁" : "󰕾")
+                    }
+
+                    // Volume bar background
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 160
+                        height: 6
+                        radius: 3
+                        color: root.mutedColor
+
+                        // Volume bar fill
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: volumeOSD.osdMuted ? 0 : (parent.width * volumeOSD.osdVolume / 100)
+                            height: parent.height
+                            radius: 3
+                            color: volumeOSD.osdVolume > 80 ? root.loveColor : 
+                                   volumeOSD.osdVolume > 50 ? root.goldColor : root.foamColor
+                            
+                            Behavior on width {
+                                NumberAnimation { duration: 150 }
+                            }
+                        }
+                    }
+
+                    // Volume percentage
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: root.textColor
+                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.pixelSize: 14
+                        font.bold: true
+                        text: volumeOSD.osdMuted ? "MUTED" : volumeOSD.osdVolume + "%"
                     }
                 }
             }
