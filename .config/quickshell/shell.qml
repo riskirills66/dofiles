@@ -764,38 +764,11 @@ ShellRoot {
                             leftPadding: 8
                             rightPadding: 8
 
-                            text: getBatteryIcon()
-
-                            function getBatteryIcon() {
-                                if (batteryContainer.charging) {
-                                    if (batteryContainer.batteryLevel >= 90) return "󰂅"
-                                    if (batteryContainer.batteryLevel >= 80) return "󰂋"
-                                    if (batteryContainer.batteryLevel >= 70) return "󰂊"
-                                    if (batteryContainer.batteryLevel >= 60) return "󰢞"
-                                    if (batteryContainer.batteryLevel >= 50) return "󰂉"
-                                    if (batteryContainer.batteryLevel >= 40) return "󰢝"
-                                    if (batteryContainer.batteryLevel >= 30) return "�"
-                                    if (batteryContainer.batteryLevel >= 20) return "�"
-                                    if (batteryContainer.batteryLevel >= 10) return "�"
-                                    return "󰢜"
-                                }
-                                if (batteryContainer.batteryLevel >= 95) return "�"
-                                if (batteryContainer.batteryLevel >= 85) return "�"
-                                if (batteryContainer.batteryLevel >= 75) return "�"
-                                if (batteryContainer.batteryLevel >= 65) return "�"
-                                if (batteryContainer.batteryLevel >= 55) return "�"
-                                if (batteryContainer.batteryLevel >= 45) return "�"
-                                if (batteryContainer.batteryLevel >= 35) return "󰁽"
-                                if (batteryContainer.batteryLevel >= 25) return "󰁼"
-                                if (batteryContainer.batteryLevel >= 15) return "󰁻"
-                                if (batteryContainer.batteryLevel >= 5) return "󰁺"
-                                return "󰂎"
-                            }
+                            text: batteryContainer.batteryLevel + "%" + (batteryContainer.charging ? " " : "")
 
                             function getBatteryColor() {
                                 if (batteryContainer.charging) return root.foamColor
-                                if (batteryContainer.batteryLevel <= 15) return root.loveColor
-                                if (batteryContainer.batteryLevel <= 30) return root.goldColor
+                                if (batteryContainer.batteryLevel < 20) return root.loveColor
                                 return root.textColor
                             }
                         }
