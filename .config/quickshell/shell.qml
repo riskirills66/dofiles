@@ -907,18 +907,21 @@ ShellRoot {
             // Monitor volume changes from media keys
             Process {
                 id: volumeMonitor
-                command: ["sh", "-c", "pactl subscribe | grep --line-buffered \"Event 'change' on sink\""]
+                command: ["sh", "-c", "pactl subscribe | grep --line-buffered -E \"Event 'change' on sink.*#[0-9]+\""]
                 running: true
                 stdout: SplitParser {
                     onRead: {
-                        // Volume changed, update OSD
-                        volumeOSD.updateOSD()
+                        // Only update OSD if volume or mute actually changed
+                        checkVolumeChange()
                     }
                 }
             }
 
-            function updateOSD() {
-                // Get current volume
+            property int lastVolume: 0
+            property bool lastMuted: false
+
+            function checkVolumeChange() {
+                // Get current volume and mute status
                 var volumeCmd = Qt.createQmlObject('
                     import Quickshell.Io
                     Process {
@@ -926,13 +929,17 @@ ShellRoot {
                         running: true
                         stdout: SplitParser {
                             onRead: data => {
-                                volumeOSD.osdVolume = parseInt(data.trim()) || 0
+                                var currentVolume = parseInt(data.trim()) || 0
+                                if (currentVolume !== volumeOSD.lastVolume) {
+                                    volumeOSD.lastVolume = currentVolume
+                                    volumeOSD.osdVolume = currentVolume
+                                    volumeOSD.showOSD()
+                                }
                             }
                         }
                     }
                 ', volumeOSD)
                 
-                // Get mute status
                 var muteCmd = Qt.createQmlObject('
                     import Quickshell.Io
                     Process {
@@ -940,13 +947,19 @@ ShellRoot {
                         running: true
                         stdout: SplitParser {
                             onRead: data => {
-                                volumeOSD.osdMuted = data.trim() === "yes"
+                                var currentMuted = data.trim() === "yes"
+                                if (currentMuted !== volumeOSD.lastMuted) {
+                                    volumeOSD.lastMuted = currentMuted
+                                    volumeOSD.osdMuted = currentMuted
+                                    volumeOSD.showOSD()
+                                }
                             }
                         }
                     }
                 ', volumeOSD)
-                
-                // Show OSD and reset timer
+            }
+
+            function showOSD() {
                 volumeOSD.visible = true
                 osdTimer.restart()
             }
@@ -1016,6 +1029,160 @@ ShellRoot {
                         font.pixelSize: 14
                         font.bold: true
                         text: volumeOSD.osdMuted ? "MUTED" : volumeOSD.osdVolume + "%"
+                    }
+                }
+            }
+        }
+    }
+
+    // Brightness OSD Window
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            id: brightnessOSD
+            property var modelData
+            screen: modelData
+            
+            anchors {
+                top: true
+            }
+            
+            margins {
+                top: 180
+            }
+            
+            width: 300
+            height: 80
+            color: "transparent"
+            visible: false
+            
+            WlrLayershell.exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: Layer.Overlay
+
+            property int osdBrightness: 0
+            property alias osdVisible: brightnessOSD.visible
+
+            // Auto-hide timer
+            Timer {
+                id: brightnessOsdTimer
+                interval: 2000
+                repeat: false
+                onTriggered: brightnessOSD.visible = false
+            }
+
+            // Monitor brightness changes
+            Process {
+                id: brightnessMonitor
+                command: ["sh", "-c", "inotifywait -m -e modify /sys/class/backlight/*/brightness 2>/dev/null"]
+                running: true
+                stdout: SplitParser {
+                    onRead: {
+                        // Brightness changed, check if it actually changed
+                        checkBrightnessChange()
+                    }
+                }
+            }
+
+            property int lastBrightness: -1
+
+            function checkBrightnessChange() {
+                // Get current brightness percentage
+                var brightnessCmd = Qt.createQmlObject('
+                    import Quickshell.Io
+                    Process {
+                        command: ["sh", "-c", "brightnessctl get; brightnessctl max"]
+                        running: true
+                        stdout: SplitParser {
+                            onRead: data => {
+                                var lines = data.trim().split("\\n")
+                                if (lines.length >= 2) {
+                                    var current = parseInt(lines[0]) || 0
+                                    var max = parseInt(lines[1]) || 1
+                                    var percentage = Math.round((current / max) * 100)
+                                    
+                                    if (percentage !== brightnessOSD.lastBrightness) {
+                                        brightnessOSD.lastBrightness = percentage
+                                        brightnessOSD.osdBrightness = percentage
+                                        brightnessOSD.showOSD()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ', brightnessOSD)
+            }
+
+            function showOSD() {
+                brightnessOSD.visible = true
+                brightnessOsdTimer.restart()
+            }
+
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                width: 280
+                height: 60
+                radius: 12
+                color: Qt.rgba(25/255, 23/255, 36/255, 0.95)
+                border.width: 1
+                border.color: root.mutedColor
+                clip: true
+
+                // Drop shadow effect
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.6)
+                    blurMax: 20
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    anchors.margins: 12
+                    spacing: 12
+
+                    // Brightness icon
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: root.textColor
+                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.pixelSize: 20
+                        text: brightnessOSD.osdBrightness === 0 ? "󰃞" : "󰃠"
+                    }
+
+                    // Brightness bar background
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 160
+                        height: 6
+                        radius: 3
+                        color: root.mutedColor
+
+                        // Brightness bar fill
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width * brightnessOSD.osdBrightness / 100
+                            height: parent.height
+                            radius: 3
+                            color: brightnessOSD.osdBrightness > 80 ? root.goldColor : 
+                                   brightnessOSD.osdBrightness > 50 ? root.foamColor : root.irisColor
+                            
+                            Behavior on width {
+                                NumberAnimation { duration: 150 }
+                            }
+                        }
+                    }
+
+                    // Brightness percentage
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: root.textColor
+                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.pixelSize: 14
+                        font.bold: true
+                        text: brightnessOSD.osdBrightness + "%"
                     }
                 }
             }
