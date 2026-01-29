@@ -812,7 +812,7 @@ ShellRoot {
                             anchors.centerIn: parent
                             color: getBatteryColor()
                             font.family: "JetBrainsMono Nerd Font Mono"
-                            font.pixelSize: root.fontSize
+                            font.pixelSize: 13
                             leftPadding: 8
                             rightPadding: 8
 
