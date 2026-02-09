@@ -1038,20 +1038,23 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     const fingerprintKeys = [];
     
     if (data && data.data && Array.isArray(data.data)) {
-      data.data.forEach((message) => {
+      data.data.forEach((message, index) => {
         // Check for fingerprint field directly in message object
         // Only include messages from users (exclude operator messages)
         if (message.fingerprint !== undefined && message.fingerprint !== null && message.from === "user") {
           fingerprintKeys.push(String(message.fingerprint));
+          console.log(`[TM] Message ${index}: fingerprint=${message.fingerprint}, timestamp=${message.timestamp}, from=${message.from}`);
         }
       });
     }
     
     console.log("[TM] parseFingerprintKeys - Total user fingerprints collected:", fingerprintKeys.length);
+    console.log("[TM] parseFingerprintKeys - All fingerprints in order:", fingerprintKeys);
     
     // Remove duplicates and get only the last 3 (since API returns oldest first)
     const uniqueKeys = [...new Set(fingerprintKeys)];
     console.log("[TM] parseFingerprintKeys - Unique user fingerprints:", uniqueKeys.length);
+    console.log("[TM] parseFingerprintKeys - Unique fingerprints:", uniqueKeys);
     
     const latest3 = uniqueKeys.slice(-3).reverse(); // Get last 3 and reverse to show newest first
     console.log("[TM] parseFingerprintKeys - Latest 3 user fingerprints:", latest3.length, latest3);
