@@ -1017,9 +1017,16 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       });
     }
     
+    console.log("[TM] parseFingerprintKeys - Total fingerprints collected:", fingerprintKeys.length);
+    
     // Remove duplicates and get only the latest 3
     const uniqueKeys = [...new Set(fingerprintKeys)];
-    return uniqueKeys.slice(-3).reverse(); // Get last 3 and reverse to show newest first
+    console.log("[TM] parseFingerprintKeys - Unique fingerprints:", uniqueKeys.length);
+    
+    const latest3 = uniqueKeys.slice(-3).reverse();
+    console.log("[TM] parseFingerprintKeys - Latest 3 (reversed):", latest3.length, latest3);
+    
+    return latest3; // Get last 3 and reverse to show newest first
   }
 
   // Display fingerprint keys floating on screen
