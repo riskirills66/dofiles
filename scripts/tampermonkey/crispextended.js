@@ -716,10 +716,28 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         checkDeposit(selectedText);
       };
 
+      const botReplyItem = document.createElement("div");
+      botReplyItem.textContent = "Bot Reply";
+      botReplyItem.style.cssText = `
+                padding: 8px 16px;
+                cursor: pointer;
+                color: black;
+                transition: background 0.1s;
+            `;
+      botReplyItem.onmouseover = () => {
+        updateSelectedItem(2);
+      };
+      botReplyItem.onclick = () => {
+        contextMenu.remove();
+        contextMenu = null;
+        fetchLatestReply(selectedText);
+      };
+
       contextMenu.appendChild(trxItem);
       contextMenu.appendChild(depositItem);
+      contextMenu.appendChild(botReplyItem);
 
-      menuItems = [trxItem, depositItem];
+      menuItems = [trxItem, depositItem, botReplyItem];
 
       document.body.appendChild(contextMenu);
 
@@ -780,6 +798,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       checkTransaction(selectedText);
     } else if (selectedIndex === 1) {
       checkDeposit(selectedText);
+    } else if (selectedIndex === 2) {
+      fetchLatestReply(selectedText);
     }
   }
   document.addEventListener("keydown", function (e) {
