@@ -934,6 +934,30 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     });
   }
 
+  // Clipboard listener for automatic bot reply when modal is displayed
+  document.addEventListener("copy", function (event) {
+    // Check if the Crisp modal is displayed
+    const crispModal = document.querySelector(".c-base-popup__container");
+    
+    if (crispModal) {
+      // Get the copied text
+      const copiedText = window.getSelection().toString().trim();
+      
+      if (copiedText) {
+        console.log("[TM] Text copied with modal displayed:", copiedText);
+        
+        // Extract alphanumeric characters only (similar to context menu logic)
+        const match = copiedText.match(/[a-zA-Z0-9]+/g);
+        const cleanedText = match ? match.join("") : copiedText;
+        
+        // Automatically fetch bot reply based on copied text
+        setTimeout(() => {
+          fetchLatestReply(cleanedText);
+        }, 100); // Small delay to ensure copy operation completes
+      }
+    }
+  });
+
   document.addEventListener("keydown", function (event) {
     // Detect ONLY Ctrl+R or Cmd+R, no other modifiers
     const isOnlyCtrlR =
