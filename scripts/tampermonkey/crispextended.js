@@ -913,6 +913,13 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         console.log("[TM] fetchLatestReply - Response text:", response.responseText);
         console.log("[TM] fetchLatestReply - Response text length:", response.responseText.length);
         
+        // Check if response is not OK (404, 500, etc.)
+        if (response.status !== 200) {
+          console.log("[TM] fetchLatestReply - Non-200 status, treating as error");
+          showToast(`Key not found: ${response.responseText}`, "error");
+          return;
+        }
+        
         try {
           const result = JSON.parse(response.responseText);
           console.log("[TM] fetchLatestReply - Parsed result:", result);
@@ -936,7 +943,21 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         } catch (error) {
           console.error("[TM] Error parsing reply data:", error);
           console.error("[TM] Raw response that failed to parse:", response.responseText);
-          showToast("Error fetching reply data", "error");
+          // If it's not JSON, treat the response text as the actual reply
+          if (response.responseText && response.responseText.trim()) {
+            navigator.clipboard
+              .writeText(response.responseText)
+              .then(() => {
+                console.log("[TM] Plain text reply copied to clipboard:", response.responseText);
+                showToast("Reply copied to clipboard!", "success");
+              })
+              .catch((error) => {
+                console.error("[TM] Error copying plain text reply:", error);
+                showToast("Error copying to clipboard", "error");
+              });
+          } else {
+            showToast("Error fetching reply data", "error");
+          }
         }
       },
       onerror: function (error) {
