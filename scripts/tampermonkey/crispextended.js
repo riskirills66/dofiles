@@ -993,9 +993,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     
     console.log("[TM] fetchFingerprintKeys - API URL:", apiUrl);
     
-    // Credentials for Basic Auth
-    const username = "24ee9d46-e379-4964-81eb-d6c4a1c2e3dd";
-    const password = "ebb4fd9f1930b187ac94284fd4540c40f10990be69c21965ca617adaeb029a8b";
+    // Credentials for Basic Auth from unsafeWindow
+    const username = unsafeWindow.crisp_api_username;
+    const password = unsafeWindow.crisp_api_password;
     const basicAuth = btoa(`${username}:${password}`);
 
     console.log("[TM] fetchFingerprintKeys - Making GM_xmlhttpRequest...");
