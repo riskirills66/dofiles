@@ -1149,27 +1149,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       container.appendChild(keyRow);
     });
 
-    const closeButton = document.createElement("button");
-    closeButton.textContent = "×";
-    closeButton.style.cssText = `
-      margin-top: 4px;
-      padding: 2px 6px;
-      background: #fff;
-      color: #666;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      cursor: pointer;
-      width: 100%;
-      font-size: 14px;
-      transition: all 0.2s;
-    `;
-    closeButton.onmouseover = () => {
-      closeButton.style.background = "#f0f0f0";
-    };
-    closeButton.onmouseout = () => {
-      closeButton.style.background = "#fff";
-    };
-
     function closeDisplay() {
       container.remove();
       document.removeEventListener("keydown", escapeHandler);
@@ -1177,8 +1156,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     }
 
     window.closeFingerprintDisplay = closeDisplay;
-    closeButton.onclick = closeDisplay;
-    container.appendChild(closeButton);
 
     document.body.appendChild(container);
 
