@@ -1011,20 +1011,21 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     if (data && data.data && Array.isArray(data.data)) {
       data.data.forEach((message) => {
         // Check for fingerprint field directly in message object
-        if (message.fingerprint !== undefined && message.fingerprint !== null) {
+        // Only include messages from users (exclude operator messages)
+        if (message.fingerprint !== undefined && message.fingerprint !== null && message.from === "user") {
           fingerprintKeys.push(String(message.fingerprint));
         }
       });
     }
     
-    console.log("[TM] parseFingerprintKeys - Total fingerprints collected:", fingerprintKeys.length);
+    console.log("[TM] parseFingerprintKeys - Total user fingerprints collected:", fingerprintKeys.length);
     
     // Remove duplicates and get only the first 3 (since API returns newest first)
     const uniqueKeys = [...new Set(fingerprintKeys)];
-    console.log("[TM] parseFingerprintKeys - Unique fingerprints:", uniqueKeys.length);
+    console.log("[TM] parseFingerprintKeys - Unique user fingerprints:", uniqueKeys.length);
     
     const latest3 = uniqueKeys.slice(0, 3); // Get first 3 since API returns newest first
-    console.log("[TM] parseFingerprintKeys - Latest 3:", latest3.length, latest3);
+    console.log("[TM] parseFingerprintKeys - Latest 3 user fingerprints:", latest3.length, latest3);
     
     return latest3;
   }
@@ -1044,27 +1045,16 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       position: fixed;
       top: 20px;
       right: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 12px;
+      background: white;
+      color: black;
+      padding: 10px;
+      border-radius: 6px;
       z-index: 10000;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       max-width: 400px;
       font-family: monospace;
-      backdrop-filter: blur(10px);
+      border: 1px solid #ddd;
     `;
-
-    const title = document.createElement("div");
-    title.textContent = "🔑 Fingerprint Keys";
-    title.style.cssText = `
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-      padding-bottom: 10px;
-    `;
-    container.appendChild(title);
 
     keys.forEach((key, index) => {
       const keyRow = document.createElement("div");
@@ -1072,17 +1062,17 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 10px;
-        margin-bottom: 8px;
-        border-radius: 6px;
+        background: #f5f5f5;
+        padding: 8px;
+        margin-bottom: 6px;
+        border-radius: 4px;
         transition: all 0.2s;
       `;
       keyRow.onmouseover = () => {
-        keyRow.style.background = "rgba(255, 255, 255, 0.2)";
+        keyRow.style.background = "#e8e8e8";
       };
       keyRow.onmouseout = () => {
-        keyRow.style.background = "rgba(255, 255, 255, 0.1)";
+        keyRow.style.background = "#f5f5f5";
       };
 
       const keyText = document.createElement("span");
@@ -1090,26 +1080,26 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       keyText.style.cssText = `
         flex: 1;
         word-break: break-all;
-        font-size: 13px;
+        font-size: 12px;
         margin-right: 10px;
       `;
 
       const copyBtn = document.createElement("button");
       copyBtn.textContent = "📋";
       copyBtn.style.cssText = `
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        padding: 5px 10px;
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 4px 8px;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 14px;
         transition: all 0.2s;
       `;
       copyBtn.onmouseover = () => {
-        copyBtn.style.background = "rgba(255, 255, 255, 0.3)";
+        copyBtn.style.background = "#f0f0f0";
       };
       copyBtn.onmouseout = () => {
-        copyBtn.style.background = "rgba(255, 255, 255, 0.2)";
+        copyBtn.style.background = "#fff";
       };
       copyBtn.onclick = () => {
         // Fetch bot reply using the fingerprint key
@@ -1130,22 +1120,22 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     const closeButton = document.createElement("button");
     closeButton.textContent = "Close";
     closeButton.style.cssText = `
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 6px;
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: #fff;
+      color: #333;
+      border: 1px solid #ddd;
+      border-radius: 4px;
       cursor: pointer;
       width: 100%;
-      font-weight: bold;
+      font-size: 12px;
       transition: all 0.2s;
     `;
     closeButton.onmouseover = () => {
-      closeButton.style.background = "rgba(255, 255, 255, 0.3)";
+      closeButton.style.background = "#f0f0f0";
     };
     closeButton.onmouseout = () => {
-      closeButton.style.background = "rgba(255, 255, 255, 0.2)";
+      closeButton.style.background = "#fff";
     };
 
     function closeDisplay() {
