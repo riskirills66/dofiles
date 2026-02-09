@@ -1017,8 +1017,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       });
     }
     
-    // Remove duplicates
-    return [...new Set(fingerprintKeys)];
+    // Remove duplicates and get only the latest 3
+    const uniqueKeys = [...new Set(fingerprintKeys)];
+    return uniqueKeys.slice(-3).reverse(); // Get last 3 and reverse to show newest first
   }
 
   // Display fingerprint keys floating on screen
@@ -1104,20 +1105,14 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         copyBtn.style.background = "rgba(255, 255, 255, 0.2)";
       };
       copyBtn.onclick = () => {
-        navigator.clipboard.writeText(key)
-          .then(() => {
-            copyBtn.textContent = "✅";
-            setTimeout(() => {
-              copyBtn.textContent = "📋";
-            }, 1500);
-          })
-          .catch((error) => {
-            console.error("Error copying fingerprint:", error);
-            copyBtn.textContent = "❌";
-            setTimeout(() => {
-              copyBtn.textContent = "📋";
-            }, 1500);
-          });
+        // Fetch bot reply using the fingerprint key
+        copyBtn.textContent = "⏳";
+        fetchLatestReply(key);
+        
+        // Reset button after a delay
+        setTimeout(() => {
+          copyBtn.textContent = "📋";
+        }, 2000);
       };
 
       keyRow.appendChild(keyText);
