@@ -1179,6 +1179,34 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     }
   });
 
+  // Auto-trigger fingerprint fetch on page load and URL changes
+  function isInboxPage() {
+    return window.location.pathname.includes("/inbox/session_");
+  }
+
+  function autoFetchFingerprints() {
+    if (isInboxPage()) {
+      const sessionId = getSessionIdFromUrl();
+      if (sessionId) {
+        console.log("[TM] Auto-fetching fingerprints for session:", sessionId);
+        fetchFingerprintKeys();
+      }
+    }
+  }
+
+  // Initial check on page load
+  setTimeout(autoFetchFingerprints, 1000);
+
+  // Watch for URL changes (SPA navigation)
+  let lastUrl = window.location.href;
+  setInterval(() => {
+    if (lastUrl !== window.location.href) {
+      lastUrl = window.location.href;
+      console.log("[TM] URL changed to:", lastUrl);
+      setTimeout(autoFetchFingerprints, 500);
+    }
+  }, 500);
+
   document.addEventListener("keydown", function (event) {
     // Detect ONLY Ctrl+R or Cmd+R, no other modifiers
     const isOnlyCtrlR =
@@ -1333,13 +1361,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     function handleRouteChange() {
       if (isInboxPage()) {
         setTimeout(detachEditor, 100);
-        // Auto-trigger fingerprint fetch when navigating to inbox page
-        setTimeout(() => {
-          const sessionId = getSessionIdFromUrl();
-          if (sessionId) {
-            fetchFingerprintKeys();
-          }
-        }, 500);
       } else {
         restoreEditor();
       }
