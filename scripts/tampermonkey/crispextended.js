@@ -20,6 +20,28 @@
     return dateString || "";
   }
 
+  function showToast(message, type = "success") {
+    const notification = document.createElement("div");
+    notification.textContent = message;
+    const bgColor = type === "error" ? "#f44336" : "#4CAF50";
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${bgColor};
+      color: white;
+      padding: 15px 20px;
+      border-radius: 4px;
+      z-index: 10001;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-size: 14px;
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
   function isAnyModalOpen() {
     return document.querySelector(".userscript-modal") !== null;
   }
@@ -851,12 +873,12 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           displayTransactionModal(data);
         } catch (error) {
           console.error("Error parsing transaction data:", error);
-          alert("Error fetching transaction data");
+          showToast("Error fetching transaction data", "error");
         }
       },
       onerror: function (error) {
         console.error("Error fetching transaction data:", error);
-        alert("Error connecting to transaction service");
+        showToast("Error connecting to transaction service", "error");
       },
     });
   }
@@ -871,12 +893,12 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           displayDepositModal(data);
         } catch (error) {
           console.error("Error parsing deposit data:", error);
-          alert("Error fetching deposit data");
+          showToast("Error fetching deposit data", "error");
         }
       },
       onerror: function (error) {
         console.error("Error fetching deposit data:", error);
-        alert("Error connecting to deposit service");
+        showToast("Error connecting to deposit service", "error");
       },
     });
   }
@@ -894,42 +916,24 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
               .writeText(result.data)
               .then(() => {
                 console.log("Latest reply copied to clipboard:", result.data);
-                // Optional: Show a brief notification
-                const notification = document.createElement("div");
-                notification.textContent = "Reply copied to clipboard!";
-                notification.style.cssText = `
-                  position: fixed;
-                  top: 20px;
-                  right: 20px;
-                  background: #4CAF50;
-                  color: white;
-                  padding: 15px 20px;
-                  border-radius: 4px;
-                  z-index: 10001;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                  font-size: 14px;
-                `;
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                  notification.remove();
-                }, 2000);
+                showToast("Reply copied to clipboard!", "success");
               })
               .catch((error) => {
                 console.error("Error copying reply to clipboard:", error);
-                alert("Error copying to clipboard");
+                showToast("Error copying to clipboard", "error");
               });
           } else {
             console.log("No data found in reply");
-            alert("No data found in reply");
+            showToast("No data found in reply", "error");
           }
         } catch (error) {
           console.error("Error parsing reply data:", error);
-          alert("Error fetching reply data");
+          showToast("Error fetching reply data", "error");
         }
       },
       onerror: function (error) {
         console.error("Error fetching reply data:", error);
-        alert("Error connecting to reply service");
+        showToast("Error connecting to reply service", "error");
       },
     });
   }
