@@ -1076,7 +1076,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     container.className = "userscript-modal";
     container.style.cssText = `
       position: fixed;
-      top: 20px;
+      top: 80px;
       right: 20px;
       background: white;
       color: black;
