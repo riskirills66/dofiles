@@ -998,24 +998,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     
     if (data && data.data && Array.isArray(data.data)) {
       data.data.forEach((message) => {
-        // Look for fingerprint in message content
-        if (message.content) {
-          const content = JSON.stringify(message.content);
-          const fingerprintMatch = content.match(/fingerprint["\s:]+([a-zA-Z0-9_-]+)/gi);
-          
-          if (fingerprintMatch) {
-            fingerprintMatch.forEach((match) => {
-              const keyMatch = match.match(/([a-zA-Z0-9_-]+)$/);
-              if (keyMatch && keyMatch[1]) {
-                fingerprintKeys.push(keyMatch[1]);
-              }
-            });
-          }
-        }
-        
-        // Also check in user object if present
-        if (message.user && message.user.fingerprint) {
-          fingerprintKeys.push(message.user.fingerprint);
+        // Check for fingerprint field directly in message object
+        if (message.fingerprint !== undefined && message.fingerprint !== null) {
+          fingerprintKeys.push(String(message.fingerprint));
         }
       });
     }
