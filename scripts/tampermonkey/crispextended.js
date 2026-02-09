@@ -2,7 +2,7 @@
   const API_URL = unsafeWindow.trx_monitor_url || "http://localhost:8040";
   const TG_API_URL = unsafeWindow.tg_api_url || "http://localhost:4040";
   const REPLY_API_URL =
-    unsafeWindow.reply_api_url || "http://reply.hexaloom.com";
+    unsafeWindow.reply_api_url || "http://trxmonitor.hexaloom.com";
   const SECURE_TOKEN =
     unsafeWindow.secure_token || "what-ever-bitch-i-dont-care-123";
   const apiBase = `${API_URL}`;
