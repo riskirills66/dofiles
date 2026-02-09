@@ -938,6 +938,238 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     });
   }
 
+  // Extract session ID from current URL
+  function getSessionIdFromUrl() {
+    const urlMatch = window.location.href.match(/\/inbox\/session_([a-f0-9-]+)/);
+    return urlMatch ? urlMatch[1] : null;
+  }
+
+  // Fetch fingerprint keys from Crisp API
+  function fetchFingerprintKeys() {
+    const sessionId = getSessionIdFromUrl();
+    
+    if (!sessionId) {
+      showToast("No session ID found in URL", "error");
+      return;
+    }
+
+    const websiteId = "1e652069-9ee7-4c7f-84df-49a6f33c8efd";
+    const fullSessionId = `session_${sessionId}`;
+    const apiUrl = `https://api.crisp.chat/v1/website/${websiteId}/conversation/${fullSessionId}/messages`;
+    
+    // Credentials for Basic Auth
+    const username = "24ee9d46-e379-4964-81eb-d6c4a1c2e3dd";
+    const password = "ebb4fd9f1930b187ac94284fd4540c40f10990be69c21965ca617adaeb029a8b";
+    const basicAuth = btoa(`${username}:${password}`);
+
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: apiUrl,
+      headers: {
+        "Authorization": `Basic ${basicAuth}`,
+        "X-Crisp-Tier": "plugin"
+      },
+      onload: function (response) {
+        try {
+          const data = JSON.parse(response.responseText);
+          const fingerprintKeys = parseFingerprintKeys(data);
+          
+          if (fingerprintKeys.length > 0) {
+            displayFingerprintKeys(fingerprintKeys);
+            showToast(`Found ${fingerprintKeys.length} fingerprint key(s)`, "success");
+          } else {
+            showToast("No fingerprint keys found", "error");
+          }
+        } catch (error) {
+          console.error("Error parsing fingerprint data:", error);
+          showToast("Error fetching fingerprint data", "error");
+        }
+      },
+      onerror: function (error) {
+        console.error("Error fetching fingerprint data:", error);
+        showToast("Error connecting to Crisp API", "error");
+      },
+    });
+  }
+
+  // Parse fingerprint keys from API response
+  function parseFingerprintKeys(data) {
+    const fingerprintKeys = [];
+    
+    if (data && data.data && Array.isArray(data.data)) {
+      data.data.forEach((message) => {
+        // Look for fingerprint in message content
+        if (message.content) {
+          const content = JSON.stringify(message.content);
+          const fingerprintMatch = content.match(/fingerprint["\s:]+([a-zA-Z0-9_-]+)/gi);
+          
+          if (fingerprintMatch) {
+            fingerprintMatch.forEach((match) => {
+              const keyMatch = match.match(/([a-zA-Z0-9_-]+)$/);
+              if (keyMatch && keyMatch[1]) {
+                fingerprintKeys.push(keyMatch[1]);
+              }
+            });
+          }
+        }
+        
+        // Also check in user object if present
+        if (message.user && message.user.fingerprint) {
+          fingerprintKeys.push(message.user.fingerprint);
+        }
+      });
+    }
+    
+    // Remove duplicates
+    return [...new Set(fingerprintKeys)];
+  }
+
+  // Display fingerprint keys floating on screen
+  function displayFingerprintKeys(keys) {
+    // Remove existing fingerprint display if any
+    const existingDisplay = document.getElementById("fingerprint-display");
+    if (existingDisplay) {
+      existingDisplay.remove();
+    }
+
+    const container = document.createElement("div");
+    container.id = "fingerprint-display";
+    container.className = "userscript-modal";
+    container.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      z-index: 10000;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      font-family: monospace;
+      backdrop-filter: blur(10px);
+    `;
+
+    const title = document.createElement("div");
+    title.textContent = "🔑 Fingerprint Keys";
+    title.style.cssText = `
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 10px;
+    `;
+    container.appendChild(title);
+
+    keys.forEach((key, index) => {
+      const keyRow = document.createElement("div");
+      keyRow.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        transition: all 0.2s;
+      `;
+      keyRow.onmouseover = () => {
+        keyRow.style.background = "rgba(255, 255, 255, 0.2)";
+      };
+      keyRow.onmouseout = () => {
+        keyRow.style.background = "rgba(255, 255, 255, 0.1)";
+      };
+
+      const keyText = document.createElement("span");
+      keyText.textContent = key;
+      keyText.style.cssText = `
+        flex: 1;
+        word-break: break-all;
+        font-size: 13px;
+        margin-right: 10px;
+      `;
+
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "📋";
+      copyBtn.style.cssText = `
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.2s;
+      `;
+      copyBtn.onmouseover = () => {
+        copyBtn.style.background = "rgba(255, 255, 255, 0.3)";
+      };
+      copyBtn.onmouseout = () => {
+        copyBtn.style.background = "rgba(255, 255, 255, 0.2)";
+      };
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(key)
+          .then(() => {
+            copyBtn.textContent = "✅";
+            setTimeout(() => {
+              copyBtn.textContent = "📋";
+            }, 1500);
+          })
+          .catch((error) => {
+            console.error("Error copying fingerprint:", error);
+            copyBtn.textContent = "❌";
+            setTimeout(() => {
+              copyBtn.textContent = "📋";
+            }, 1500);
+          });
+      };
+
+      keyRow.appendChild(keyText);
+      keyRow.appendChild(copyBtn);
+      container.appendChild(keyRow);
+    });
+
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "Close";
+    closeButton.style.cssText = `
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+      transition: all 0.2s;
+    `;
+    closeButton.onmouseover = () => {
+      closeButton.style.background = "rgba(255, 255, 255, 0.3)";
+    };
+    closeButton.onmouseout = () => {
+      closeButton.style.background = "rgba(255, 255, 255, 0.2)";
+    };
+
+    function closeDisplay() {
+      container.remove();
+      document.removeEventListener("keydown", escapeHandler);
+      window.closeFingerprintDisplay = null;
+    }
+
+    window.closeFingerprintDisplay = closeDisplay;
+    closeButton.onclick = closeDisplay;
+    container.appendChild(closeButton);
+
+    document.body.appendChild(container);
+
+    function escapeHandler(event) {
+      if (event.key === "Escape") {
+        closeDisplay();
+      }
+    }
+
+    document.addEventListener("keydown", escapeHandler);
+  }
+
   // Clipboard listener for automatic bot reply when modal is displayed
   document.addEventListener("copy", function (event) {
     // Check if the Crisp modal is displayed
@@ -995,6 +1227,18 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     if (isCtrlShiftB) {
       event.preventDefault();
       fetchLatestReply();
+    }
+
+    // Detect Ctrl+Shift+F or Cmd+Shift+F to fetch fingerprint keys
+    const isCtrlShiftF =
+      (event.ctrlKey || event.metaKey) && // Ctrl or Cmd
+      event.shiftKey && // Shift pressed
+      !event.altKey && // Alt NOT pressed
+      event.key.toLowerCase() === "f";
+
+    if (isCtrlShiftF) {
+      event.preventDefault();
+      fetchFingerprintKeys();
     }
   });
 
@@ -1104,6 +1348,13 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     function handleRouteChange() {
       if (isInboxPage()) {
         setTimeout(detachEditor, 100);
+        // Auto-trigger fingerprint fetch when navigating to inbox page
+        setTimeout(() => {
+          const sessionId = getSessionIdFromUrl();
+          if (sessionId) {
+            fetchFingerprintKeys();
+          }
+        }, 500);
       } else {
         restoreEditor();
       }
