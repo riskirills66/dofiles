@@ -941,14 +941,18 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   // Extract session ID from current URL
   function getSessionIdFromUrl() {
     const urlMatch = window.location.href.match(/\/inbox\/session_([a-f0-9-]+)/);
+    console.log("[TM] getSessionIdFromUrl - URL:", window.location.href);
+    console.log("[TM] getSessionIdFromUrl - Match:", urlMatch);
     return urlMatch ? urlMatch[1] : null;
   }
 
   // Fetch fingerprint keys from Crisp API
   function fetchFingerprintKeys() {
+    console.log("[TM] fetchFingerprintKeys - Starting...");
     const sessionId = getSessionIdFromUrl();
     
     if (!sessionId) {
+      console.log("[TM] fetchFingerprintKeys - No session ID found");
       showToast("No session ID found in URL", "error");
       return;
     }
@@ -957,11 +961,15 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     const fullSessionId = `session_${sessionId}`;
     const apiUrl = `https://api.crisp.chat/v1/website/${websiteId}/conversation/${fullSessionId}/messages`;
     
+    console.log("[TM] fetchFingerprintKeys - API URL:", apiUrl);
+    
     // Credentials for Basic Auth
     const username = "24ee9d46-e379-4964-81eb-d6c4a1c2e3dd";
     const password = "ebb4fd9f1930b187ac94284fd4540c40f10990be69c21965ca617adaeb029a8b";
     const basicAuth = btoa(`${username}:${password}`);
 
+    console.log("[TM] fetchFingerprintKeys - Making GM_xmlhttpRequest...");
+    
     GM_xmlhttpRequest({
       method: "GET",
       url: apiUrl,
@@ -970,9 +978,13 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         "X-Crisp-Tier": "plugin"
       },
       onload: function (response) {
+        console.log("[TM] fetchFingerprintKeys - Response received:", response.status);
+        console.log("[TM] fetchFingerprintKeys - Response text:", response.responseText);
         try {
           const data = JSON.parse(response.responseText);
+          console.log("[TM] fetchFingerprintKeys - Parsed data:", data);
           const fingerprintKeys = parseFingerprintKeys(data);
+          console.log("[TM] fetchFingerprintKeys - Fingerprint keys:", fingerprintKeys);
           
           if (fingerprintKeys.length > 0) {
             displayFingerprintKeys(fingerprintKeys);
@@ -981,12 +993,12 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             showToast("No fingerprint keys found", "error");
           }
         } catch (error) {
-          console.error("Error parsing fingerprint data:", error);
+          console.error("[TM] Error parsing fingerprint data:", error);
           showToast("Error fetching fingerprint data", "error");
         }
       },
       onerror: function (error) {
-        console.error("Error fetching fingerprint data:", error);
+        console.error("[TM] Error fetching fingerprint data:", error);
         showToast("Error connecting to Crisp API", "error");
       },
     });
@@ -1181,24 +1193,34 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
   // Auto-trigger fingerprint fetch on page load and URL changes
   function isInboxPage() {
-    return window.location.pathname.includes("/inbox/session_");
+    const result = window.location.pathname.includes("/inbox/session_");
+    console.log("[TM] isInboxPage - pathname:", window.location.pathname, "result:", result);
+    return result;
   }
 
   function autoFetchFingerprints() {
+    console.log("[TM] autoFetchFingerprints - Called");
     if (isInboxPage()) {
       const sessionId = getSessionIdFromUrl();
+      console.log("[TM] autoFetchFingerprints - Session ID:", sessionId);
       if (sessionId) {
         console.log("[TM] Auto-fetching fingerprints for session:", sessionId);
         fetchFingerprintKeys();
+      } else {
+        console.log("[TM] autoFetchFingerprints - No session ID found, skipping");
       }
+    } else {
+      console.log("[TM] autoFetchFingerprints - Not on inbox page, skipping");
     }
   }
 
   // Initial check on page load
+  console.log("[TM] Script loaded, scheduling initial autoFetchFingerprints in 1 second");
   setTimeout(autoFetchFingerprints, 1000);
 
   // Watch for URL changes (SPA navigation)
   let lastUrl = window.location.href;
+  console.log("[TM] Starting URL monitor, initial URL:", lastUrl);
   setInterval(() => {
     if (lastUrl !== window.location.href) {
       lastUrl = window.location.href;
