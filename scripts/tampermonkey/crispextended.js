@@ -1,8 +1,13 @@
 (function () {
   const API_URL = unsafeWindow.trx_monitor_url || "http://localhost:8040";
   const TG_API_URL = unsafeWindow.tg_api_url || "http://localhost:4040";
+  const REPLY_API_URL =
+    unsafeWindow.reply_api_url || "http://reply.hexaloom.com";
+  const SECURE_TOKEN =
+    unsafeWindow.secure_token || "what-ever-bitch-i-dont-care-123";
   const apiBase = `${API_URL}`;
   const tgApi = `${TG_API_URL}`;
+  const replyApi = `${REPLY_API_URL}`;
 
   ("use strict");
 
@@ -25,12 +30,12 @@
       "Menunggu Jawaban": "⏰",
       "Belum Diproses": "📋",
       "Tidak ada parsing": "❓",
-      "Terjadwal": "📅",
-      "Sukses": "✅",
+      Terjadwal: "📅",
+      Sukses: "✅",
       "Sukses Masuk Outbox": "✅",
       "Sukses Masuk Transaksi": "✅",
       "Sukses Masuk CS": "✅",
-      "Gagal": "❌",
+      Gagal: "❌",
       "Bukan Reseller": "🚫",
       "Format Salah": "📝",
       "Saldo Tidak Cukup": "💸",
@@ -40,12 +45,12 @@
       "Produk Gangguan": "⚠️",
       "Parameter Salah": "⚙️",
       "Pin Salah": "🔒",
-      "Dibatalkan": "🚫",
+      Dibatalkan: "🚫",
       "Reseller Tidak Aktif": "😴",
       "Tujuan Salah": "🎯",
       "Tujuan Di Luar Wilayah": "🌍",
       "Kode Area Tidak Cocok": "📍",
-      "Timeout": "⏱️",
+      Timeout: "⏱️",
       "Nomor Blacklist": "🚫",
       "Wrong Signature": "✍️",
       "Nomor Tidak Aktif": "📵",
@@ -54,27 +59,27 @@
       "Qty Tidak Sesuai": "🔢",
       "Limit Harian": "📊",
       "Reseller Suspend": "⏸️",
-      "Diabaikan": "👁️‍🗨️",
+      Diabaikan: "👁️‍🗨️",
       "Unit Tidak Cukup": "📉",
       "Invalid Terminal": "💻",
       "Group Dissallow": "👥",
       "Access Denied": "🔐",
-      "Cutoff": "✂️",
+      Cutoff: "✂️",
       "Harus Ubah Pin": "🔑",
       "Nomor Hangus": "🗑️",
-      "Nomor Masa Tenggang": "⏳"
+      "Nomor Masa Tenggang": "⏳",
     };
-    
+
     return statusMap[status] || "❓";
   }
 
   function getDepositStatusEmoji(status) {
     const statusMap = {
-      "Open": "🔄",
-      "Cancelled": "❌", 
-      "Settled": "✅"
+      Open: "🔄",
+      Cancelled: "❌",
+      Settled: "✅",
     };
-    
+
     return statusMap[status] || "❓";
   }
 
@@ -168,7 +173,7 @@
 
       rowData.forEach((cellData, index) => {
         const td = document.createElement("td");
-        
+
         // Create a container div for cell content and copy button
         const cellContainer = document.createElement("div");
         cellContainer.style.cssText = `
@@ -177,7 +182,7 @@
           align-items: center;
           width: 100%;
         `;
-        
+
         // Create text span for the cell data
         const textSpan = document.createElement("span");
         textSpan.innerText = cellData;
@@ -186,7 +191,7 @@
           word-wrap: break-word;
           overflow-wrap: break-word;
         `;
-        
+
         // Create small copy button for each cell
         const cellCopyBtn = document.createElement("button");
         cellCopyBtn.innerText = "📋";
@@ -203,13 +208,15 @@
         cellCopyBtn.title = "Copy cell content";
         cellCopyBtn.onclick = (e) => {
           e.stopPropagation();
-          navigator.clipboard.writeText(cellData).catch((error) => console.error("Error copying cell:", error));
+          navigator.clipboard
+            .writeText(cellData)
+            .catch((error) => console.error("Error copying cell:", error));
         };
-        
+
         cellContainer.appendChild(textSpan);
         cellContainer.appendChild(cellCopyBtn);
         td.appendChild(cellContainer);
-        
+
         td.style.cssText = `
                     border: 1px solid #ccc;
                     padding: 4px 6px;
@@ -243,7 +250,7 @@
 👤 Reseller: ${row.kode_reseller || ""} - ${row.nama_reseller || ""}.
 💰 Harga: ${new Intl.NumberFormat("id-ID").format(row.harga) || ""}.
 ⚠️ Status: Dalam pengecekan lebih lanjut`;
-        
+
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying report:", error));
@@ -251,7 +258,7 @@
         // Forward to Telegram
         const module = row.kode_modul_label || "";
         const message = `${formatDate(row.tgl_entri) || ""} ${row.tujuan || ""} ${row.sn || ""} ${row.status || ""} bantu cek, kak`;
-        
+
         reportButton.innerText = "⏳";
         GM_xmlhttpRequest({
           method: "GET",
@@ -437,7 +444,7 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
       rowData.forEach((cellData, index) => {
         const td = document.createElement("td");
-        
+
         // Create a container div for cell content and copy button
         const cellContainer = document.createElement("div");
         cellContainer.style.cssText = `
@@ -446,7 +453,7 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
           align-items: center;
           width: 100%;
         `;
-        
+
         // Create text span for the cell data
         const textSpan = document.createElement("span");
         textSpan.innerText = cellData;
@@ -455,7 +462,7 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
           word-wrap: break-word;
           overflow-wrap: break-word;
         `;
-        
+
         // Create small copy button for each cell
         const cellCopyBtn = document.createElement("button");
         cellCopyBtn.innerText = "📋";
@@ -472,13 +479,15 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
         cellCopyBtn.title = "Copy cell content";
         cellCopyBtn.onclick = (e) => {
           e.stopPropagation();
-          navigator.clipboard.writeText(cellData).catch((error) => console.error("Error copying cell:", error));
+          navigator.clipboard
+            .writeText(cellData)
+            .catch((error) => console.error("Error copying cell:", error));
         };
-        
+
         cellContainer.appendChild(textSpan);
         cellContainer.appendChild(cellCopyBtn);
         td.appendChild(cellContainer);
-        
+
         td.style.cssText = `
                     border: 1px solid #ccc;
                     padding: 6px 8px;
@@ -510,13 +519,13 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
 👤 Nama: ${row.nama_reseller || ""}.
 💰 Jumlah: ${new Intl.NumberFormat("id-ID").format(row.jumlah) || ""}.
 ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
-        
+
         // Only show Update line for Cancelled or Settled status
         if (row.status === "Cancelled" || row.status === "Settled") {
           formattedText += `.
 🔄 Update: ${formatDate(row.tgl_status) || ""}`;
         }
-        
+
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying text:", error));
@@ -852,6 +861,59 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     });
   }
 
+  function fetchLatestReply(key = "reply:test") {
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: `${replyApi}/reply?token=${SECURE_TOKEN}&key=${encodeURIComponent(key)}`,
+      onload: function (response) {
+        try {
+          const result = JSON.parse(response.responseText);
+          if (result.data) {
+            // Automatically copy data value to clipboard
+            navigator.clipboard
+              .writeText(result.data)
+              .then(() => {
+                console.log("Latest reply copied to clipboard:", result.data);
+                // Optional: Show a brief notification
+                const notification = document.createElement("div");
+                notification.textContent = "Reply copied to clipboard!";
+                notification.style.cssText = `
+                  position: fixed;
+                  top: 20px;
+                  right: 20px;
+                  background: #4CAF50;
+                  color: white;
+                  padding: 15px 20px;
+                  border-radius: 4px;
+                  z-index: 10001;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                  font-size: 14px;
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                  notification.remove();
+                }, 2000);
+              })
+              .catch((error) => {
+                console.error("Error copying reply to clipboard:", error);
+                alert("Error copying to clipboard");
+              });
+          } else {
+            console.log("No data found in reply");
+            alert("No data found in reply");
+          }
+        } catch (error) {
+          console.error("Error parsing reply data:", error);
+          alert("Error fetching reply data");
+        }
+      },
+      onerror: function (error) {
+        console.error("Error fetching reply data:", error);
+        alert("Error connecting to reply service");
+      },
+    });
+  }
+
   document.addEventListener("keydown", function (event) {
     // Detect ONLY Ctrl+R or Cmd+R, no other modifiers
     const isOnlyCtrlR =
@@ -865,7 +927,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       event.preventDefault();
 
       const btn = document.querySelector(
-        ".c-conversation-profile-widget-layout-action--button.c-conversation-profile-widget-layout-action--green"
+        ".c-conversation-profile-widget-layout-action--button.c-conversation-profile-widget-layout-action--green",
       );
 
       if (btn) {
@@ -873,6 +935,18 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       } else {
         console.log('[TM] "Ask for rating" button not found.');
       }
+    }
+
+    // Detect Ctrl+Shift+B or Cmd+Shift+B to fetch latest bot reply
+    const isCtrlShiftB =
+      (event.ctrlKey || event.metaKey) && // Ctrl or Cmd
+      event.shiftKey && // Shift pressed
+      !event.altKey && // Alt NOT pressed
+      event.key.toLowerCase() === "b";
+
+    if (isCtrlShiftB) {
+      event.preventDefault();
+      fetchLatestReply();
     }
   });
 
@@ -889,7 +963,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     function focusInputField() {
       const inputField = document.querySelector(
-        ".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field"
+        ".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field",
       );
       if (inputField) {
         inputField.focus();
@@ -899,7 +973,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     function detachEditor() {
       const editor = document.querySelector(".c-conversation-box__editor");
       const parent = document.querySelector(
-        ".c-conversation-box.js-conversation-wrapper.c-conversation-box--default"
+        ".c-conversation-box.js-conversation-wrapper.c-conversation-box--default",
       );
 
       if (!editor || !parent || isDetached) return;
@@ -933,7 +1007,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     function restoreEditor() {
       const editor = document.querySelector(
-        "body > .c-conversation-box__editor"
+        "body > .c-conversation-box__editor",
       );
 
       if (!editor || !originalParent || !isDetached) return;
@@ -966,7 +1040,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       if (!isInboxPage() || !isDetached) return;
 
       const editor = document.querySelector(
-        "body > .c-conversation-box__editor"
+        "body > .c-conversation-box__editor",
       );
       if (editor) {
         isHidden = !isHidden;
@@ -1013,8 +1087,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   }
 
   function isCrispModsDisabled() {
-    return (typeof unsafeWindow !== 'undefined' && unsafeWindow.disableCrispMods) ||
-           (typeof window !== 'undefined' && window.disableCrispMods);
+    return (
+      (typeof unsafeWindow !== "undefined" && unsafeWindow.disableCrispMods) ||
+      (typeof window !== "undefined" && window.disableCrispMods)
+    );
   }
 
   if (!isCrispModsDisabled()) {
@@ -1022,19 +1098,21 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     // ---- Change theme color ----
     let meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', '#b4637a');
+    if (meta) meta.setAttribute("content", "#b4637a");
 
     // ---- Change favicon ----
     const newFavicon = "https://www.svgrepo.com/show/194023/message-mail.svg";
-    document.querySelectorAll('link[rel*="icon"]').forEach(el => el.parentNode.removeChild(el));
-    const link = document.createElement('link');
-    link.rel = 'icon';
-    link.type = 'image/png';
+    document
+      .querySelectorAll('link[rel*="icon"]')
+      .forEach((el) => el.parentNode.removeChild(el));
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.type = "image/png";
     link.href = newFavicon;
     document.head.appendChild(link);
 
     // ---- Force sidebar width & add slide animation ----
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.innerHTML = `
         .c-conversation-menu.c-inbox-index__menu {
             width: 200px !important;
@@ -1098,67 +1176,69 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     document.head.appendChild(style);
 
     function createToggleButton() {
-        if (document.querySelector('.sidebar-toggle-btn')) return;
-        const toggleBtn = document.createElement('button');
-        toggleBtn.className = 'sidebar-toggle-btn';
-        toggleBtn.innerHTML = sidebarHidden ? 'Details' : 'Hide';
-        toggleBtn.title = 'Toggle Conversation Pane';
-        if (sidebarHidden) {
-            toggleBtn.classList.add('pane-hidden');
-        }
-        toggleBtn.addEventListener('click', toggleSidebar);
-        document.body.appendChild(toggleBtn);
+      if (document.querySelector(".sidebar-toggle-btn")) return;
+      const toggleBtn = document.createElement("button");
+      toggleBtn.className = "sidebar-toggle-btn";
+      toggleBtn.innerHTML = sidebarHidden ? "Details" : "Hide";
+      toggleBtn.title = "Toggle Conversation Pane";
+      if (sidebarHidden) {
+        toggleBtn.classList.add("pane-hidden");
+      }
+      toggleBtn.addEventListener("click", toggleSidebar);
+      document.body.appendChild(toggleBtn);
     }
 
     function toggleSidebar() {
-        sidebarHidden = !sidebarHidden;
-        const toggleBtn = document.querySelector('.sidebar-toggle-btn');
-        document.querySelectorAll('.c-inbox-conversation__pane').forEach(el => {
-            if (sidebarHidden) {
-                el.classList.add('sidebar-hidden');
-                setTimeout(() => {
-                    if (el.classList.contains('sidebar-hidden')) {
-                        el.style.setProperty('position', 'absolute', 'important');
-                        el.style.setProperty('visibility', 'hidden', 'important');
-                    }
-                }, 300);
-            } else {
-                el.style.removeProperty('position');
-                el.style.removeProperty('visibility');
-                setTimeout(() => {
-                    el.classList.remove('sidebar-hidden');
-                }, 10);
+      sidebarHidden = !sidebarHidden;
+      const toggleBtn = document.querySelector(".sidebar-toggle-btn");
+      document.querySelectorAll(".c-inbox-conversation__pane").forEach((el) => {
+        if (sidebarHidden) {
+          el.classList.add("sidebar-hidden");
+          setTimeout(() => {
+            if (el.classList.contains("sidebar-hidden")) {
+              el.style.setProperty("position", "absolute", "important");
+              el.style.setProperty("visibility", "hidden", "important");
             }
-        });
-        if (toggleBtn) {
-            toggleBtn.innerHTML = sidebarHidden ? 'Details' : 'Hide';
-            if (sidebarHidden) {
-                toggleBtn.classList.add('pane-hidden');
-            } else {
-                toggleBtn.classList.remove('pane-hidden');
-            }
+          }, 300);
+        } else {
+          el.style.removeProperty("position");
+          el.style.removeProperty("visibility");
+          setTimeout(() => {
+            el.classList.remove("sidebar-hidden");
+          }, 10);
         }
+      });
+      if (toggleBtn) {
+        toggleBtn.innerHTML = sidebarHidden ? "Details" : "Hide";
+        if (sidebarHidden) {
+          toggleBtn.classList.add("pane-hidden");
+        } else {
+          toggleBtn.classList.remove("pane-hidden");
+        }
+      }
     }
 
     function setupSidebar() {
-        document.querySelectorAll('.c-conversation-menu.c-inbox-index__menu').forEach(el => {
-            el.style.setProperty('width', '200px', 'important');
-            el.style.setProperty('min-width', '200px', 'important');
-            el.style.setProperty('max-width', '200px', 'important');
-            el.style.setProperty('flex-basis', '200px', 'important');
+      document
+        .querySelectorAll(".c-conversation-menu.c-inbox-index__menu")
+        .forEach((el) => {
+          el.style.setProperty("width", "200px", "important");
+          el.style.setProperty("min-width", "200px", "important");
+          el.style.setProperty("max-width", "200px", "important");
+          el.style.setProperty("flex-basis", "200px", "important");
         });
-        document.querySelectorAll('.c-inbox-conversation__pane').forEach(el => {
-            if (sidebarHidden) {
-                el.classList.add('sidebar-hidden');
-                el.style.setProperty('position', 'absolute', 'important');
-                el.style.setProperty('visibility', 'hidden', 'important');
-            } else {
-                el.classList.remove('sidebar-hidden');
-                el.style.removeProperty('position');
-                el.style.removeProperty('visibility');
-            }
-        });
-        createToggleButton();
+      document.querySelectorAll(".c-inbox-conversation__pane").forEach((el) => {
+        if (sidebarHidden) {
+          el.classList.add("sidebar-hidden");
+          el.style.setProperty("position", "absolute", "important");
+          el.style.setProperty("visibility", "hidden", "important");
+        } else {
+          el.classList.remove("sidebar-hidden");
+          el.style.removeProperty("position");
+          el.style.removeProperty("visibility");
+        }
+      });
+      createToggleButton();
     }
 
     setupSidebar();
