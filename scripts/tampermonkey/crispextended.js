@@ -904,35 +904,43 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   }
 
   function fetchLatestReply(key = "reply:test") {
+    console.log("[TM] fetchLatestReply - Fetching reply for key:", key);
     GM_xmlhttpRequest({
       method: "GET",
       url: `${replyApi}/reply?token=${SECURE_TOKEN}&key=${encodeURIComponent(key)}`,
       onload: function (response) {
+        console.log("[TM] fetchLatestReply - Response status:", response.status);
+        console.log("[TM] fetchLatestReply - Response text:", response.responseText);
+        console.log("[TM] fetchLatestReply - Response text length:", response.responseText.length);
+        
         try {
           const result = JSON.parse(response.responseText);
+          console.log("[TM] fetchLatestReply - Parsed result:", result);
+          
           if (result.data) {
             // Automatically copy data value to clipboard
             navigator.clipboard
               .writeText(result.data)
               .then(() => {
-                console.log("Latest reply copied to clipboard:", result.data);
+                console.log("[TM] Latest reply copied to clipboard:", result.data);
                 showToast("Reply copied to clipboard!", "success");
               })
               .catch((error) => {
-                console.error("Error copying reply to clipboard:", error);
+                console.error("[TM] Error copying reply to clipboard:", error);
                 showToast("Error copying to clipboard", "error");
               });
           } else {
-            console.log("No data found in reply");
+            console.log("[TM] No data found in reply");
             showToast("No data found in reply", "error");
           }
         } catch (error) {
-          console.error("Error parsing reply data:", error);
+          console.error("[TM] Error parsing reply data:", error);
+          console.error("[TM] Raw response that failed to parse:", response.responseText);
           showToast("Error fetching reply data", "error");
         }
       },
       onerror: function (error) {
-        console.error("Error fetching reply data:", error);
+        console.error("[TM] Error fetching reply data:", error);
         showToast("Error connecting to reply service", "error");
       },
     });
