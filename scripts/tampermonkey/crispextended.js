@@ -1018,7 +1018,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           
           if (fingerprintKeys.length > 0) {
             displayFingerprintKeys(fingerprintKeys);
-            showToast(`Showing latest ${fingerprintKeys.length} fingerprint key(s)`, "success");
           } else {
             showToast("No fingerprint keys found", "error");
           }
