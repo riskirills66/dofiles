@@ -1049,11 +1049,11 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     
     console.log("[TM] parseFingerprintKeys - Total user fingerprints collected:", fingerprintKeys.length);
     
-    // Remove duplicates and get only the first 3 (since API returns newest first)
+    // Remove duplicates and get only the last 3 (since API returns oldest first)
     const uniqueKeys = [...new Set(fingerprintKeys)];
     console.log("[TM] parseFingerprintKeys - Unique user fingerprints:", uniqueKeys.length);
     
-    const latest3 = uniqueKeys.slice(0, 3); // Get first 3 since API returns newest first
+    const latest3 = uniqueKeys.slice(-3).reverse(); // Get last 3 and reverse to show newest first
     console.log("[TM] parseFingerprintKeys - Latest 3 user fingerprints:", latest3.length, latest3);
     
     return latest3;
