@@ -1079,11 +1079,11 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       right: 20px;
       background: white;
       color: black;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 6px;
+      border-radius: 4px;
       z-index: 10000;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      max-width: 400px;
+      max-width: 350px;
       font-family: monospace;
       border: 1px solid #ddd;
     `;
@@ -1095,9 +1095,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         align-items: center;
         justify-content: space-between;
         background: #f5f5f5;
-        padding: 8px;
-        margin-bottom: 6px;
-        border-radius: 4px;
+        padding: 4px 6px;
+        margin-bottom: ${index === keys.length - 1 ? '0' : '3px'};
+        border-radius: 3px;
         transition: all 0.2s;
       `;
       keyRow.onmouseover = () => {
@@ -1112,8 +1112,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       keyText.style.cssText = `
         flex: 1;
         word-break: break-all;
-        font-size: 12px;
-        margin-right: 10px;
+        font-size: 11px;
+        margin-right: 6px;
       `;
 
       const copyBtn = document.createElement("button");
@@ -1121,10 +1121,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       copyBtn.style.cssText = `
         background: #fff;
         border: 1px solid #ddd;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 2px 6px;
+        border-radius: 3px;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 12px;
         transition: all 0.2s;
       `;
       copyBtn.onmouseover = () => {
@@ -1150,17 +1150,17 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     });
 
     const closeButton = document.createElement("button");
-    closeButton.textContent = "Close";
+    closeButton.textContent = "×";
     closeButton.style.cssText = `
-      margin-top: 8px;
-      padding: 6px 12px;
+      margin-top: 4px;
+      padding: 2px 6px;
       background: #fff;
-      color: #333;
+      color: #666;
       border: 1px solid #ddd;
-      border-radius: 4px;
+      border-radius: 3px;
       cursor: pointer;
       width: 100%;
-      font-size: 12px;
+      font-size: 14px;
       transition: all 0.2s;
     `;
     closeButton.onmouseover = () => {
