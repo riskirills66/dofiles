@@ -33,10 +33,10 @@ return {
       return require("opencode").operator("@this ") .. "_"
     end, { desc = "Add line to opencode", expr = true })
 
-    vim.keymap.set("n", "<S-C-u>", function()
+    vim.keymap.set("n", "<S-C-j>", function()
       require("opencode").command("session.half.page.up")
     end, { desc = "Scroll opencode up" })
-    vim.keymap.set("n", "<S-C-d>", function()
+    vim.keymap.set("n", "<S-C-k>", function()
       require("opencode").command("session.half.page.down")
     end, { desc = "Scroll opencode down" })
 
