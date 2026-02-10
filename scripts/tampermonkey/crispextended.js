@@ -967,158 +967,174 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     return latest3;
   }
 
-  // Display fingerprint keys floating on screen
-  function displayFingerprintKeys(keys) {
-    // Remove existing fingerprint display if any
-    const existingDisplay = document.getElementById("fingerprint-display");
-    if (existingDisplay) {
-      existingDisplay.remove();
-    }
-
-    const container = document.createElement("div");
-    container.id = "fingerprint-display";
-    // Don't add userscript-modal class to avoid interfering with context menu
-    container.style.cssText = `
-      position: fixed !important;
-      top: 80px !important;
-      right: 20px !important;
-      background: transparent !important;
-      color: black !important;
-      padding: 6px !important;
-      border-radius: 4px !important;
-      z-index: 10000 !important;
-      max-width: 350px !important;
-      font-family: monospace !important;
-    `;
-
-    keys.forEach((key, index) => {
-      const keyRow = document.createElement("div");
-      keyRow.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        background: rgba(30, 30, 30, 0.7) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        padding: 4px 6px !important;
-        margin-bottom: ${index === keys.length - 1 ? '0' : '3px'} !important;
-        border-radius: 3px !important;
-        transition: all 0.2s !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      `;
-      keyRow.onmouseover = () => {
-        keyRow.style.background = "rgba(50, 50, 50, 0.7)";
-      };
-      keyRow.onmouseout = () => {
-        keyRow.style.background = "rgba(30, 30, 30, 0.7)";
-      };
-
-      const keyText = document.createElement("span");
-      keyText.textContent = "Loading...";
-      keyText.style.cssText = `
-        flex: 1 !important;
-        word-break: break-all !important;
-        font-size: 11px !important;
-        margin-right: 6px !important;
-        color: #aaa !important;
-        font-style: italic !important;
-      `;
-
-      const copyBtn = document.createElement("button");
-      copyBtn.textContent = "⏳";
-      copyBtn.style.cssText = `
-        background: rgba(60, 60, 60, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        padding: 2px 6px !important;
-        border-radius: 3px !important;
-        cursor: pointer !important;
-        font-size: 12px !important;
-        transition: all 0.2s !important;
-        color: #fff !important;
-      `;
-      copyBtn.onmouseover = () => {
-        copyBtn.style.background = "rgba(80, 80, 80, 0.9)";
-      };
-      copyBtn.onmouseout = () => {
-        copyBtn.style.background = "rgba(60, 60, 60, 0.9)";
-      };
+  // Display fingerprint keys as Crisp suggestions
+  function displayFingerprintKeys(keys, retryCount = 0) {
+    console.log("[TM] displayFingerprintKeys - Injecting into Crisp suggestions (attempt " + (retryCount + 1) + ")");
+    
+    // Find the suggestions body container
+    const suggestionsBody = document.querySelector(".c-conversation-box-suggestions__body");
+    
+    if (!suggestionsBody) {
+      console.log("[TM] Suggestions body not found");
       
-      // Store fetched reply data for this key
-      let fetchedReply = null;
-      let fetchStatus = 'loading'; // 'loading', 'success', 'error'
-      
-      copyBtn.onclick = () => {
-        if (fetchStatus === 'loading') {
-          // Still loading, do nothing
-          return;
-        }
-        
-        if (fetchStatus === 'success' && fetchedReply) {
-          // Copy the already fetched reply
-          navigator.clipboard
-            .writeText(fetchedReply)
-            .then(() => {
-              const originalText = copyBtn.textContent;
-              copyBtn.textContent = "✅";
-              setTimeout(() => {
-                // Close the display after successful copy
-                closeDisplay();
-              }, 500);
-            })
-            .catch((error) => {
-              console.error("[TM] Error copying to clipboard:", error);
-              copyBtn.textContent = "❌";
-              setTimeout(() => {
-                copyBtn.textContent = "🔄";
-              }, 1000);
-            });
-        } else {
-          // Retry fetching (for error state or manual retry)
-          copyBtn.textContent = "⏳";
-          keyText.textContent = "Loading...";
-          keyText.style.color = "#666";
-          keyText.style.fontStyle = "italic";
-          fetchStatus = 'loading';
-          fetchReplyForKey(key, copyBtn, keyText, (reply, status) => {
-            fetchedReply = reply;
-            fetchStatus = status;
-          });
-        }
-      };
-      
-      // Auto-fetch reply on display
-      fetchReplyForKey(key, copyBtn, keyText, (reply, status) => {
-        fetchedReply = reply;
-        fetchStatus = status;
-      });
-
-      keyRow.appendChild(keyText);
-      keyRow.appendChild(copyBtn);
-      container.appendChild(keyRow);
-    });
-
-    function closeDisplay() {
-      container.remove();
-      document.removeEventListener("keydown", escapeHandler);
-      window.closeFingerprintDisplay = null;
-    }
-
-    window.closeFingerprintDisplay = closeDisplay;
-
-    document.body.appendChild(container);
-
-    function escapeHandler(event) {
-      // Don't handle if context menu is open
-      if (contextMenu && document.body.contains(contextMenu)) {
+      // Retry up to 10 times with 500ms delay
+      if (retryCount < 10) {
+        console.log("[TM] Retrying in 500ms...");
+        showToast("Waiting for suggestions panel...", "info");
+        setTimeout(() => {
+          displayFingerprintKeys(keys, retryCount + 1);
+        }, 500);
+        return;
+      } else {
+        console.log("[TM] Suggestions panel not found after 10 retries");
+        showToast("Suggestions panel not found. Try typing '/' in the input field first.", "error");
         return;
       }
-      if (event.key === "Escape") {
-        closeDisplay();
-      }
     }
 
-    document.addEventListener("keydown", escapeHandler);
+    console.log("[TM] Suggestions body found, injecting bot replies");
+    showToast("Loading bot replies...", "info");
+
+    // Remove existing bot reply items
+    const existingBotReplies = suggestionsBody.querySelectorAll('[data-bot-reply="true"]');
+    existingBotReplies.forEach(item => item.remove());
+
+    // Create or find the "Bot Replies" tag
+    let botReplyTag = Array.from(suggestionsBody.querySelectorAll('.c-conversation-box-suggestion-tag'))
+      .find(tag => tag.textContent.includes('Bot Replies'));
+    
+    if (!botReplyTag) {
+      botReplyTag = document.createElement("div");
+      botReplyTag.className = "c-conversation-box-suggestion-tag";
+      botReplyTag.innerHTML = '<span>Bot Replies</span>';
+      suggestionsBody.appendChild(botReplyTag);
+    }
+
+    // Fetch and inject each bot reply
+    keys.forEach((key, index) => {
+      const suggestionItem = document.createElement("div");
+      suggestionItem.className = "c-conversation-box-suggestion-item c-conversation-box-suggestion-shortcut";
+      suggestionItem.setAttribute("tag", "bot-replies");
+      suggestionItem.setAttribute("data-bot-reply", "true");
+      
+      const bangDiv = document.createElement("div");
+      bangDiv.className = "c-conversation-box-suggestion-shortcut__bang u-bold";
+      
+      const bangText = document.createElement("span");
+      bangText.className = "c-conversation-box-suggestion-shortcut__bang-text u-ellipsis";
+      bangText.textContent = `Bot Reply ${index + 1}`;
+      
+      bangDiv.appendChild(bangText);
+      
+      const textSpan = document.createElement("span");
+      textSpan.className = "c-conversation-box-suggestion-shortcut__text u-ellipsis";
+      textSpan.textContent = "Loading...";
+      textSpan.style.fontStyle = "italic";
+      textSpan.style.color = "#999";
+      
+      suggestionItem.appendChild(bangDiv);
+      suggestionItem.appendChild(textSpan);
+      suggestionsBody.appendChild(suggestionItem);
+      
+      // Store fetched reply data
+      let fetchedReply = null;
+      
+      // Click handler to insert reply into input
+      suggestionItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log("[TM] Bot reply clicked:", fetchedReply);
+        
+        if (fetchedReply) {
+          const inputField = document.querySelector(".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field");
+          if (inputField) {
+            console.log("[TM] Input field found:", inputField);
+            
+            // Find the paragraph and text span
+            let paragraph = inputField.querySelector('p.o-markdown-ltr');
+            let textSpan = paragraph ? paragraph.querySelector('span[data-lexical-text="true"]') : null;
+            
+            console.log("[TM] Paragraph:", paragraph);
+            console.log("[TM] Text span:", textSpan);
+            
+            if (textSpan) {
+              // Replace the text content directly
+              textSpan.textContent = fetchedReply;
+              console.log("[TM] Text replaced in existing span");
+            } else if (paragraph) {
+              // Create new text span if it doesn't exist
+              paragraph.innerHTML = '';
+              const newSpan = document.createElement('span');
+              newSpan.setAttribute('data-lexical-text', 'true');
+              newSpan.textContent = fetchedReply;
+              paragraph.appendChild(newSpan);
+              console.log("[TM] Created new span in existing paragraph");
+            } else {
+              // Create entire structure if nothing exists
+              inputField.innerHTML = '';
+              const p = document.createElement('p');
+              p.className = 'o-markdown-ltr';
+              p.setAttribute('dir', 'ltr');
+              const span = document.createElement('span');
+              span.setAttribute('data-lexical-text', 'true');
+              span.textContent = fetchedReply;
+              p.appendChild(span);
+              inputField.appendChild(p);
+              console.log("[TM] Created complete structure");
+            }
+            
+            // Focus the input field
+            inputField.focus();
+            
+            // Move cursor to end
+            const range = document.createRange();
+            const sel = window.getSelection();
+            const lastTextNode = inputField.querySelector('span[data-lexical-text="true"]');
+            if (lastTextNode && lastTextNode.firstChild) {
+              range.setStart(lastTextNode.firstChild, lastTextNode.textContent.length);
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+            
+            // Trigger events to notify Lexical
+            inputField.dispatchEvent(new Event('input', { bubbles: true }));
+            inputField.dispatchEvent(new Event('change', { bubbles: true }));
+            inputField.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+            inputField.dispatchEvent(new KeyboardEvent('keyup', { key: 'a', bubbles: true }));
+            
+            // Also copy to clipboard as backup
+            navigator.clipboard.writeText(fetchedReply).catch(err => {
+              console.error("[TM] Failed to copy to clipboard:", err);
+            });
+            
+            // Close suggestions panel
+            const suggestionsPanel = document.querySelector('.c-conversation-box-suggestions');
+            if (suggestionsPanel) {
+              suggestionsPanel.style.display = 'none';
+            }
+            
+            console.log("[TM] Bot reply inserted into input field");
+            showToast("Reply inserted!", "success");
+          } else {
+            console.error("[TM] Input field not found");
+            showToast("Input field not found", "error");
+          }
+        }
+      }, true); // Use capture phase to intercept before Crisp's handlers
+      
+      // Auto-fetch reply
+      fetchReplyForKey(key, null, textSpan, (reply, status) => {
+        fetchedReply = reply;
+        if (status === 'success') {
+          textSpan.style.fontStyle = "normal";
+          textSpan.style.color = "";
+        }
+      });
+    });
+    
+    showToast("Bot replies loaded!", "success");
   }
 
   // Helper function to fetch reply for a specific key
@@ -1134,8 +1150,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         // Check if response is not OK (404, 500, etc.)
         if (response.status !== 200) {
           console.log("[TM] fetchReplyForKey - Non-200 status, treating as error");
-          buttonElement.textContent = "🔄";
-          buttonElement.title = "Retry and copy";
+          if (buttonElement) {
+            buttonElement.textContent = "🔄";
+            buttonElement.title = "Retry and copy";
+          }
           textElement.textContent = `Error: ${response.status}`;
           textElement.style.color = "#ff6b6b";
           textElement.style.fontStyle = "normal";
@@ -1149,16 +1167,20 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           
           if (result.data) {
             console.log("[TM] Reply fetched successfully:", result.data);
-            buttonElement.textContent = "📋";
-            buttonElement.title = "Copy reply";
+            if (buttonElement) {
+              buttonElement.textContent = "📋";
+              buttonElement.title = "Copy reply";
+            }
             textElement.textContent = result.data;
-            textElement.style.color = "#fff";
+            textElement.style.color = "";
             textElement.style.fontStyle = "normal";
             if (callback) callback(result.data, 'success');
           } else {
             console.log("[TM] No data found in reply");
-            buttonElement.textContent = "🔄";
-            buttonElement.title = "Retry and copy";
+            if (buttonElement) {
+              buttonElement.textContent = "🔄";
+              buttonElement.title = "Retry and copy";
+            }
             textElement.textContent = "No data found";
             textElement.style.color = "#ff6b6b";
             textElement.style.fontStyle = "normal";
@@ -1170,15 +1192,19 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           // If it's not JSON, treat the response text as the actual reply
           if (response.responseText && response.responseText.trim()) {
             console.log("[TM] Plain text reply fetched:", response.responseText);
-            buttonElement.textContent = "📋";
-            buttonElement.title = "Copy reply";
+            if (buttonElement) {
+              buttonElement.textContent = "📋";
+              buttonElement.title = "Copy reply";
+            }
             textElement.textContent = response.responseText;
-            textElement.style.color = "#fff";
+            textElement.style.color = "";
             textElement.style.fontStyle = "normal";
             if (callback) callback(response.responseText, 'success');
           } else {
-            buttonElement.textContent = "🔄";
-            buttonElement.title = "Retry and copy";
+            if (buttonElement) {
+              buttonElement.textContent = "🔄";
+              buttonElement.title = "Retry and copy";
+            }
             textElement.textContent = "Parse error";
             textElement.style.color = "#ff6b6b";
             textElement.style.fontStyle = "normal";
@@ -1188,8 +1214,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       },
       onerror: function (error) {
         console.error("[TM] Error fetching reply data:", error);
-        buttonElement.textContent = "🔄";
-        buttonElement.title = "Retry and copy";
+        if (buttonElement) {
+          buttonElement.textContent = "🔄";
+          buttonElement.title = "Retry and copy";
+        }
         textElement.textContent = "Network error";
         textElement.style.color = "#ff6b6b";
         textElement.style.fontStyle = "normal";
@@ -1304,15 +1332,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     if (isCtrlShiftF) {
       event.preventDefault();
-      // Close existing display if open
-      const existingDisplay = document.getElementById("fingerprint-display");
-      if (existingDisplay) {
-        existingDisplay.remove();
-        if (window.closeFingerprintDisplay) {
-          window.closeFingerprintDisplay = null;
-        }
-      }
-      // Fetch fresh fingerprints
+      // Fetch fresh fingerprints and inject into suggestions
       fetchFingerprintKeys();
     }
   });
