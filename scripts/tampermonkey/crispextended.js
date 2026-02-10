@@ -1016,6 +1016,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       suggestionItem.className = "c-conversation-box-suggestion-item c-conversation-box-suggestion-shortcut";
       suggestionItem.setAttribute("tag", "bot-replies");
       suggestionItem.setAttribute("data-bot-reply", "true");
+      suggestionItem.setAttribute("tabindex", "0"); // Make it focusable
       
       const bangDiv = document.createElement("div");
       bangDiv.className = "c-conversation-box-suggestion-shortcut__bang u-bold";
@@ -1039,13 +1040,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       // Store fetched reply data
       let fetchedReply = null;
       
-      // Click handler to insert reply into input
-      suggestionItem.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log("[TM] Bot reply clicked:", fetchedReply);
-        
+      // Function to insert reply
+      const insertReply = () => {
         if (fetchedReply) {
           const inputField = document.querySelector(".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field");
           if (inputField) {
@@ -1122,7 +1118,45 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             showToast("Input field not found", "error");
           }
         }
-      }, true); // Use capture phase to intercept before Crisp's handlers
+      };
+      
+      // Click handler
+      suggestionItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("[TM] Bot reply clicked:", fetchedReply);
+        insertReply();
+      }, true);
+      
+      // Keyboard handler for Enter key
+      suggestionItem.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("[TM] Bot reply selected with Enter:", fetchedReply);
+          insertReply();
+        }
+      });
+      
+      // Hover handler to add active class
+      suggestionItem.addEventListener('mouseenter', () => {
+        // Remove active class from all items
+        document.querySelectorAll('.c-conversation-box-suggestion-item').forEach(item => {
+          item.classList.remove('c-conversation-box-suggestion-item--active');
+        });
+        // Add active class to this item
+        suggestionItem.classList.add('c-conversation-box-suggestion-item--active');
+      });
+      
+      // Focus handler to add active class
+      suggestionItem.addEventListener('focus', () => {
+        // Remove active class from all items
+        document.querySelectorAll('.c-conversation-box-suggestion-item').forEach(item => {
+          item.classList.remove('c-conversation-box-suggestion-item--active');
+        });
+        // Add active class to this item
+        suggestionItem.classList.add('c-conversation-box-suggestion-item--active');
+      });
       
       // Auto-fetch reply
       fetchReplyForKey(key, null, textSpan, (reply, status) => {
@@ -1134,7 +1168,79 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       });
     });
     
+    // Setup keyboard navigation for bot replies
+    setupBotReplyKeyboardNavigation(suggestionsBody);
+    
     showToast("Bot replies loaded!", "success");
+  }
+
+  // Setup keyboard navigation for bot reply items
+  function setupBotReplyKeyboardNavigation(suggestionsBody) {
+    console.log("[TM] Setting up keyboard navigation for bot replies");
+    
+    // Listen for arrow keys on the suggestions panel
+    const suggestionsPanel = document.querySelector('.c-conversation-box-suggestions');
+    if (!suggestionsPanel) return;
+    
+    suggestionsPanel.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' && e.key !== 'Enter') {
+        return; // Only handle arrow keys and Enter
+      }
+      
+      // Get all suggestion items (both Crisp's and ours)
+      const allItems = Array.from(suggestionsBody.querySelectorAll('.c-conversation-box-suggestion-item'));
+      if (allItems.length === 0) return;
+      
+      // Find currently active item
+      let activeIndex = allItems.findIndex(item => 
+        item.classList.contains('c-conversation-box-suggestion-item--active')
+      );
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Move to next item
+        activeIndex = (activeIndex + 1) % allItems.length;
+        
+        // Remove active class from all
+        allItems.forEach(item => item.classList.remove('c-conversation-box-suggestion-item--active'));
+        
+        // Add active class to new item
+        allItems[activeIndex].classList.add('c-conversation-box-suggestion-item--active');
+        allItems[activeIndex].scrollIntoView({ block: 'nearest' });
+        
+        console.log("[TM] Navigated down to index:", activeIndex);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Move to previous item
+        activeIndex = activeIndex <= 0 ? allItems.length - 1 : activeIndex - 1;
+        
+        // Remove active class from all
+        allItems.forEach(item => item.classList.remove('c-conversation-box-suggestion-item--active'));
+        
+        // Add active class to new item
+        allItems[activeIndex].classList.add('c-conversation-box-suggestion-item--active');
+        allItems[activeIndex].scrollIntoView({ block: 'nearest' });
+        
+        console.log("[TM] Navigated up to index:", activeIndex);
+      } else if (e.key === 'Enter') {
+        // Check if active item is a bot reply
+        const activeItem = allItems[activeIndex];
+        if (activeItem && activeItem.getAttribute('data-bot-reply') === 'true') {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          console.log("[TM] Enter pressed on bot reply, triggering click");
+          activeItem.click();
+        }
+        // If it's not a bot reply, let Crisp handle it
+      }
+    }, true); // Use capture phase
+    
+    console.log("[TM] Keyboard navigation setup complete");
   }
 
   // Helper function to fetch reply for a specific key
