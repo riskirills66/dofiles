@@ -129,7 +129,7 @@
             right: 0;
             background-color: white;
             padding: 20px;
-            z-index: 9999;
+            z-index: 10001;
             border-radius: 16px 16px 0 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
             max-height: 85vh;
@@ -369,18 +369,6 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     modal.appendChild(table);
 
-    const closeButton = document.createElement("button");
-    closeButton.innerText = "Close";
-    closeButton.style.cssText = `
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        `;
-
     // Function to close modal and cleanup
     function closeModal() {
       modal.style.transform = "translateY(100%)";
@@ -393,9 +381,6 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     // Add global reference for Tridactyl access
     window.closeUserscriptModal = closeModal;
-
-    closeButton.onclick = closeModal;
-    modal.appendChild(closeButton);
 
     document.body.appendChild(modal);
 
@@ -437,7 +422,7 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
             right: 0;
             background-color: white;
             padding: 20px;
-            z-index: 9999;
+            z-index: 10001;
             border-radius: 16px 16px 0 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
             max-height: 85vh;
@@ -668,18 +653,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     modal.appendChild(table);
 
-    const closeButton = document.createElement("button");
-    closeButton.innerText = "Close";
-    closeButton.style.cssText = `
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        `;
-
     function closeModal() {
       modal.style.transform = "translateY(100%)";
       setTimeout(() => {
@@ -689,9 +662,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       window.closeUserscriptModal = null;
     }
     window.closeUserscriptModal = closeModal;
-
-    closeButton.onclick = closeModal;
-    modal.appendChild(closeButton);
 
     document.body.appendChild(modal);
 
