@@ -1043,16 +1043,18 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       };
 
       const keyText = document.createElement("span");
-      keyText.textContent = key;
+      keyText.textContent = "Loading...";
       keyText.style.cssText = `
         flex: 1;
         word-break: break-all;
         font-size: 11px;
         margin-right: 6px;
+        color: #666;
+        font-style: italic;
       `;
 
       const copyBtn = document.createElement("button");
-      copyBtn.textContent = "📋";
+      copyBtn.textContent = "⏳";
       copyBtn.style.cssText = `
         background: #fff;
         border: 1px solid #ddd;
@@ -1068,16 +1070,54 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       copyBtn.onmouseout = () => {
         copyBtn.style.background = "#fff";
       };
+      
+      // Store fetched reply data for this key
+      let fetchedReply = null;
+      let fetchStatus = 'loading'; // 'loading', 'success', 'error'
+      
       copyBtn.onclick = () => {
-        // Fetch bot reply using the fingerprint key
-        copyBtn.textContent = "⏳";
-        fetchLatestReply(key);
+        if (fetchStatus === 'loading') {
+          // Still loading, do nothing
+          return;
+        }
         
-        // Reset button after a delay
-        setTimeout(() => {
-          copyBtn.textContent = "📋";
-        }, 2000);
+        if (fetchStatus === 'success' && fetchedReply) {
+          // Copy the already fetched reply
+          navigator.clipboard
+            .writeText(fetchedReply)
+            .then(() => {
+              const originalText = copyBtn.textContent;
+              copyBtn.textContent = "✅";
+              setTimeout(() => {
+                copyBtn.textContent = originalText;
+              }, 1000);
+            })
+            .catch((error) => {
+              console.error("[TM] Error copying to clipboard:", error);
+              copyBtn.textContent = "❌";
+              setTimeout(() => {
+                copyBtn.textContent = "🔄";
+              }, 1000);
+            });
+        } else {
+          // Retry fetching (for error state or manual retry)
+          copyBtn.textContent = "⏳";
+          keyText.textContent = "Loading...";
+          keyText.style.color = "#666";
+          keyText.style.fontStyle = "italic";
+          fetchStatus = 'loading';
+          fetchReplyForKey(key, copyBtn, keyText, (reply, status) => {
+            fetchedReply = reply;
+            fetchStatus = status;
+          });
+        }
       };
+      
+      // Auto-fetch reply on display
+      fetchReplyForKey(key, copyBtn, keyText, (reply, status) => {
+        fetchedReply = reply;
+        fetchStatus = status;
+      });
 
       keyRow.appendChild(keyText);
       keyRow.appendChild(copyBtn);
@@ -1105,6 +1145,83 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     }
 
     document.addEventListener("keydown", escapeHandler);
+  }
+
+  // Helper function to fetch reply for a specific key
+  function fetchReplyForKey(key, buttonElement, textElement, callback) {
+    console.log("[TM] fetchReplyForKey - Fetching reply for key:", key);
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: `${replyApi}/reply?token=${SECURE_TOKEN}&key=${encodeURIComponent(key)}`,
+      onload: function (response) {
+        console.log("[TM] fetchReplyForKey - Response status:", response.status);
+        console.log("[TM] fetchReplyForKey - Response text:", response.responseText);
+        
+        // Check if response is not OK (404, 500, etc.)
+        if (response.status !== 200) {
+          console.log("[TM] fetchReplyForKey - Non-200 status, treating as error");
+          buttonElement.textContent = "🔄";
+          buttonElement.title = "Retry and copy";
+          textElement.textContent = `Error: ${response.status}`;
+          textElement.style.color = "#d32f2f";
+          textElement.style.fontStyle = "normal";
+          if (callback) callback(null, 'error');
+          return;
+        }
+        
+        try {
+          const result = JSON.parse(response.responseText);
+          console.log("[TM] fetchReplyForKey - Parsed result:", result);
+          
+          if (result.data) {
+            console.log("[TM] Reply fetched successfully:", result.data);
+            buttonElement.textContent = "📋";
+            buttonElement.title = "Copy reply";
+            textElement.textContent = result.data;
+            textElement.style.color = "#000";
+            textElement.style.fontStyle = "normal";
+            if (callback) callback(result.data, 'success');
+          } else {
+            console.log("[TM] No data found in reply");
+            buttonElement.textContent = "🔄";
+            buttonElement.title = "Retry and copy";
+            textElement.textContent = "No data found";
+            textElement.style.color = "#d32f2f";
+            textElement.style.fontStyle = "normal";
+            if (callback) callback(null, 'error');
+          }
+        } catch (error) {
+          console.error("[TM] Error parsing reply data:", error);
+          console.error("[TM] Raw response that failed to parse:", response.responseText);
+          // If it's not JSON, treat the response text as the actual reply
+          if (response.responseText && response.responseText.trim()) {
+            console.log("[TM] Plain text reply fetched:", response.responseText);
+            buttonElement.textContent = "📋";
+            buttonElement.title = "Copy reply";
+            textElement.textContent = response.responseText;
+            textElement.style.color = "#000";
+            textElement.style.fontStyle = "normal";
+            if (callback) callback(response.responseText, 'success');
+          } else {
+            buttonElement.textContent = "🔄";
+            buttonElement.title = "Retry and copy";
+            textElement.textContent = "Parse error";
+            textElement.style.color = "#d32f2f";
+            textElement.style.fontStyle = "normal";
+            if (callback) callback(null, 'error');
+          }
+        }
+      },
+      onerror: function (error) {
+        console.error("[TM] Error fetching reply data:", error);
+        buttonElement.textContent = "🔄";
+        buttonElement.title = "Retry and copy";
+        textElement.textContent = "Network error";
+        textElement.style.color = "#d32f2f";
+        textElement.style.fontStyle = "normal";
+        if (callback) callback(null, 'error');
+      },
+    });
   }
 
   // Clipboard listener for automatic bot reply when modal is displayed
