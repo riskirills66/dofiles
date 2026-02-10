@@ -24,7 +24,12 @@
   function showToast(message, type = "success") {
     const notification = document.createElement("div");
     notification.textContent = message;
-    const bgColor = type === "error" ? "#f44336" : "#4CAF50";
+    let bgColor = "#4CAF50"; // success - green
+    if (type === "error") {
+      bgColor = "#f44336"; // error - red
+    } else if (type === "info") {
+      bgColor = "#2196F3"; // info - blue
+    }
     notification.style.cssText = `
       position: fixed;
       top: 20px;
@@ -44,7 +49,14 @@
   }
 
   function isAnyModalOpen() {
-    return document.querySelector(".userscript-modal") !== null;
+    // Check for transaction/deposit modals, but exclude fingerprint display and context menu
+    const modals = document.querySelectorAll(".userscript-modal");
+    for (let modal of modals) {
+      if (modal.id !== "fingerprint-display" && modal !== contextMenu) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function getStatusEmoji(status) {
@@ -112,18 +124,18 @@
     modal.className = "userscript-modal"; // Add class for Tridactyl targeting
     modal.style.cssText = `
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 0;
+            left: 0;
+            right: 0;
             background-color: white;
             padding: 20px;
             z-index: 9999;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-height: 80vh;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
             overflow-y: auto;
-            max-width: 95vw;
-            width: 95vw;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
         `;
 
     const table = document.createElement("table");
@@ -364,9 +376,11 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     // Function to close modal and cleanup
     function closeModal() {
-      modal.remove();
+      modal.style.transform = "translateY(100%)";
+      setTimeout(() => {
+        modal.remove();
+      }, 300);
       document.removeEventListener("keydown", escapeHandler);
-      document.removeEventListener("click", clickHandler);
       window.closeUserscriptModal = null; // Clear the reference
     }
 
@@ -378,6 +392,11 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     document.body.appendChild(modal);
 
+    // Trigger animation
+    requestAnimationFrame(() => {
+      modal.style.transform = "translateY(0)";
+    });
+
     // Event listeners for closing modal
     function escapeHandler(event) {
       if (event.key === "Escape") {
@@ -385,14 +404,7 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
       }
     }
 
-    function clickHandler(event) {
-      if (!modal.contains(event.target)) {
-        closeModal();
-      }
-    }
-
     document.addEventListener("keydown", escapeHandler);
-    document.addEventListener("click", clickHandler);
   }
 
   function displayDepositModal(data) {
@@ -401,18 +413,18 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
     modal.className = "userscript-modal";
     modal.style.cssText = `
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 0;
+            left: 0;
+            right: 0;
             background-color: white;
             padding: 20px;
             z-index: 9999;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-height: 80vh;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
             overflow-y: auto;
-            max-width: 90vw;
-            width: 90vw;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
         `;
 
     const table = document.createElement("table");
@@ -643,9 +655,11 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         `;
 
     function closeModal() {
-      modal.remove();
+      modal.style.transform = "translateY(100%)";
+      setTimeout(() => {
+        modal.remove();
+      }, 300);
       document.removeEventListener("keydown", escapeHandler);
-      document.removeEventListener("click", clickHandler);
       window.closeUserscriptModal = null;
     }
     window.closeUserscriptModal = closeModal;
@@ -655,18 +669,18 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     document.body.appendChild(modal);
 
+    // Trigger animation
+    requestAnimationFrame(() => {
+      modal.style.transform = "translateY(0)";
+    });
+
     function escapeHandler(event) {
       if (event.key === "Escape") {
         closeModal();
       }
     }
-    function clickHandler(event) {
-      if (!modal.contains(event.target)) {
-        closeModal();
-      }
-    }
+    
     document.addEventListener("keydown", escapeHandler);
-    document.addEventListener("click", clickHandler);
   }
 
   // Context menu and keyboard navigation (unchanged)
@@ -682,187 +696,62 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     if (selectedText) {
       e.preventDefault();
+      e.stopPropagation();
 
-      if (contextMenu) {
-        contextMenu.remove();
-        contextMenu = null;
-      }
+      // Show loading toast
+      showToast("Loading...", "info");
 
-      selectedIndex = 0;
-      menuItems = [];
-
-      contextMenu = document.createElement("div");
-      contextMenu.style.cssText = `
-                position: fixed;
-                background: white;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                z-index: 10000;
-                padding: 5px 0;
-                min-width: 150px;
-                visibility: hidden;
-            `;
-
-      const trxItem = document.createElement("div");
-      trxItem.textContent = "Cek Transaksi";
-      trxItem.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                color: black;
-                background-color: #f0f0f0;
-                transition: background 0.1s;
-            `;
-      trxItem.onmouseover = () => {
-        updateSelectedItem(0);
-      };
-      trxItem.onclick = () => {
-        contextMenu.remove();
-        contextMenu = null;
-        checkTransaction(selectedText);
-      };
-
-      const depositItem = document.createElement("div");
-      depositItem.textContent = "Cek Deposit";
-      depositItem.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                color: black;
-                transition: background 0.1s;
-            `;
-      depositItem.onmouseover = () => {
-        updateSelectedItem(1);
-      };
-      depositItem.onclick = () => {
-        contextMenu.remove();
-        contextMenu = null;
-        checkDeposit(selectedText);
-      };
-
-      const botReplyItem = document.createElement("div");
-      botReplyItem.textContent = "Bot Reply";
-      botReplyItem.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                color: black;
-                transition: background 0.1s;
-            `;
-      botReplyItem.onmouseover = () => {
-        updateSelectedItem(2);
-      };
-      botReplyItem.onclick = () => {
-        contextMenu.remove();
-        contextMenu = null;
-        fetchLatestReply(selectedText);
-      };
-
-      contextMenu.appendChild(trxItem);
-      contextMenu.appendChild(depositItem);
-      contextMenu.appendChild(botReplyItem);
-
-      menuItems = [trxItem, depositItem, botReplyItem];
-
-      document.body.appendChild(contextMenu);
-
-      // Get menu dimensions after appending to DOM to ensure accurate sizing
-      const menuRect = contextMenu.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      // Define margin from edges
-      const edgeMargin = 10; // 10px margin from edge
-
-      let x = e.clientX;
-      let y = e.clientY;
-
-      // Adjust horizontal position if too close to right edge
-      if (x + menuRect.width > viewportWidth - edgeMargin) {
-        x = viewportWidth - menuRect.width - edgeMargin;
-      }
-
-      // Adjust vertical position if too close to bottom edge
-      if (y + menuRect.height > viewportHeight - edgeMargin) {
-        y = viewportHeight - menuRect.height - edgeMargin;
-      }
-
-      // Ensure menu doesn't go off left or top edge
-      if (x < edgeMargin) {
-        x = edgeMargin;
-      }
-      if (y < edgeMargin) {
-        y = edgeMargin;
-      }
-
-      contextMenu.style.left = x + "px";
-      contextMenu.style.top = y + "px";
-      contextMenu.style.visibility = "visible";
-
-      contextMenu.setAttribute("tabindex", "-1");
-      contextMenu.focus();
-
-      updateSelectedItem(selectedIndex);
+      // Try deposit first
+      GM_xmlhttpRequest({
+        method: "GET",
+        url: `${apiBase}/deposit?identifier=${selectedText}`,
+        onload: function (response) {
+          try {
+            const data = JSON.parse(response.responseText);
+            if (data && data.length > 0) {
+              displayDepositModal(data);
+            } else {
+              // If no deposit data, try transaction
+              checkTransactionFallback(selectedText);
+            }
+          } catch (error) {
+            console.error("Error parsing deposit data:", error);
+            // Try transaction as fallback
+            checkTransactionFallback(selectedText);
+          }
+        },
+        onerror: function (error) {
+          console.error("Error fetching deposit data:", error);
+          // Try transaction as fallback
+          checkTransactionFallback(selectedText);
+        },
+      });
     }
   });
 
-  function updateSelectedItem(index) {
-    if (menuItems.length === 0) return;
-    menuItems.forEach((item) => {
-      item.style.background = "";
-    });
-    selectedIndex = index;
-    menuItems[selectedIndex].style.background =
-      "linear-gradient(rgba(255,255,255,0.8),rgba(255,255,255,0.5)), #f0f0f0";
-  }
-  function executeSelectedItem() {
-    if (menuItems.length === 0 || !contextMenu) return;
-    contextMenu.remove();
-    contextMenu = null;
-    if (selectedIndex === 0) {
-      checkTransaction(selectedText);
-    } else if (selectedIndex === 1) {
-      checkDeposit(selectedText);
-    } else if (selectedIndex === 2) {
-      fetchLatestReply(selectedText);
-    }
-  }
-  document.addEventListener("keydown", function (e) {
-    if (
-      !contextMenu ||
-      !document.body.contains(contextMenu) ||
-      isAnyModalOpen()
-    )
-      return;
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        selectedIndex = (selectedIndex + 1) % menuItems.length;
-        updateSelectedItem(selectedIndex);
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        selectedIndex =
-          selectedIndex === 0 ? menuItems.length - 1 : selectedIndex - 1;
-        updateSelectedItem(selectedIndex);
-        break;
-      case "Enter":
-        e.preventDefault();
-        executeSelectedItem();
-        break;
-      case "Escape":
-        e.preventDefault();
-        if (contextMenu) {
-          contextMenu.remove();
-          contextMenu = null;
+  function checkTransactionFallback(dest) {
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: `${apiBase}/trx?dest=${dest}`,
+      onload: function (response) {
+        try {
+          const data = JSON.parse(response.responseText);
+          if (data && data.length > 0) {
+            displayTransactionModal(data);
+          } else {
+            showToast("No data found", "error");
+          }
+        } catch (error) {
+          console.error("Error parsing transaction data:", error);
+          showToast("Error fetching data", "error");
         }
-        break;
-    }
-  });
-  document.addEventListener("click", function (e) {
-    if (contextMenu && !contextMenu.contains(e.target)) {
-      contextMenu.remove();
-      contextMenu = null;
-    }
-  });
+      },
+      onerror: function (error) {
+        console.error("Error fetching transaction data:", error);
+        showToast("Error connecting to service", "error");
+      },
+    });
+  }
 
   function checkTransaction(dest) {
     GM_xmlhttpRequest({
@@ -871,7 +760,11 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       onload: function (response) {
         try {
           const data = JSON.parse(response.responseText);
-          displayTransactionModal(data);
+          if (data && data.length > 0) {
+            displayTransactionModal(data);
+          } else {
+            showToast("No transaction data found", "error");
+          }
         } catch (error) {
           console.error("Error parsing transaction data:", error);
           showToast("Error fetching transaction data", "error");
@@ -891,7 +784,11 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       onload: function (response) {
         try {
           const data = JSON.parse(response.responseText);
-          displayDepositModal(data);
+          if (data && data.length > 0) {
+            displayDepositModal(data);
+          } else {
+            showToast("No deposit data found", "error");
+          }
         } catch (error) {
           console.error("Error parsing deposit data:", error);
           showToast("Error fetching deposit data", "error");
@@ -1072,7 +969,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     const container = document.createElement("div");
     container.id = "fingerprint-display";
-    container.className = "userscript-modal";
+    // Don't add userscript-modal class to avoid interfering with context menu
     container.style.cssText = `
       position: fixed;
       top: 80px;
@@ -1160,6 +1057,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     document.body.appendChild(container);
 
     function escapeHandler(event) {
+      // Don't handle if context menu is open
+      if (contextMenu && document.body.contains(contextMenu)) {
+        return;
+      }
       if (event.key === "Escape") {
         closeDisplay();
       }
