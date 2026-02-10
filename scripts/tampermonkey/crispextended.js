@@ -246,6 +246,8 @@
           navigator.clipboard
             .writeText(cellData)
             .catch((error) => console.error("Error copying cell:", error));
+          // Close modal after copying
+          closeModal();
         };
 
         cellContainer.appendChild(textSpan);
@@ -312,6 +314,9 @@
             }, 2000);
           },
         });
+        
+        // Close modal after report action
+        closeModal();
       };
       const reportCell = document.createElement("td");
       reportCell.style.cssText = `
@@ -345,6 +350,8 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying text:", error));
+        // Close modal after copying
+        closeModal();
       };
 
       const copyCell = document.createElement("td");
@@ -395,6 +402,8 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
     // Trigger animation
     requestAnimationFrame(() => {
       modal.style.transform = "translateY(0)";
+      // Focus the modal after animation starts
+      modal.focus();
     });
 
     // Event listeners for closing modal
@@ -403,7 +412,17 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
         closeModal();
       }
     }
+    
+    // Close modal when it loses focus
+    function blurHandler(event) {
+      // Check if the new focus target is outside the modal
+      if (!modal.contains(event.relatedTarget)) {
+        closeModal();
+      }
+    }
 
+    modal.setAttribute("tabindex", "-1");
+    modal.addEventListener("blur", blurHandler, true);
     document.addEventListener("keydown", escapeHandler);
   }
 
@@ -517,6 +536,8 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
           navigator.clipboard
             .writeText(cellData)
             .catch((error) => console.error("Error copying cell:", error));
+          // Close modal after copying
+          closeModal();
         };
 
         cellContainer.appendChild(textSpan);
@@ -564,6 +585,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         navigator.clipboard
           .writeText(formattedText)
           .catch((error) => console.error("Error copying text:", error));
+        // Close modal after copying
+        closeModal();
       };
 
       const copyCell = document.createElement("td");
@@ -625,6 +648,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             }, 2000);
           },
         });
+        
+        // Close modal after submit action
+        closeModal();
       };
 
       const submitCell = document.createElement("td");
@@ -672,6 +698,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     // Trigger animation
     requestAnimationFrame(() => {
       modal.style.transform = "translateY(0)";
+      // Focus the modal after animation starts
+      modal.focus();
     });
 
     function escapeHandler(event) {
@@ -680,6 +708,16 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       }
     }
     
+    // Close modal when it loses focus
+    function blurHandler(event) {
+      // Check if the new focus target is outside the modal
+      if (!modal.contains(event.relatedTarget)) {
+        closeModal();
+      }
+    }
+    
+    modal.setAttribute("tabindex", "-1");
+    modal.addEventListener("blur", blurHandler, true);
     document.addEventListener("keydown", escapeHandler);
   }
 
