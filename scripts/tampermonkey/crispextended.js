@@ -1250,6 +1250,46 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     }
   });
 
+  // Auto-trigger fingerprint fetch when suggestions panel appears
+  function setupSuggestionsPanelObserver() {
+    console.log("[TM] Setting up suggestions panel observer");
+    
+    // Use MutationObserver to watch for suggestions panel appearing
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          // Check if the added node is or contains the suggestions panel
+          if (node.nodeType === 1) { // Element node
+            const suggestionsPanel = node.classList && node.classList.contains('c-conversation-box-suggestions') 
+              ? node 
+              : node.querySelector('.c-conversation-box-suggestions');
+            
+            if (suggestionsPanel) {
+              console.log("[TM] Suggestions panel detected, auto-fetching bot replies");
+              
+              // Check if we're on an inbox page with a session
+              if (isInboxPage()) {
+                const sessionId = getSessionIdFromUrl();
+                if (sessionId) {
+                  // Fetch fingerprints and inject bot replies
+                  fetchFingerprintKeys();
+                }
+              }
+            }
+          }
+        });
+      });
+    });
+    
+    // Start observing the document body for changes
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+    
+    console.log("[TM] Suggestions panel observer active");
+  }
+
   // Auto-trigger fingerprint fetch on page load and URL changes
   function isInboxPage() {
     const result = window.location.pathname.includes("/inbox/session_");
@@ -1274,7 +1314,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   }
 
   // Initial check on page load
-  console.log("[TM] Script loaded, scheduling initial autoFetchFingerprints in 1 second");
+  console.log("[TM] Script loaded, setting up auto-fetch on suggestions panel display");
+  setupSuggestionsPanelObserver();
+  
+  // Also do initial fetch after delay (for already open sessions)
   setTimeout(autoFetchFingerprints, 1000);
 
   // Watch for URL changes (SPA navigation)
