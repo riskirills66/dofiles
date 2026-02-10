@@ -1009,66 +1009,69 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     container.id = "fingerprint-display";
     // Don't add userscript-modal class to avoid interfering with context menu
     container.style.cssText = `
-      position: fixed;
-      top: 80px;
-      right: 20px;
-      background: white;
-      color: black;
-      padding: 6px;
-      border-radius: 4px;
-      z-index: 10000;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      max-width: 350px;
-      font-family: monospace;
-      border: 1px solid #ddd;
+      position: fixed !important;
+      top: 80px !important;
+      right: 20px !important;
+      background: transparent !important;
+      color: black !important;
+      padding: 6px !important;
+      border-radius: 4px !important;
+      z-index: 10000 !important;
+      max-width: 350px !important;
+      font-family: monospace !important;
     `;
 
     keys.forEach((key, index) => {
       const keyRow = document.createElement("div");
       keyRow.style.cssText = `
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #f5f5f5;
-        padding: 4px 6px;
-        margin-bottom: ${index === keys.length - 1 ? '0' : '3px'};
-        border-radius: 3px;
-        transition: all 0.2s;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background: rgba(30, 30, 30, 0.7) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        padding: 4px 6px !important;
+        margin-bottom: ${index === keys.length - 1 ? '0' : '3px'} !important;
+        border-radius: 3px !important;
+        transition: all 0.2s !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
       `;
       keyRow.onmouseover = () => {
-        keyRow.style.background = "#e8e8e8";
+        keyRow.style.background = "rgba(50, 50, 50, 0.7)";
       };
       keyRow.onmouseout = () => {
-        keyRow.style.background = "#f5f5f5";
+        keyRow.style.background = "rgba(30, 30, 30, 0.7)";
       };
 
       const keyText = document.createElement("span");
       keyText.textContent = "Loading...";
       keyText.style.cssText = `
-        flex: 1;
-        word-break: break-all;
-        font-size: 11px;
-        margin-right: 6px;
-        color: #666;
-        font-style: italic;
+        flex: 1 !important;
+        word-break: break-all !important;
+        font-size: 11px !important;
+        margin-right: 6px !important;
+        color: #aaa !important;
+        font-style: italic !important;
       `;
 
       const copyBtn = document.createElement("button");
       copyBtn.textContent = "⏳";
       copyBtn.style.cssText = `
-        background: #fff;
-        border: 1px solid #ddd;
-        padding: 2px 6px;
-        border-radius: 3px;
-        cursor: pointer;
-        font-size: 12px;
-        transition: all 0.2s;
+        background: rgba(60, 60, 60, 0.9) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        padding: 2px 6px !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+        font-size: 12px !important;
+        transition: all 0.2s !important;
+        color: #fff !important;
       `;
       copyBtn.onmouseover = () => {
-        copyBtn.style.background = "#f0f0f0";
+        copyBtn.style.background = "rgba(80, 80, 80, 0.9)";
       };
       copyBtn.onmouseout = () => {
-        copyBtn.style.background = "#fff";
+        copyBtn.style.background = "rgba(60, 60, 60, 0.9)";
       };
       
       // Store fetched reply data for this key
@@ -1089,8 +1092,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
               const originalText = copyBtn.textContent;
               copyBtn.textContent = "✅";
               setTimeout(() => {
-                copyBtn.textContent = originalText;
-              }, 1000);
+                // Close the display after successful copy
+                closeDisplay();
+              }, 500);
             })
             .catch((error) => {
               console.error("[TM] Error copying to clipboard:", error);
@@ -1163,7 +1167,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           buttonElement.textContent = "🔄";
           buttonElement.title = "Retry and copy";
           textElement.textContent = `Error: ${response.status}`;
-          textElement.style.color = "#d32f2f";
+          textElement.style.color = "#ff6b6b";
           textElement.style.fontStyle = "normal";
           if (callback) callback(null, 'error');
           return;
@@ -1178,7 +1182,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             buttonElement.textContent = "📋";
             buttonElement.title = "Copy reply";
             textElement.textContent = result.data;
-            textElement.style.color = "#000";
+            textElement.style.color = "#fff";
             textElement.style.fontStyle = "normal";
             if (callback) callback(result.data, 'success');
           } else {
@@ -1186,7 +1190,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             buttonElement.textContent = "🔄";
             buttonElement.title = "Retry and copy";
             textElement.textContent = "No data found";
-            textElement.style.color = "#d32f2f";
+            textElement.style.color = "#ff6b6b";
             textElement.style.fontStyle = "normal";
             if (callback) callback(null, 'error');
           }
@@ -1199,14 +1203,14 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             buttonElement.textContent = "📋";
             buttonElement.title = "Copy reply";
             textElement.textContent = response.responseText;
-            textElement.style.color = "#000";
+            textElement.style.color = "#fff";
             textElement.style.fontStyle = "normal";
             if (callback) callback(response.responseText, 'success');
           } else {
             buttonElement.textContent = "🔄";
             buttonElement.title = "Retry and copy";
             textElement.textContent = "Parse error";
-            textElement.style.color = "#d32f2f";
+            textElement.style.color = "#ff6b6b";
             textElement.style.fontStyle = "normal";
             if (callback) callback(null, 'error');
           }
@@ -1217,7 +1221,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         buttonElement.textContent = "🔄";
         buttonElement.title = "Retry and copy";
         textElement.textContent = "Network error";
-        textElement.style.color = "#d32f2f";
+        textElement.style.color = "#ff6b6b";
         textElement.style.fontStyle = "normal";
         if (callback) callback(null, 'error');
       },
@@ -1321,7 +1325,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       fetchLatestReply();
     }
 
-    // Detect Ctrl+Shift+F or Cmd+Shift+F to fetch fingerprint keys
+    // Detect Ctrl+Shift+F or Cmd+Shift+F to fetch/reload fingerprint keys
     const isCtrlShiftF =
       (event.ctrlKey || event.metaKey) && // Ctrl or Cmd
       event.shiftKey && // Shift pressed
@@ -1330,6 +1334,15 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     if (isCtrlShiftF) {
       event.preventDefault();
+      // Close existing display if open
+      const existingDisplay = document.getElementById("fingerprint-display");
+      if (existingDisplay) {
+        existingDisplay.remove();
+        if (window.closeFingerprintDisplay) {
+          window.closeFingerprintDisplay = null;
+        }
+      }
+      // Fetch fresh fingerprints
       fetchFingerprintKeys();
     }
   });
