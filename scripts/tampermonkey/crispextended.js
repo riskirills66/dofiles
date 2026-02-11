@@ -1522,20 +1522,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   // Initial check on page load
   console.log("[TM] Script loaded, setting up auto-fetch on suggestions panel display");
   setupSuggestionsPanelObserver();
-  
-  // Also do initial fetch after delay (for already open sessions)
-  setTimeout(autoFetchFingerprints, 1000);
-
-  // Watch for URL changes (SPA navigation)
-  let lastUrl = window.location.href;
-  console.log("[TM] Starting URL monitor, initial URL:", lastUrl);
-  setInterval(() => {
-    if (lastUrl !== window.location.href) {
-      lastUrl = window.location.href;
-      console.log("[TM] URL changed to:", lastUrl);
-      setTimeout(autoFetchFingerprints, 500);
-    }
-  }, 500);
 
   document.addEventListener("keydown", function (event) {
     // Detect ONLY Ctrl+R or Cmd+R, no other modifiers
