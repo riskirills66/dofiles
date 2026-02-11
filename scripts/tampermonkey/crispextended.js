@@ -167,10 +167,10 @@
       "12%",
       "15%",
       "8%",
+      "12%",
+      "12%",
       "10%",
-      "18%",
-      "10%",
-      "6%",
+      "12%",
       "2%",
       "2%",
     ];
@@ -180,12 +180,13 @@
       th.innerText = headerText;
       th.style.cssText = `
                 border: 1px solid #ccc;
-                padding: 4px 6px;
+                padding: 2px 4px;
                 color: black;
                 font-size: 12px;
                 width: ${columnWidths[index]};
-                word-wrap: break-word;
-                overflow-wrap: break-word;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             `;
       headerRow.appendChild(th);
     });
@@ -223,8 +224,9 @@
         textSpan.innerText = cellData;
         textSpan.style.cssText = `
           flex: 1;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         `;
 
         // Create small copy button for each cell
@@ -256,12 +258,10 @@
 
         td.style.cssText = `
                     border: 1px solid #ccc;
-                    padding: 4px 6px;
+                    padding: 2px 4px;
                     color: black;
                     font-size: 11px;
                     width: ${columnWidths[index]};
-                    word-wrap: break-word;
-                    overflow-wrap: break-word;
                     line-height: 1.2;
                 `;
         tr.appendChild(td);
