@@ -1043,79 +1043,166 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       // Function to insert reply
       const insertReply = () => {
         if (fetchedReply) {
-          const inputField = document.querySelector(".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field");
-          if (inputField) {
-            console.log("[TM] Input field found:", inputField);
+          // First, click the Reply button
+          const replyButton = document.querySelector('div[name="reply"].c-base-tabs__item--reply');
+          if (replyButton) {
+            console.log("[TM] Reply button found, clicking it");
+            replyButton.click();
             
-            // Find the paragraph and text span
-            let paragraph = inputField.querySelector('p.o-markdown-ltr');
-            let textSpan = paragraph ? paragraph.querySelector('span[data-lexical-text="true"]') : null;
-            
-            console.log("[TM] Paragraph:", paragraph);
-            console.log("[TM] Text span:", textSpan);
-            
-            if (textSpan) {
-              // Replace the text content directly
-              textSpan.textContent = fetchedReply;
-              console.log("[TM] Text replaced in existing span");
-            } else if (paragraph) {
-              // Create new text span if it doesn't exist
-              paragraph.innerHTML = '';
-              const newSpan = document.createElement('span');
-              newSpan.setAttribute('data-lexical-text', 'true');
-              newSpan.textContent = fetchedReply;
-              paragraph.appendChild(newSpan);
-              console.log("[TM] Created new span in existing paragraph");
-            } else {
-              // Create entire structure if nothing exists
-              inputField.innerHTML = '';
-              const p = document.createElement('p');
-              p.className = 'o-markdown-ltr';
-              p.setAttribute('dir', 'ltr');
-              const span = document.createElement('span');
-              span.setAttribute('data-lexical-text', 'true');
-              span.textContent = fetchedReply;
-              p.appendChild(span);
-              inputField.appendChild(p);
-              console.log("[TM] Created complete structure");
-            }
-            
-            // Focus the input field
-            inputField.focus();
-            
-            // Move cursor to end
-            const range = document.createRange();
-            const sel = window.getSelection();
-            const lastTextNode = inputField.querySelector('span[data-lexical-text="true"]');
-            if (lastTextNode && lastTextNode.firstChild) {
-              range.setStart(lastTextNode.firstChild, lastTextNode.textContent.length);
-              range.collapse(true);
-              sel.removeAllRanges();
-              sel.addRange(range);
-            }
-            
-            // Trigger events to notify Lexical
-            inputField.dispatchEvent(new Event('input', { bubbles: true }));
-            inputField.dispatchEvent(new Event('change', { bubbles: true }));
-            inputField.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
-            inputField.dispatchEvent(new KeyboardEvent('keyup', { key: 'a', bubbles: true }));
-            
-            // Also copy to clipboard as backup
-            navigator.clipboard.writeText(fetchedReply).catch(err => {
-              console.error("[TM] Failed to copy to clipboard:", err);
-            });
-            
-            // Close suggestions panel
-            const suggestionsPanel = document.querySelector('.c-conversation-box-suggestions');
-            if (suggestionsPanel) {
-              suggestionsPanel.style.display = 'none';
-            }
-            
-            console.log("[TM] Bot reply inserted into input field");
-            showToast("Reply inserted!", "success");
+            // Wait a bit for the UI to update after clicking Reply
+            setTimeout(() => {
+              const inputField = document.querySelector(".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field");
+              if (inputField) {
+                console.log("[TM] Input field found:", inputField);
+                
+                // Find the paragraph and text span
+                let paragraph = inputField.querySelector('p.o-markdown-ltr');
+                let textSpan = paragraph ? paragraph.querySelector('span[data-lexical-text="true"]') : null;
+                
+                console.log("[TM] Paragraph:", paragraph);
+                console.log("[TM] Text span:", textSpan);
+                
+                if (textSpan) {
+                  // Replace the text content directly
+                  textSpan.textContent = fetchedReply;
+                  console.log("[TM] Text replaced in existing span");
+                } else if (paragraph) {
+                  // Create new text span if it doesn't exist
+                  paragraph.innerHTML = '';
+                  const newSpan = document.createElement('span');
+                  newSpan.setAttribute('data-lexical-text', 'true');
+                  newSpan.textContent = fetchedReply;
+                  paragraph.appendChild(newSpan);
+                  console.log("[TM] Created new span in existing paragraph");
+                } else {
+                  // Create entire structure if nothing exists
+                  inputField.innerHTML = '';
+                  const p = document.createElement('p');
+                  p.className = 'o-markdown-ltr';
+                  p.setAttribute('dir', 'ltr');
+                  const span = document.createElement('span');
+                  span.setAttribute('data-lexical-text', 'true');
+                  span.textContent = fetchedReply;
+                  p.appendChild(span);
+                  inputField.appendChild(p);
+                  console.log("[TM] Created complete structure");
+                }
+                
+                // Focus the input field
+                inputField.focus();
+                
+                // Move cursor to end
+                const range = document.createRange();
+                const sel = window.getSelection();
+                const lastTextNode = inputField.querySelector('span[data-lexical-text="true"]');
+                if (lastTextNode && lastTextNode.firstChild) {
+                  range.setStart(lastTextNode.firstChild, lastTextNode.textContent.length);
+                  range.collapse(true);
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                }
+                
+                // Trigger events to notify Lexical
+                inputField.dispatchEvent(new Event('input', { bubbles: true }));
+                inputField.dispatchEvent(new Event('change', { bubbles: true }));
+                inputField.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+                inputField.dispatchEvent(new KeyboardEvent('keyup', { key: 'a', bubbles: true }));
+                
+                // Also copy to clipboard as backup
+                navigator.clipboard.writeText(fetchedReply).catch(err => {
+                  console.error("[TM] Failed to copy to clipboard:", err);
+                });
+                
+                // Close suggestions panel
+                const suggestionsPanel = document.querySelector('.c-conversation-box-suggestions');
+                if (suggestionsPanel) {
+                  suggestionsPanel.style.display = 'none';
+                }
+                
+                console.log("[TM] Bot reply inserted into input field");
+                showToast("Reply inserted!", "success");
+              } else {
+                console.error("[TM] Input field not found");
+                showToast("Input field not found", "error");
+              }
+            }, 200); // Wait 200ms for UI to update
           } else {
-            console.error("[TM] Input field not found");
-            showToast("Input field not found", "error");
+            console.log("[TM] Reply button not found, inserting directly");
+            // Fallback to direct insertion if Reply button not found
+            const inputField = document.querySelector(".c-editor-composer__field.o-markdown.c-conversation-box-field__field-composer-field");
+            if (inputField) {
+              console.log("[TM] Input field found:", inputField);
+              
+              // Find the paragraph and text span
+              let paragraph = inputField.querySelector('p.o-markdown-ltr');
+              let textSpan = paragraph ? paragraph.querySelector('span[data-lexical-text="true"]') : null;
+              
+              console.log("[TM] Paragraph:", paragraph);
+              console.log("[TM] Text span:", textSpan);
+              
+              if (textSpan) {
+                // Replace the text content directly
+                textSpan.textContent = fetchedReply;
+                console.log("[TM] Text replaced in existing span");
+              } else if (paragraph) {
+                // Create new text span if it doesn't exist
+                paragraph.innerHTML = '';
+                const newSpan = document.createElement('span');
+                newSpan.setAttribute('data-lexical-text', 'true');
+                newSpan.textContent = fetchedReply;
+                paragraph.appendChild(newSpan);
+                console.log("[TM] Created new span in existing paragraph");
+              } else {
+                // Create entire structure if nothing exists
+                inputField.innerHTML = '';
+                const p = document.createElement('p');
+                p.className = 'o-markdown-ltr';
+                p.setAttribute('dir', 'ltr');
+                const span = document.createElement('span');
+                span.setAttribute('data-lexical-text', 'true');
+                span.textContent = fetchedReply;
+                p.appendChild(span);
+                inputField.appendChild(p);
+                console.log("[TM] Created complete structure");
+              }
+              
+              // Focus the input field
+              inputField.focus();
+              
+              // Move cursor to end
+              const range = document.createRange();
+              const sel = window.getSelection();
+              const lastTextNode = inputField.querySelector('span[data-lexical-text="true"]');
+              if (lastTextNode && lastTextNode.firstChild) {
+                range.setStart(lastTextNode.firstChild, lastTextNode.textContent.length);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+              
+              // Trigger events to notify Lexical
+              inputField.dispatchEvent(new Event('input', { bubbles: true }));
+              inputField.dispatchEvent(new Event('change', { bubbles: true }));
+              inputField.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+              inputField.dispatchEvent(new KeyboardEvent('keyup', { key: 'a', bubbles: true }));
+              
+              // Also copy to clipboard as backup
+              navigator.clipboard.writeText(fetchedReply).catch(err => {
+                console.error("[TM] Failed to copy to clipboard:", err);
+              });
+              
+              // Close suggestions panel
+              const suggestionsPanel = document.querySelector('.c-conversation-box-suggestions');
+              if (suggestionsPanel) {
+                suggestionsPanel.style.display = 'none';
+              }
+              
+              console.log("[TM] Bot reply inserted into input field");
+              showToast("Reply inserted!", "success");
+            } else {
+              console.error("[TM] Input field not found");
+              showToast("Input field not found", "error");
+            }
           }
         }
       };
