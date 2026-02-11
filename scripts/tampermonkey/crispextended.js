@@ -1015,15 +1015,17 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       const suggestionItem = document.createElement("div");
       suggestionItem.className = "c-conversation-box-suggestion-item c-conversation-box-suggestion-shortcut";
       suggestionItem.setAttribute("tag", "bot-replies");
-      suggestionItem.setAttribute("data-bot-reply", "true");
-      suggestionItem.setAttribute("tabindex", "0"); // Make it focusable
+      // Remove data-bot-reply attribute to make it behave like native shortcuts
+      // suggestionItem.setAttribute("data-bot-reply", "true");
+      // Don't set tabindex - let Crisp handle it
+      // suggestionItem.setAttribute("tabindex", "0");
       
       const bangDiv = document.createElement("div");
       bangDiv.className = "c-conversation-box-suggestion-shortcut__bang u-bold";
       
       const bangText = document.createElement("span");
       bangText.className = "c-conversation-box-suggestion-shortcut__bang-text u-ellipsis";
-      bangText.textContent = `Bot Reply ${index + 1}`;
+      bangText.textContent = `!bot${index + 1}`;
       
       bangDiv.appendChild(bangText);
       
@@ -1220,43 +1222,21 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         }
       };
       
-      // Click handler
-      suggestionItem.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log("[TM] Bot reply clicked:", fetchedReply);
-        insertReply();
-      }, true);
+      // Store reference to the item for Crisp's event delegation
+      suggestionItem._botReplyData = {
+        key: key,
+        insertReply: insertReply
+      };
       
-      // Keyboard handler for Enter key
-      suggestionItem.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
+      // Click handler - use capture phase to intercept before Crisp
+      suggestionItem.addEventListener('click', (e) => {
+        console.log("[TM] Bot reply clicked:", fetchedReply);
+        if (fetchedReply) {
           e.preventDefault();
           e.stopPropagation();
-          console.log("[TM] Bot reply selected with Enter:", fetchedReply);
           insertReply();
         }
-      });
-      
-      // Hover handler to add active class
-      suggestionItem.addEventListener('mouseenter', () => {
-        // Remove active class from all items
-        document.querySelectorAll('.c-conversation-box-suggestion-item').forEach(item => {
-          item.classList.remove('c-conversation-box-suggestion-item--active');
-        });
-        // Add active class to this item
-        suggestionItem.classList.add('c-conversation-box-suggestion-item--active');
-      });
-      
-      // Focus handler to add active class
-      suggestionItem.addEventListener('focus', () => {
-        // Remove active class from all items
-        document.querySelectorAll('.c-conversation-box-suggestion-item').forEach(item => {
-          item.classList.remove('c-conversation-box-suggestion-item--active');
-        });
-        // Add active class to this item
-        suggestionItem.classList.add('c-conversation-box-suggestion-item--active');
-      });
+      }, true);
       
       // Auto-fetch reply
       fetchReplyForKey(key, null, textSpan, (reply, status) => {
@@ -1268,79 +1248,41 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       });
     });
     
-    // Setup keyboard navigation for bot replies
-    setupBotReplyKeyboardNavigation(suggestionsBody);
+    // Intercept Crisp's suggestion selection mechanism
+    interceptCrispSuggestionSelection(suggestionsBody);
     
     showToast("Bot replies loaded!", "success");
   }
 
-  // Setup keyboard navigation for bot reply items
-  function setupBotReplyKeyboardNavigation(suggestionsBody) {
-    console.log("[TM] Setting up keyboard navigation for bot replies");
+  // Intercept Crisp's suggestion selection to handle bot replies
+  function interceptCrispSuggestionSelection(suggestionsBody) {
+    console.log("[TM] Setting up Crisp suggestion interception");
     
-    // Listen for arrow keys on the suggestions panel
+    // Listen for keyboard events on the suggestions panel
     const suggestionsPanel = document.querySelector('.c-conversation-box-suggestions');
     if (!suggestionsPanel) return;
     
+    // Intercept Enter key on suggestions panel
     suggestionsPanel.addEventListener('keydown', (e) => {
-      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' && e.key !== 'Enter') {
-        return; // Only handle arrow keys and Enter
-      }
-      
-      // Get all suggestion items (both Crisp's and ours)
-      const allItems = Array.from(suggestionsBody.querySelectorAll('.c-conversation-box-suggestion-item'));
-      if (allItems.length === 0) return;
-      
-      // Find currently active item
-      let activeIndex = allItems.findIndex(item => 
-        item.classList.contains('c-conversation-box-suggestion-item--active')
-      );
-      
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        e.stopPropagation();
+      if (e.key === 'Enter') {
+        // Find the active suggestion item
+        const activeItem = suggestionsBody.querySelector('.c-conversation-box-suggestion-item--active');
         
-        // Move to next item
-        activeIndex = (activeIndex + 1) % allItems.length;
-        
-        // Remove active class from all
-        allItems.forEach(item => item.classList.remove('c-conversation-box-suggestion-item--active'));
-        
-        // Add active class to new item
-        allItems[activeIndex].classList.add('c-conversation-box-suggestion-item--active');
-        allItems[activeIndex].scrollIntoView({ block: 'nearest' });
-        
-        console.log("[TM] Navigated down to index:", activeIndex);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Move to previous item
-        activeIndex = activeIndex <= 0 ? allItems.length - 1 : activeIndex - 1;
-        
-        // Remove active class from all
-        allItems.forEach(item => item.classList.remove('c-conversation-box-suggestion-item--active'));
-        
-        // Add active class to new item
-        allItems[activeIndex].classList.add('c-conversation-box-suggestion-item--active');
-        allItems[activeIndex].scrollIntoView({ block: 'nearest' });
-        
-        console.log("[TM] Navigated up to index:", activeIndex);
-      } else if (e.key === 'Enter') {
-        // Check if active item is a bot reply
-        const activeItem = allItems[activeIndex];
-        if (activeItem && activeItem.getAttribute('data-bot-reply') === 'true') {
+        if (activeItem && activeItem._botReplyData) {
+          console.log("[TM] Enter pressed on bot reply item");
           e.preventDefault();
           e.stopPropagation();
           
-          console.log("[TM] Enter pressed on bot reply, triggering click");
-          activeItem.click();
+          // Trigger our custom insert function
+          if (activeItem._botReplyData.insertReply) {
+            activeItem._botReplyData.insertReply();
+          }
         }
-        // If it's not a bot reply, let Crisp handle it
+        // If it's not a bot reply, let Crisp handle it normally
       }
-    }, true); // Use capture phase
+    }, true); // Use capture phase to intercept before Crisp
     
-    console.log("[TM] Keyboard navigation setup complete");
+    console.log("[TM] Crisp suggestion interception setup complete");
   }
 
   // Helper function to fetch reply for a specific key
