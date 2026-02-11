@@ -1035,8 +1035,28 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       textSpan.style.fontStyle = "italic";
       textSpan.style.color = "#999";
       
+      // Create a clickable button for Tridactyl hint mode
+      const insertButton = document.createElement("button");
+      insertButton.className = "bot-reply-insert-btn";
+      insertButton.textContent = "📤";
+      insertButton.title = "Insert reply";
+      insertButton.style.cssText = `
+        background: transparent;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-left: 8px;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+      `;
+      insertButton.onmouseover = () => insertButton.style.opacity = "1";
+      insertButton.onmouseout = () => insertButton.style.opacity = "0.7";
+      
       suggestionItem.appendChild(bangDiv);
       suggestionItem.appendChild(textSpan);
+      suggestionItem.appendChild(insertButton);
       suggestionsBody.appendChild(suggestionItem);
       
       // Store fetched reply data
@@ -1228,22 +1248,41 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         insertReply: insertReply
       };
       
-      // Click handler - use capture phase to intercept before Crisp
-      suggestionItem.addEventListener('click', (e) => {
-        console.log("[TM] Bot reply clicked:", fetchedReply);
+      // Click handler for the button - use capture phase to intercept before Crisp
+      insertButton.addEventListener('click', (e) => {
+        console.log("[TM] Bot reply button clicked:", fetchedReply);
+        e.preventDefault();
+        e.stopPropagation();
         if (fetchedReply) {
-          e.preventDefault();
-          e.stopPropagation();
           insertReply();
+        } else {
+          showToast("Reply not loaded yet", "error");
+        }
+      }, true);
+      
+      // Click handler for the item itself - use capture phase to intercept before Crisp
+      suggestionItem.addEventListener('click', (e) => {
+        // Only handle if not clicking the button
+        if (e.target !== insertButton) {
+          console.log("[TM] Bot reply item clicked:", fetchedReply);
+          if (fetchedReply) {
+            e.preventDefault();
+            e.stopPropagation();
+            insertReply();
+          }
         }
       }, true);
       
       // Auto-fetch reply
-      fetchReplyForKey(key, null, textSpan, (reply, status) => {
+      fetchReplyForKey(key, insertButton, textSpan, (reply, status) => {
         fetchedReply = reply;
         if (status === 'success') {
           textSpan.style.fontStyle = "normal";
           textSpan.style.color = "";
+          insertButton.style.opacity = "1";
+          insertButton.style.borderColor = "#4CAF50";
+        } else {
+          insertButton.style.borderColor = "#f44336";
         }
       });
     });
@@ -1300,7 +1339,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           console.log("[TM] fetchReplyForKey - Non-200 status, treating as error");
           if (buttonElement) {
             buttonElement.textContent = "🔄";
-            buttonElement.title = "Retry and copy";
+            buttonElement.title = "Retry and insert";
           }
           textElement.textContent = `Error: ${response.status}`;
           textElement.style.color = "#ff6b6b";
@@ -1316,8 +1355,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           if (result.data) {
             console.log("[TM] Reply fetched successfully:", result.data);
             if (buttonElement) {
-              buttonElement.textContent = "📋";
-              buttonElement.title = "Copy reply";
+              buttonElement.textContent = "📤";
+              buttonElement.title = "Insert reply";
             }
             textElement.textContent = result.data;
             textElement.style.color = "";
@@ -1327,7 +1366,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             console.log("[TM] No data found in reply");
             if (buttonElement) {
               buttonElement.textContent = "🔄";
-              buttonElement.title = "Retry and copy";
+              buttonElement.title = "Retry and insert";
             }
             textElement.textContent = "No data found";
             textElement.style.color = "#ff6b6b";
@@ -1341,8 +1380,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           if (response.responseText && response.responseText.trim()) {
             console.log("[TM] Plain text reply fetched:", response.responseText);
             if (buttonElement) {
-              buttonElement.textContent = "📋";
-              buttonElement.title = "Copy reply";
+              buttonElement.textContent = "📤";
+              buttonElement.title = "Insert reply";
             }
             textElement.textContent = response.responseText;
             textElement.style.color = "";
@@ -1351,7 +1390,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           } else {
             if (buttonElement) {
               buttonElement.textContent = "🔄";
-              buttonElement.title = "Retry and copy";
+              buttonElement.title = "Retry and insert";
             }
             textElement.textContent = "Parse error";
             textElement.style.color = "#ff6b6b";
@@ -1364,7 +1403,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         console.error("[TM] Error fetching reply data:", error);
         if (buttonElement) {
           buttonElement.textContent = "🔄";
-          buttonElement.title = "Retry and copy";
+          buttonElement.title = "Retry and insert";
         }
         textElement.textContent = "Network error";
         textElement.style.color = "#ff6b6b";
