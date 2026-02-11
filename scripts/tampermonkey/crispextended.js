@@ -1043,11 +1043,24 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       // Function to insert reply
       const insertReply = () => {
         if (fetchedReply) {
-          // First, click the Reply button
-          const replyButton = document.querySelector('div[name="reply"].c-base-tabs__item--reply');
-          if (replyButton) {
-            console.log("[TM] Reply button found, clicking it");
-            replyButton.click();
+          // First, ensure Reply tab is active by clicking it
+          const replyTab = document.querySelector('div[name="reply"].c-base-tabs__item--reply');
+          if (replyTab) {
+            console.log("[TM] Reply tab found");
+            
+            // Check if Reply tab is not already active
+            if (!replyTab.classList.contains('c-base-tabs__item--active')) {
+              console.log("[TM] Reply tab not active, clicking it");
+              // Click the inner tab element for better compatibility
+              const innerTab = replyTab.querySelector('.c-base-tab');
+              if (innerTab) {
+                innerTab.click();
+              } else {
+                replyTab.click();
+              }
+            } else {
+              console.log("[TM] Reply tab already active");
+            }
             
             // Wait a bit for the UI to update after clicking Reply
             setTimeout(() => {
