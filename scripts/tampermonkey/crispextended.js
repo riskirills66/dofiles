@@ -1407,9 +1407,11 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           reuploadBtn.disabled = true;
           reuploadBtn.innerText = "⏳";
           
+          const reason = encodeURIComponent("mohon perbaiki verifikasi sesuai dengan instruksi foto:\nFoto kartu identitas (nampak foto, nama dan alamat)\nFoto selfie sambil memegang kartu identitas");
+          
           const postData = VERIFY_SESSION 
-            ? `id=${row.verificationId}&status=2&statusktp=2&session=${encodeURIComponent(VERIFY_SESSION)}`
-            : `id=${row.verificationId}&status=2&statusktp=2`;
+            ? `id=${row.verificationId}&status=2&statusktp=2&keterangan=${reason}&session=${encodeURIComponent(VERIFY_SESSION)}`
+            : `id=${row.verificationId}&status=2&statusktp=2&keterangan=${reason}`;
           
           GM_xmlhttpRequest({
             method: "POST",
