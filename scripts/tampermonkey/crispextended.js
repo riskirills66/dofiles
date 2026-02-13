@@ -207,9 +207,9 @@
       "15%",
       "8%",
       "10%",
-      "18%",
+      "14%",
       "10%",
-      "6%",
+      "10%",
       "2%",
       "2%",
     ];
@@ -262,8 +262,9 @@
         textSpan.innerText = cellData;
         textSpan.style.cssText = `
           flex: 1;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         `;
 
         // Create small copy button for each cell
@@ -299,8 +300,9 @@
                     color: black;
                     font-size: 11px;
                     width: ${columnWidths[index]};
-                    word-wrap: break-word;
-                    overflow-wrap: break-word;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                     line-height: 1.2;
                 `;
         tr.appendChild(td);
@@ -537,8 +539,9 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
         textSpan.innerText = cellData;
         textSpan.style.cssText = `
           flex: 1;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         `;
 
         // Create small copy button for each cell
