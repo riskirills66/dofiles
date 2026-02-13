@@ -1020,57 +1020,35 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
         rowData.forEach((cellData, index) => {
           const td = document.createElement("td");
-          const cellContainer = document.createElement("div");
-          cellContainer.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-          `;
-
-          const textSpan = document.createElement("span");
-          textSpan.innerText = cellData;
-          textSpan.style.cssText = `
-            flex: 1;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-          `;
-
-          const cellCopyBtn = document.createElement("button");
-          cellCopyBtn.innerText = "📋";
-          cellCopyBtn.style.cssText = `
-            background: transparent;
-            border: none;
-            padding: 1px;
-            font-size: 10px;
-            cursor: pointer;
-            opacity: 0.6;
-            margin-left: 4px;
-            flex-shrink: 0;
-          `;
-          cellCopyBtn.title = "Copy cell content";
-          cellCopyBtn.onclick = (e) => {
-            e.stopPropagation();
-            navigator.clipboard
-              .writeText(cellData)
-              .catch((error) => console.error("Error copying cell:", error));
-            closeModal();
-          };
-
-          cellContainer.appendChild(textSpan);
-          cellContainer.appendChild(cellCopyBtn);
-          td.appendChild(cellContainer);
-
+          td.innerText = cellData;
+          td.setAttribute("tabindex", "0");
+          td.setAttribute("role", "button");
           td.style.cssText = `
             border: 1px solid #ccc;
             padding: 6px 8px;
             color: black;
             font-size: 12px;
             width: ${columnWidths[index]};
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             line-height: 1.3;
+            cursor: pointer;
+            transition: background 0.2s;
           `;
+          td.title = "Click to copy";
+          td.onclick = () => {
+            navigator.clipboard
+              .writeText(cellData)
+              .catch((error) => console.error("Error copying cell:", error));
+            closeModal();
+          };
+          td.onmouseenter = () => {
+            td.style.background = "#f0f0f0";
+          };
+          td.onmouseleave = () => {
+            td.style.background = "";
+          };
           tr.appendChild(td);
         });
 
