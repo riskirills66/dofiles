@@ -1074,7 +1074,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           img.src = row.imageUrl;
           img.style.cssText = `
             max-width: 100%;
-            max-height: 100px;
+            max-height: 60px;
             cursor: pointer;
             border-radius: 4px;
           `;
