@@ -1543,6 +1543,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
                 onload: function (replyResponse) {
                   fetchedCount++;
                   
+                  // Only add to botReplies if status is 200 (success)
                   if (replyResponse.status === 200) {
                     try {
                       const result = JSON.parse(replyResponse.responseText);
@@ -1573,8 +1574,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
                   if (fetchedCount === fingerprintKeys.length) {
                     console.log("[TM] All bot replies fetched:", botReplies);
                     
-                    // Add bot replies to the shortcuts data
-                    if (shortcutsData && shortcutsData.data) {
+                    // Only inject and show toast if we have successful replies
+                    if (botReplies.length > 0 && shortcutsData && shortcutsData.data) {
                       shortcutsData.data = [...botReplies, ...shortcutsData.data];
                       console.log("[TM] Bot replies injected into shortcuts data");
                       showToast(`${botReplies.length} bot replies loaded!`, "success");
@@ -1722,7 +1723,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     }
 
     console.log("[TM] Suggestions body found, injecting bot replies");
-    showToast("Loading bot replies...", "info");
+    // Don't show loading toast - just silently load in background
 
     // Remove existing bot reply items
     const existingBotReplies = suggestionsBody.querySelectorAll('[data-bot-reply="true"]');
@@ -1746,7 +1747,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       suggestionItem.setAttribute("tag", "bot-replies");
       suggestionItem.setAttribute("data-bot-reply", "true");
       suggestionItem.setAttribute("tabindex", "0"); // Make it focusable
-      suggestionItem.style.display = "flex";
+      suggestionItem.style.display = "none"; // Hide initially until loaded
       suggestionItem.style.alignItems = "center";
       suggestionItem.style.gap = "8px";
       
@@ -1761,9 +1762,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       
       const textSpan = document.createElement("span");
       textSpan.className = "c-conversation-box-suggestion-shortcut__text u-ellipsis";
-      textSpan.textContent = "Loading...";
-      textSpan.style.fontStyle = "italic";
-      textSpan.style.color = "#999";
+      textSpan.textContent = "";
       
       // Create insert button
       const insertButton = document.createElement("button");
@@ -1959,8 +1958,13 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       fetchReplyForKey(key, null, textSpan, (reply, status) => {
         fetchedReply = reply;
         if (status === 'success') {
+          // Only show the item if successfully loaded
+          suggestionItem.style.display = "flex";
           textSpan.style.fontStyle = "normal";
           textSpan.style.color = "";
+        } else {
+          // Keep hidden on error/timeout
+          suggestionItem.style.display = "none";
         }
       });
     });
@@ -1968,7 +1972,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     // Setup keyboard navigation for bot replies
     setupBotReplyKeyboardNavigation(suggestionsBody);
     
-    showToast("Bot replies loaded!", "success");
+    // Don't show success toast immediately - wait for replies to load
+    console.log("[TM] Bot reply items created, waiting for data to load...");
   }
 
   // Setup keyboard navigation for bot reply items
@@ -2041,24 +2046,43 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   }
 
   // Helper function to fetch reply for a specific key
-  function fetchReplyForKey(key, buttonElement, textElement, callback) {
-    console.log("[TM] fetchReplyForKey - Fetching reply for key:", key);
+  function fetchReplyForKey(key, buttonElement, textElement, callback, retryCount = 0, startTime = Date.now()) {
+    const maxRetries = 12; // 12 retries * 5 seconds = 60 seconds total
+    const retryDelay = 5000; // 5 seconds between retries
+    
+    if (retryCount === 0) {
+      console.log("[TM] fetchReplyForKey - Fetching reply for key:", key, "at", new Date().toISOString());
+    } else {
+      console.log("[TM] fetchReplyForKey - Retry", retryCount, "for key:", key);
+    }
+    
     GM_xmlhttpRequest({
       method: "GET",
       url: `${replyApi}/reply?token=${SECURE_TOKEN}&key=${encodeURIComponent(key)}`,
       timeout: 60000,
       onload: function (response) {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        console.log("[TM] fetchReplyForKey - Response received after", elapsed, "seconds");
         console.log("[TM] fetchReplyForKey - Response status:", response.status);
         console.log("[TM] fetchReplyForKey - Response text:", response.responseText);
         
-        // Check if response is not OK (404, 500, etc.)
+        // If 404 and haven't exceeded max retries, retry after delay
+        if (response.status === 404 && retryCount < maxRetries) {
+          console.log("[TM] fetchReplyForKey - Got 404, will retry in", retryDelay/1000, "seconds (attempt", retryCount + 1, "of", maxRetries, ")");
+          setTimeout(() => {
+            fetchReplyForKey(key, buttonElement, textElement, callback, retryCount + 1, startTime);
+          }, retryDelay);
+          return;
+        }
+        
+        // Check if response is not OK (non-404 errors or 404 after max retries)
         if (response.status !== 200) {
-          console.log("[TM] fetchReplyForKey - Non-200 status, treating as error");
+          console.log("[TM] fetchReplyForKey - Non-200 status after", elapsed, "seconds, treating as error");
           if (buttonElement) {
             buttonElement.textContent = "🔄";
             buttonElement.title = "Retry and copy";
           }
-          textElement.textContent = `Error: ${response.status}`;
+          textElement.textContent = `Error: ${response.status} (${elapsed}s)`;
           textElement.style.color = "#ff6b6b";
           textElement.style.fontStyle = "normal";
           if (callback) callback(null, 'error');
@@ -2117,23 +2141,25 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         }
       },
       onerror: function (error) {
-        console.error("[TM] Error fetching reply data:", error);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        console.error("[TM] Error fetching reply data after", elapsed, "seconds:", error);
         if (buttonElement) {
           buttonElement.textContent = "🔄";
           buttonElement.title = "Retry and copy";
         }
-        textElement.textContent = "Network error";
+        textElement.textContent = `Network error (${elapsed}s)`;
         textElement.style.color = "#ff6b6b";
         textElement.style.fontStyle = "normal";
         if (callback) callback(null, 'error');
       },
       ontimeout: function () {
-        console.error("[TM] Request timed out after 60 seconds");
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        console.error("[TM] Request timed out after", elapsed, "seconds (60s limit)");
         if (buttonElement) {
           buttonElement.textContent = "🔄";
           buttonElement.title = "Retry and copy";
         }
-        textElement.textContent = "Request timeout";
+        textElement.textContent = `Timeout (${elapsed}s)`;
         textElement.style.color = "#ff6b6b";
         textElement.style.fontStyle = "normal";
         if (callback) callback(null, 'timeout');
