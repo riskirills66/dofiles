@@ -1433,6 +1433,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     GM_xmlhttpRequest({
       method: "GET",
       url: `${replyApi}/reply?token=${SECURE_TOKEN}&key=${encodeURIComponent(key)}`,
+      timeout: 60000,
       onload: function (response) {
         console.log("[TM] fetchLatestReply - Response status:", response.status);
         console.log("[TM] fetchLatestReply - Response text:", response.responseText);
@@ -1489,6 +1490,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         console.error("[TM] Error fetching reply data:", error);
         showToast("Error connecting to reply service", "error");
       },
+      ontimeout: function () {
+        console.error("[TM] Request timed out after 60 seconds");
+        showToast("Request timed out", "error");
+      },
     });
   }
 
@@ -1534,6 +1539,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
               GM_xmlhttpRequest({
                 method: "GET",
                 url: `${replyApi}/reply?token=${SECURE_TOKEN}&key=${encodeURIComponent(key)}`,
+                timeout: 60000,
                 onload: function (replyResponse) {
                   fetchedCount++;
                   
@@ -1577,6 +1583,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
                 },
                 onerror: function (error) {
                   console.error("[TM] Error fetching bot reply:", error);
+                  fetchedCount++;
+                },
+                ontimeout: function () {
+                  console.error("[TM] Bot reply request timed out after 60 seconds");
                   fetchedCount++;
                 }
               });
@@ -2036,6 +2046,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     GM_xmlhttpRequest({
       method: "GET",
       url: `${replyApi}/reply?token=${SECURE_TOKEN}&key=${encodeURIComponent(key)}`,
+      timeout: 60000,
       onload: function (response) {
         console.log("[TM] fetchReplyForKey - Response status:", response.status);
         console.log("[TM] fetchReplyForKey - Response text:", response.responseText);
@@ -2115,6 +2126,17 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         textElement.style.color = "#ff6b6b";
         textElement.style.fontStyle = "normal";
         if (callback) callback(null, 'error');
+      },
+      ontimeout: function () {
+        console.error("[TM] Request timed out after 60 seconds");
+        if (buttonElement) {
+          buttonElement.textContent = "🔄";
+          buttonElement.title = "Retry and copy";
+        }
+        textElement.textContent = "Request timeout";
+        textElement.style.color = "#ff6b6b";
+        textElement.style.fontStyle = "normal";
+        if (callback) callback(null, 'timeout');
       },
     });
   }
