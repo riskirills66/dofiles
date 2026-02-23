@@ -1697,6 +1697,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     return latest3;
   }
 
+  // Track if we're currently displaying fingerprints to prevent duplicate calls
+  let isDisplayingFingerprints = false;
+  
   // Display fingerprint keys as Crisp suggestions
   function displayFingerprintKeys(keys, retryCount = 0) {
     console.log("[TM] displayFingerprintKeys - Injecting into Crisp suggestions (attempt " + (retryCount + 1) + ")");
@@ -1710,7 +1713,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       // Retry up to 10 times with 500ms delay
       if (retryCount < 10) {
         console.log("[TM] Retrying in 500ms...");
-        showToast("Waiting for suggestions panel...", "info");
+        // Only show toast on first attempt
+        if (retryCount === 0) {
+          showToast("Waiting for suggestions panel...", "info");
+        }
         setTimeout(() => {
           displayFingerprintKeys(keys, retryCount + 1);
         }, 500);
@@ -1718,12 +1724,16 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       } else {
         console.log("[TM] Suggestions panel not found after 10 retries");
         showToast("Suggestions panel not found. Try typing '/' in the input field first.", "error");
+        isDisplayingFingerprints = false;
         return;
       }
     }
 
     console.log("[TM] Suggestions body found, injecting bot replies");
     // Don't show loading toast - just silently load in background
+    
+    // Mark that we're done displaying (panel found)
+    isDisplayingFingerprints = false;
 
     // Remove existing bot reply items
     const existingBotReplies = suggestionsBody.querySelectorAll('[data-bot-reply="true"]');
@@ -2192,7 +2202,14 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   });
 
   // Auto-trigger fingerprint fetch when suggestions panel appears
+  let suggestionsPanelObserverActive = false;
+  
   function setupSuggestionsPanelObserver() {
+    if (suggestionsPanelObserverActive) {
+      console.log("[TM] Suggestions panel observer already active, skipping setup");
+      return;
+    }
+    
     console.log("[TM] Setting up suggestions panel observer");
     
     // Use MutationObserver to watch for suggestions panel appearing
@@ -2206,12 +2223,20 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
               : node.querySelector('.c-conversation-box-suggestions');
             
             if (suggestionsPanel) {
-              console.log("[TM] Suggestions panel detected, auto-fetching bot replies");
+              console.log("[TM] Suggestions panel detected");
+              
+              // Prevent duplicate calls
+              if (isDisplayingFingerprints) {
+                console.log("[TM] Already displaying fingerprints, skipping");
+                return;
+              }
               
               // Check if we're on an inbox page with a session
               if (isInboxPage()) {
                 const sessionId = getSessionIdFromUrl();
                 if (sessionId) {
+                  console.log("[TM] Auto-fetching bot replies for session:", sessionId);
+                  isDisplayingFingerprints = true;
                   // Fetch fingerprints and inject bot replies
                   fetchFingerprintKeys();
                 }
@@ -2228,6 +2253,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       subtree: true
     });
     
+    suggestionsPanelObserverActive = true;
     console.log("[TM] Suggestions panel observer active");
   }
 
@@ -2240,12 +2266,21 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
   function autoFetchFingerprints() {
     console.log("[TM] autoFetchFingerprints - Called");
+    
+    // Prevent duplicate calls
+    if (isDisplayingFingerprints) {
+      console.log("[TM] Already displaying fingerprints, skipping auto-fetch");
+      return;
+    }
+    
     if (isInboxPage()) {
       const sessionId = getSessionIdFromUrl();
       console.log("[TM] autoFetchFingerprints - Session ID:", sessionId);
       if (sessionId) {
         console.log("[TM] Auto-fetching fingerprints for session:", sessionId);
-        fetchFingerprintKeys();
+        // Don't fetch immediately on page load - wait for user to open suggestions panel
+        // This prevents unnecessary API calls
+        console.log("[TM] Waiting for user to open suggestions panel (type '/')");
       } else {
         console.log("[TM] autoFetchFingerprints - No session ID found, skipping");
       }
@@ -2258,8 +2293,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   console.log("[TM] Script loaded, setting up auto-fetch on suggestions panel display");
   setupSuggestionsPanelObserver();
   
-  // Also do initial fetch after delay (for already open sessions)
-  setTimeout(autoFetchFingerprints, 1000);
+  // Don't do initial fetch - let the observer handle it when user opens suggestions
+  // setTimeout(autoFetchFingerprints, 1000);
 
   // Watch for URL changes (SPA navigation)
   let lastUrl = window.location.href;
@@ -2268,7 +2303,10 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     if (lastUrl !== window.location.href) {
       lastUrl = window.location.href;
       console.log("[TM] URL changed to:", lastUrl);
-      setTimeout(autoFetchFingerprints, 500);
+      // Reset the flag when URL changes so new session can fetch
+      isDisplayingFingerprints = false;
+      // Don't auto-fetch on URL change - wait for user to open suggestions panel
+      // setTimeout(autoFetchFingerprints, 500);
     }
   }, 500);
 
@@ -2316,7 +2354,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
     if (isCtrlShiftF) {
       event.preventDefault();
-      // Fetch fresh fingerprints and inject into suggestions
+      // Reset flag and fetch fresh fingerprints
+      isDisplayingFingerprints = false;
       fetchFingerprintKeys();
     }
   });
