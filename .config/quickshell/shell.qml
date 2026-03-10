@@ -463,17 +463,28 @@ ShellRoot {
                             onTriggered: volumeContainer.updateVolumeStatus()
                         }
 
+                        // Process for opening pavucontrol
+                        Process {
+                            id: pavucontrolProcess
+                            command: ["pavucontrol"]
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
                             onEntered: volumePopup.visible = true
                             onExited: volumePopup.visible = false
-                            onClicked: {
-                                // Toggle mute/unmute
-                                toggleMuteProcess.running = true
-                                // Update status after a short delay
-                                quickUpdateTimer.start()
+                            onClicked: function(mouse) {
+                                if (mouse.button === Qt.RightButton) {
+                                    // Right click - open pavucontrol
+                                    pavucontrolProcess.running = true
+                                } else if (mouse.button === Qt.LeftButton) {
+                                    // Left click - toggle mute/unmute
+                                    toggleMuteProcess.running = true
+                                    // Update status after a short delay
+                                    quickUpdateTimer.start()
+                                }
                             }
                             onWheel: function(wheel) {
                                 // Adjust volume with scroll wheel
