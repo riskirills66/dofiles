@@ -1607,46 +1607,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     document.addEventListener("keydown", escapeHandler);
   }
 
-
-
-          if (node.nodeType === 1) { // Element node
-            const suggestionsPanel = node.classList && node.classList.contains('c-conversation-box-suggestions') 
-              ? node 
-              : node.querySelector('.c-conversation-box-suggestions');
-            
-            if (suggestionsPanel) {
-              console.log("[TM] Suggestions panel detected");
-            }
-          }
-        });
-      });
-    });
-    
-    // Start observing the document body for changes
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-    
-    suggestionsPanelObserverActive = true;
-    console.log("[TM] Suggestions panel observer active");
-  }
-
-  // Auto-trigger fingerprint fetch on page load and URL changes
-  function isInboxPage() {
-    const result = window.location.pathname.includes("/inbox/session_");
-    console.log("[TM] isInboxPage - pathname:", window.location.pathname, "result:", result);
-    return result;
-  }
-
-  function autoFetchFingerprints() {
-    console.log("[TM] autoFetchFingerprints - Called");
-  }
-
-  // Initial check on page load
-  console.log("[TM] Script loaded");
-  setupSuggestionsPanelObserver();
-
   // Watch for URL changes (SPA navigation)
   let lastUrl = window.location.href;
   console.log("[TM] Starting URL monitor, initial URL:", lastUrl);
