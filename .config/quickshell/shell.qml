@@ -127,7 +127,7 @@ ShellRoot {
                 Rectangle {
                     id: frame
                     anchors.fill: parent
-                    color: Qt.rgba(25/255, 23/255, 36/255, 0.8)
+                    color: root.baseColor
 
                     layer.enabled: true
                     layer.effect: MultiEffect {
