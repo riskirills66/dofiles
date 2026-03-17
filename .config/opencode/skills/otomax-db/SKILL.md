@@ -19,6 +19,7 @@ compatibility: opencode
 | "list level A" | `SELECT * FROM reseller WHERE kode_level = 'A' AND aktif = 1` |
 | "token products" | `SELECT kode FROM produk WHERE catatan LIKE '%TOKEN%' AND aktif = 1` |
 | "pulsa products" | `SELECT kode FROM produk WHERE catatan LIKE '%REGULER%' AND aktif = 1` |
+| "export inactive members" | `SELECT r.kode, r.saldo, COALESCE(p.pengirim, r.nomor_hp) AS NOHP, r.kode_upline, r.tgl_daftar, r.tgl_aktivitas, r.alamat FROM reseller r LEFT JOIN pengirim p ON r.kode = p.kode_reseller WHERE r.tgl_aktivitas <= DATEADD(day, -7, GETDATE())` |
 
 ## Core Tables
 
@@ -66,6 +67,14 @@ compatibility: opencode
 ### level (20 rows)
 **Columns**: kode(PK), nama, selisih_harga, kode_upline, deposit_minimal, deposit_maksimal
 
+### pengirim
+**Columns**: pengirim(PK), tipe_pengirim, kode_reseller, kirim_info, tgl_data, akses, wrkirim, wrgkirim
+**Purpose**: Stores phone numbers used by resellers for transactions
+**Phone Number Types** (tipe_pengirim):
+- **S**: SMS-based phone numbers (priority/primary)
+- **W**: WhatsApp-based phone numbers (secondary)
+**Note**: A reseller can have multiple phone numbers registered with different types
+
 ## Financial Metrics
 - **Amount/Revenue**: `SUM(harga)` - what customers paid
 - **Profit/Margin**: `SUM(harga - ISNULL(harga_beli, 0))` - actual profit
@@ -86,6 +95,20 @@ SELECT TOP 20 kode, tgl_entri, kode_produk, tujuan, harga, status FROM transaksi
 
 -- Balance history
 SELECT TOP 20 tanggal, jumlah, keterangan, saldo_akhir FROM mutasi WHERE kode_reseller = 'APPS0119' ORDER BY tanggal DESC
+
+-- Export member data to CSV (inactive members)
+SELECT 
+    r.kode AS NAMAMEMBER,
+    r.saldo AS SALDO,
+    COALESCE(p.pengirim, r.nomor_hp) AS NOHP,
+    r.kode_upline AS UPLINE,
+    CONVERT(VARCHAR, r.tgl_daftar, 120) AS TGLDAFTAR,
+    CONVERT(VARCHAR, r.tgl_aktivitas, 120) AS LASTAKTIF,
+    REPLACE(REPLACE(r.alamat, ',', ';'), CHAR(13) + CHAR(10), ' ') AS ALAMAT
+FROM reseller r
+LEFT JOIN pengirim p ON r.kode = p.kode_reseller
+WHERE r.tgl_aktivitas < DATEADD(day, -7, GETDATE())
+ORDER BY r.tgl_aktivitas DESC
 ```
 
 ### Product Queries
@@ -244,6 +267,9 @@ ORDER BY total DESC
 - **Pending status**: `status IN (0,1,2,3,5)`
 - **Active products**: `aktif = 1 AND gangguan = 0`
 - **Active resellers**: `aktif = 1 AND deleted = 0`
+- **Inactive members**: `tgl_aktivitas <= DATEADD(day, -7, GETDATE())`
+- **Get phone from pengirim**: `LEFT JOIN pengirim p ON r.kode = p.kode_reseller` then use `COALESCE(p.pengirim, r.nomor_hp)`
+- **Phone priority (S > W)**: Filter by `tipe_pengirim IN ('S', 'W')` and use `ROW_NUMBER() OVER (PARTITION BY r.kode ORDER BY CASE WHEN p.tipe_pengirim = 'S' THEN 1 WHEN p.tipe_pengirim = 'W' THEN 2 END)` to get one phone per member
 
 ## Best Practices
 1. Always use indexed columns: kode, kode_reseller, tgl_entri, tanggal
@@ -254,3 +280,78 @@ ORDER BY total DESC
 6. Use CASE for status text in user-facing reports
 7. Never query schema - use this documentation
 8. Identify promo products by: price (harga_jual <= harga_beli) OR name keywords (lambat/slow/sabar/murah)
+9. When exporting to CSV: use CONVERT(VARCHAR, date_column, 120) for dates, REPLACE() to escape commas in text fields
+10. Join pengirim table to get phone numbers: `LEFT JOIN pengirim p ON r.kode = p.kode_reseller`, then use `COALESCE(p.pengirim, r.nomor_hp)`
+
+## Member Data Export
+To export member data with phone numbers from pengirim table:
+
+### Basic Export (with duplicate members for multiple phone numbers)
+```sql
+-- Get inactive members (last active 7+ days ago) with phone numbers
+SELECT 
+    r.kode AS NAMAMEMBER,
+    r.saldo AS SALDO,
+    COALESCE(p.pengirim, r.nomor_hp) AS NOHP,
+    r.kode_upline AS UPLINE,
+    CONVERT(VARCHAR, r.tgl_daftar, 120) AS TGLDAFTAR,
+    CONVERT(VARCHAR, r.tgl_aktivitas, 120) AS LASTAKTIF,
+    REPLACE(REPLACE(r.alamat, ',', ';'), CHAR(13) + CHAR(10), ' ') AS ALAMAT
+FROM reseller r
+LEFT JOIN pengirim p ON r.kode = p.kode_reseller
+WHERE r.tgl_aktivitas < DATEADD(day, -7, GETDATE())
+ORDER BY r.tgl_aktivitas DESC
+```
+
+### Deduplicated Export (one phone per member, priority S > W)
+```sql
+-- Get inactive members with one phone number per member (prioritize S over W)
+WITH RankedPhones AS (
+    SELECT 
+        r.kode,
+        r.saldo,
+        r.kode_upline,
+        r.tgl_daftar,
+        r.tgl_aktivitas,
+        r.alamat,
+        p.pengirim,
+        p.tipe_pengirim,
+        ROW_NUMBER() OVER (
+            PARTITION BY r.kode 
+            ORDER BY 
+                CASE 
+                    WHEN p.tipe_pengirim = 'S' THEN 1
+                    WHEN p.tipe_pengirim = 'W' THEN 2
+                    ELSE 3
+                END,
+                p.pengirim
+        ) as rn
+    FROM reseller r
+    LEFT JOIN pengirim p ON r.kode = p.kode_reseller 
+        AND p.tipe_pengirim IN ('S', 'W')
+    WHERE r.tgl_aktivitas <= DATEADD(day, -7, GETDATE())
+      AND r.saldo <= 10000
+)
+SELECT 
+    kode AS NAMAMEMBER,
+    saldo AS SALDO,
+    COALESCE(pengirim, '') AS NOHP,
+    kode_upline AS UPLINE,
+    CONVERT(VARCHAR, tgl_daftar, 120) AS TGLDAFTAR,
+    CONVERT(VARCHAR, tgl_aktivitas, 120) AS LASTAKTIF,
+    REPLACE(REPLACE(alamat, ',', ';'), CHAR(13) + CHAR(10), ' ') AS ALAMAT
+FROM RankedPhones
+WHERE rn = 1
+ORDER BY tgl_aktivitas DESC
+```
+
+**Notes**:
+- Use `COALESCE(p.pengirim, r.nomor_hp)` to get phone from pengirim table first, fallback to reseller.nomor_hp
+- A reseller may have multiple entries in pengirim (multiple phone numbers)
+- **Phone number types**: S (SMS, priority) and W (WhatsApp, secondary)
+- For deduplicated export: Use `ROW_NUMBER()` with `PARTITION BY` to get one phone per member
+- Priority order: S (1) > W (2) > others (3)
+- Filter by `tipe_pengirim IN ('S', 'W')` to only get SMS and WhatsApp numbers
+- Use `CONVERT(VARCHAR, date, 120)` for ISO date format (YYYY-MM-DD HH:MM:SS)
+- Replace commas in alamat with semicolons to avoid CSV parsing issues
+- Adjust days in `DATEADD(day, -7, GETDATE())` for different inactive periods
