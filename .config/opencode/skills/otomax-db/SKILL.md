@@ -19,6 +19,7 @@ compatibility: opencode
 | "list level A" | `SELECT * FROM reseller WHERE kode_level = 'A' AND aktif = 1` |
 | "token products" | `SELECT kode FROM produk WHERE catatan LIKE '%TOKEN%' AND aktif = 1` |
 | "pulsa products" | `SELECT kode FROM produk WHERE catatan LIKE '%REGULER%' AND aktif = 1` |
+| "closed products" | `SELECT kode, nama, aktif, gangguan, stok FROM produk WHERE aktif = 0 OR gangguan = 1 OR ISNULL(stok, 0) = 0` |
 | "export inactive members" | `SELECT r.kode, r.saldo, COALESCE(p.pengirim, r.nomor_hp) AS NOHP, r.kode_upline, r.tgl_daftar, r.tgl_aktivitas, r.alamat FROM reseller r LEFT JOIN pengirim p ON r.kode = p.kode_reseller WHERE r.tgl_aktivitas <= DATEADD(day, -7, GETDATE())` |
 
 ## Core Tables
@@ -35,6 +36,40 @@ compatibility: opencode
 - **0-5**: Processing (0=not processed, 1=processing, 2=waiting, 5=scheduled)
 - **20-23**: Success (20=success, 21-23=success variants)
 - **40-72**: Failed (40=failed, 43=insufficient balance, 46=duplicate, 47=disruption, 49=wrong PIN, 51=inactive reseller, 55=timeout, 63=suspended)
+
+**Status Descriptions for Daily Report** (from inbox.pesan):
+| Status | Category | Count | Descriptions |
+|--------|----------|-------|--------------|
+| 40 | dibatalkan/gagal | varies | GAGAL (blank reason), abandoned (cutoff in progress), Qty tidak sesuai |
+| 43 | saldo tidak cukup | varies | PPOB inquiry transactions (not payment failures) - balance check before payment |
+| 45,50,52 | suspect | varies | Nomor tujuan salah, INVALID_ACCOUNT_NUMBER, mohon diperiksa kembali No tujuan |
+| 47 | tidak ada parsing | varies | Produk sedang gangguan |
+| 55 | timeout | varies | timeout, Gagal Biller, dibatalkan, Produk sedang gangguan |
+| 46,49 | tujuan salah | varies | Wrong destination number |
+
+**Query for Daily Status Counts**:
+```sql
+SELECT 
+    SUM(CASE WHEN status = 40 THEN 1 ELSE 0 END) as dibatalkan,
+    SUM(CASE WHEN status = 40 THEN 1 ELSE 0 END) as gagal,
+    SUM(CASE WHEN status = 43 THEN 1 ELSE 0 END) as [saldo tidak cukup],
+    SUM(CASE WHEN status IN (45, 50, 52) THEN 1 ELSE 0 END) as suspect,
+    SUM(CASE WHEN status = 47 THEN 1 ELSE 0 END) as [tidak ada parsing],
+    SUM(CASE WHEN status = 55 THEN 1 ELSE 0 END) as timeout,
+    SUM(CASE WHEN status IN (46, 49) THEN 1 ELSE 0 END) as [tujuan salah]
+FROM transaksi 
+WHERE CAST(tgl_entri AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE)
+```
+
+**Query for Status Details** (sample 5-10 each):
+```sql
+SELECT TOP 10 t.kode, t.status, t.kode_produk, t.tujuan, i.pesan
+FROM transaksi t
+LEFT JOIN inbox i ON t.kode = i.kode_transaksi AND i.is_jawaban = 1
+WHERE t.status = 40
+  AND CAST(t.tgl_entri AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE)
+ORDER BY t.tgl_entri DESC
+```
 
 ### mutasi (4.3M rows)
 **Columns**: kode(PK), kode_reseller, tanggal, jumlah, keterangan, jenis, kode_transaksi, saldo_akhir
@@ -142,6 +177,13 @@ GROUP BY CASE
     WHEN harga_jual <= harga_beli OR nama LIKE '%lambat%' OR nama LIKE '%slow%' OR nama LIKE '%sabar%' THEN 'Promo'
     ELSE 'Regular'
 END
+
+-- Closed products (token/pulsa/reguler) - includes aktif=0, gangguan=1, or empty stock
+SELECT kode, nama, aktif, gangguan, stok, catatan
+FROM produk 
+WHERE (aktif = 0 OR gangguan = 1 OR ISNULL(stok, 0) = 0)
+  AND (catatan LIKE '%TOKEN%' OR catatan LIKE '%REGULER%' OR catatan LIKE '%PULSA%')
+ORDER BY kode
 ```
 
 ### Transaction Analysis
@@ -262,6 +304,7 @@ ORDER BY total DESC
 - **All tokens**: `catatan LIKE '%TOKEN%'`
 - **Promo products**: `harga_jual <= harga_beli` OR `nama LIKE '%lambat%' OR nama LIKE '%slow%' OR nama LIKE '%sabar%' OR nama LIKE '%murah%'`
 - **Regular products**: `harga_jual > harga_beli` AND no slow keywords in name
+- **Closed products**: `aktif = 0` OR `gangguan = 1` OR `ISNULL(stok, 0) = 0`
 - **Success status**: `status = 20`
 - **Failed status**: `status >= 40 AND status <= 72`
 - **Pending status**: `status IN (0,1,2,3,5)`
