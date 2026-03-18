@@ -4,12 +4,16 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.SystemTray
+import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 
 ShellRoot {
     id: root
+
+    // Font 
+    readonly property string baseFont: "JetBrainsMono Nerd Font Mono"
     
     // Rosé Pine colors
     readonly property color baseColor: "#191724"
@@ -22,6 +26,7 @@ ShellRoot {
     readonly property color goldColor: "#f6c177"
     readonly property color roseColor: "#ebbcba"
     readonly property color loveColor: "#eb6f92"
+    readonly property color overlay: "#26233a"
     
     readonly property int borderThickness: 8
     readonly property int cornerRadius: 16
@@ -154,7 +159,7 @@ ShellRoot {
                     anchors.rightMargin: root.borderThickness
                     anchors.bottomMargin: root.borderThickness
                     radius: root.cornerRadius
-                    color: "white"
+                    color: textColor
                 }
             }
 
@@ -174,7 +179,7 @@ ShellRoot {
                     height: 24
                     width: workspacesRow.width + 10
                     radius: 12
-                    color: Qt.rgba(255/255, 255/255, 255/255, 0.15)
+                    color: overlay
 
                     RowLayout {
                         id: workspacesRow
@@ -203,7 +208,7 @@ ShellRoot {
                                     anchors.centerIn: parent
                                     text: modelData.id
                                     color: parent.isActive ? root.baseColor : root.subtleColor
-                                    font.family: "JetBrainsMono Nerd Font Mono"
+                                    font.family: baseFont
                                     font.pixelSize: 11
                                 }
 
@@ -227,7 +232,7 @@ ShellRoot {
                         id: clock
                         anchors.centerIn: parent
                         color: root.textColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.family: baseFont
                         font.pixelSize: 13
                         font.bold: true
                         property string time: ""
@@ -296,7 +301,7 @@ ShellRoot {
                             anchors.centerIn: parent
                             text: calendarPopup.calendarOutput
                             color: root.textColor
-                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.family: baseFont
                             font.pixelSize: 11
                             lineHeight: 1.2
                         }
@@ -316,6 +321,129 @@ ShellRoot {
                     anchors.rightMargin: 16
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 0
+
+                    // MPRIS Media Controls
+                    Item {
+                        id: mediaContainer
+                        width: mediaRow.width
+                        height: root.barHeight
+                        visible: Mpris.players.length > 0
+
+                        property var currentPlayer: Mpris.players.length > 0 ? Mpris.players[0] : null
+
+                        RowLayout {
+                            id: mediaRow
+                            anchors.centerIn: parent
+                            spacing: 6
+
+                            // Previous
+                            Text {
+                                text: "󰒮"
+                                color: root.subtleColor
+                                font.family: baseFont
+                                font.pixelSize: 12
+                                visible: mediaContainer.currentPlayer?.canGoPrevious
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: mediaContainer.currentPlayer?.previous()
+                                }
+                            }
+
+                            // Play/Pause
+                            Text {
+                                text: mediaContainer.currentPlayer?.playbackState === MprisPlaybackState.Playing ? "󰏤" : "󰐊"
+                                color: root.textColor
+                                font.family: baseFont
+                                font.pixelSize: 14
+                                visible: mediaContainer.currentPlayer?.canTogglePlaying
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: mediaContainer.currentPlayer?.playPause()
+                                }
+                            }
+
+                            // Next
+                            Text {
+                                text: "󰒭"
+                                color: root.subtleColor
+                                font.family: baseFont
+                                font.pixelSize: 12
+                                visible: mediaContainer.currentPlayer?.canGoNext
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: mediaContainer.currentPlayer?.next()
+                                }
+                            }
+
+                            // Track info
+                            Text {
+                                text: (mediaContainer.currentPlayer?.trackTitle || "No Media")
+                                color: root.textColor
+                                font.family: baseFont
+                                font.pixelSize: 11
+                                leftPadding: 8
+                                rightPadding: 4
+                                elide: Text.ElideRight
+                                maximumLineCount: 1
+                                width: 120
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: mediaPopup.visible = true
+                            onExited: mediaPopup.visible = false
+                        }
+
+                        Rectangle {
+                            id: mediaPopup
+                            visible: false
+                            anchors.top: parent.bottom
+                            anchors.topMargin: 4
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: mediaPopupText.width + 16
+                            height: mediaPopupText.height + 8
+                            radius: 6
+                            color: root.baseColor
+                            border.width: 0
+                            border.color: root.mutedColor
+
+                            Text {
+                                id: mediaPopupText
+                                anchors.centerIn: parent
+                                text: (mediaContainer.currentPlayer?.trackTitle || "No media playing") + 
+                                      (mediaContainer.currentPlayer?.trackArtists ? "\n" + mediaContainer.currentPlayer.trackArtists : "") +
+                                      (mediaContainer.currentPlayer?.trackAlbum ? "\n" + mediaContainer.currentPlayer.trackAlbum : "")
+                                color: root.textColor
+                                font.family: baseFont
+                                font.pixelSize: 10
+                                lineHeight: 1.3
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: mediaPopup.visible = true
+                                onExited: mediaPopup.visible = false
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: root.mutedColor
+                        visible: mediaContainer.visible
+                        Layout.leftMargin: 16
+                        Layout.rightMargin: 16
+                    }
 
                     // System Tray
                     RowLayout {
@@ -378,7 +506,7 @@ ShellRoot {
                         width: 1
                         height: 16
                         color: root.mutedColor
-                        visible: SystemTray.items.count > 0
+                        visible: SystemTray.items.count > 0 || mediaContainer.visible
                         Layout.leftMargin: 16
                         Layout.rightMargin: 16
                     }
@@ -429,7 +557,7 @@ ShellRoot {
                             id: volumeText
                             anchors.centerIn: parent
                             color: root.textColor
-                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.family: baseFont
                             font.pixelSize: root.fontSize
                             leftPadding: 8
                             rightPadding: 8
@@ -524,7 +652,7 @@ ShellRoot {
                                 anchors.centerIn: parent
                                 text: volumeContainer.muted ? "Muted" : volumeContainer.volumeLevel + "%"
                                 color: root.textColor
-                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.family: baseFont
                                 font.pixelSize: 11
                             }
 
@@ -579,7 +707,7 @@ ShellRoot {
                             id: networkText
                             anchors.centerIn: parent
                             color: root.textColor
-                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.family: baseFont
                             font.pixelSize: root.fontSize
                             leftPadding: 8
                             rightPadding: 8
@@ -620,7 +748,7 @@ ShellRoot {
                                 anchors.centerIn: parent
                                 text: networkContainer.connected ? networkContainer.network : "Disconnected"
                                 color: root.textColor
-                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.family: baseFont
                                 font.pixelSize: 11
                             }
 
@@ -660,7 +788,7 @@ ShellRoot {
                             id: cpuText
                             anchors.centerIn: parent
                             color: root.textColor
-                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.family: baseFont
                             font.pixelSize: root.fontSize
                             leftPadding: 8
                             rightPadding: 8
@@ -692,7 +820,7 @@ ShellRoot {
                                 anchors.centerIn: parent
                                 text: cpuContainer.cpuLevel + "%"
                                 color: root.textColor
-                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.family: baseFont
                                 font.pixelSize: 11
                             }
 
@@ -732,7 +860,7 @@ ShellRoot {
                             id: memText
                             anchors.centerIn: parent
                             color: root.textColor
-                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.family: baseFont
                             font.pixelSize: root.fontSize
                             leftPadding: 8
                             rightPadding: 8
@@ -764,7 +892,7 @@ ShellRoot {
                                 anchors.centerIn: parent
                                 text: memContainer.memLevel + "%"
                                 color: root.textColor
-                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.family: baseFont
                                 font.pixelSize: 11
                             }
 
@@ -822,7 +950,7 @@ ShellRoot {
                             id: batteryText
                             anchors.centerIn: parent
                             color: getBatteryColor()
-                            font.family: "JetBrainsMono Nerd Font Mono"
+                            font.family: baseFont
                             font.pixelSize: 13
                             leftPadding: 8
                             rightPadding: 8
@@ -861,7 +989,7 @@ ShellRoot {
                                 anchors.centerIn: parent
                                 text: batteryContainer.batteryLevel + "%" + (batteryContainer.charging ? " ⚡" : "")
                                 color: root.textColor
-                                font.family: "JetBrainsMono Nerd Font Mono"
+                                font.family: baseFont
                                 font.pixelSize: 11
                             }
 
@@ -1003,7 +1131,7 @@ ShellRoot {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         color: volumeOSD.osdMuted ? root.mutedColor : root.textColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.family: baseFont
                         font.pixelSize: 20
                         text: volumeOSD.osdMuted ? "󰖁" : (volumeOSD.osdVolume === 0 ? "󰖁" : "󰕾")
                     }
@@ -1036,7 +1164,7 @@ ShellRoot {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         color: root.textColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.family: baseFont
                         font.pixelSize: 14
                         font.bold: true
                         text: volumeOSD.osdMuted ? "MUTED" : volumeOSD.osdVolume + "%"
@@ -1157,7 +1285,7 @@ ShellRoot {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         color: root.textColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.family: baseFont
                         font.pixelSize: 20
                         text: brightnessOSD.osdBrightness === 0 ? "󰃞" : "󰃠"
                     }
@@ -1190,7 +1318,7 @@ ShellRoot {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         color: root.textColor
-                        font.family: "JetBrainsMono Nerd Font Mono"
+                        font.family: baseFont
                         font.pixelSize: 14
                         font.bold: true
                         text: brightnessOSD.osdBrightness + "%"
