@@ -764,117 +764,6 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     });
   }
 
-  // Helper function to perform login to rmwapps
-  function performLogin(sessionId) {
-    return new Promise((resolve, reject) => {
-      const postData = 'usernm=administrator&passwd=%40PadangUtara37*&login=Login&log=';
-      
-      GM_xmlhttpRequest({
-        method: "POST",
-        url: "https://rmwapps.otoreport.com/",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Cookie": `PHPSESSID=${sessionId}`,
-          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
-        },
-        data: postData,
-        onload: function (response) {
-          if (response.status === 200) {
-            resolve(true);
-          } else {
-            reject(new Error(`Login failed with status ${response.status}`));
-          }
-        },
-        onerror: function (error) {
-          reject(error);
-        },
-      });
-    });
-  }
-
-  // Helper function to fetch verification data from rmwapps
-  function fetchVerificationData(postData, sessionId) {
-    return new Promise((resolve, reject) => {
-      GM_xmlhttpRequest({
-        method: "POST",
-        url: "https://rmwapps.otoreport.com/admin/verifikasifoto/",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Referer": "https://rmwapps.otoreport.com/admin/verifikasifoto/",
-          "Cookie": `PHPSESSID=${sessionId}`,
-          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
-        },
-        data: postData,
-        onload: function (response) {
-          resolve(response.responseText);
-        },
-        onerror: function (error) {
-          reject(error);
-        },
-      });
-    });
-  }
-
-  // Helper function to parse verification modals from HTML
-  function parseVerificationModals(data, filterAgentCode = null) {
-    const modalRegex = /<div class="modal fade action(\d+)"[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g;
-    const results = [];
-    const seen = new Set();
-
-    let match;
-    while ((match = modalRegex.exec(data)) !== null) {
-      const verificationId = match[1];
-      const modalContent = match[0];
-
-      const agentMatch = modalContent.match(/APPS\d+/);
-      const agentCode = agentMatch ? agentMatch[0] : null;
-
-      // Filter by agent code if specified
-      if (filterAgentCode && agentCode !== filterAgentCode) {
-        continue;
-      }
-
-      const selfieMatches = modalContent.match(/https:\/\/images\.otoreport\.com\/foto_agen\/[^"]+/g) || [];
-      const uniqueSelfies = [...new Set(selfieMatches)];
-
-      const ktpMatches = modalContent.match(/https:\/\/images\.otoreport\.com\/foto_ktp\/[^"]+/g) || [];
-      const uniqueKtps = [...new Set(ktpMatches)];
-
-      const statusMatch = modalContent.match(/<option value="\d+" selected="selected">(.*?)<\/option>/);
-      const status = statusMatch ? statusMatch[1] : null;
-
-      uniqueSelfies.forEach((selfieUrl) => {
-        const key = `${verificationId}-selfie-${selfieUrl}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          results.push({
-            verificationId: verificationId,
-            agentCode: agentCode,
-            imageUrl: selfieUrl,
-            type: 'Selfie',
-            status: status,
-          });
-        }
-      });
-
-      uniqueKtps.forEach((ktpUrl) => {
-        const key = `${verificationId}-ktp-${ktpUrl}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          results.push({
-            verificationId: verificationId,
-            agentCode: agentCode,
-            imageUrl: ktpUrl,
-            type: 'KTP',
-            status: status,
-          });
-        }
-      });
-    }
-
-    return results;
-  }
-
   function checkVerification(agentCode) {
     const VERIFY_SESSION = unsafeWindow.verify_session || "";
     
@@ -884,36 +773,26 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       return;
     }
 
-    const postData = `order=DESC&limit=30&kriteria=kode_reseller&keyword=${agentCode}`;
-    
-    fetchVerificationData(postData, VERIFY_SESSION)
-      .then(data => {
-        let results = parseVerificationModals(data, agentCode);
-        
-        // If no results or data looks invalid, try login fallback
-        if (results.length === 0 && (data.includes('login') || data.includes('Login'))) {
-          return performLogin(VERIFY_SESSION)
-            .then(() => fetchVerificationData(postData, VERIFY_SESSION))
-            .then(newData => {
-              results = parseVerificationModals(newData, agentCode);
-              return results;
-            })
-            .catch(loginErr => {
-              console.error('Login fallback failed:', loginErr);
-              return results;
-            });
+    // Use server endpoint instead of direct calls
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: `${apiBase}/user/${agentCode}?session=${VERIFY_SESSION}`,
+      onload: function (response) {
+        try {
+          const results = JSON.parse(response.responseText);
+          displayVerificationModal(results, agentCode);
+        } catch (error) {
+          console.error("Error parsing verification data:", error);
+          showToast("Error fetching verification data", "error");
+          displayVerificationModal([], agentCode);
         }
-        
-        return results;
-      })
-      .then(results => {
-        displayVerificationModal(results, agentCode);
-      })
-      .catch(error => {
+      },
+      onerror: function (error) {
         console.error("Error fetching verification data:", error);
         showToast("Error connecting to verification service", "error");
         displayVerificationModal([], agentCode);
-      });
+      },
+    });
   }
 
   function showImageOverlay(imageUrl) {
@@ -1257,95 +1136,51 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             verifyBtn.disabled = true;
             verifyBtn.innerText = "⏳";
 
-            const postData = `status=1&statusktp=1&keterangan=%23RK&act=actionverifikasi&id=${row.verificationId}`;
-
-            const performVerification = () => {
-              return new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
-                  method: "POST",
-                  url: "https://rmwapps.otoreport.com/admin/verifikasifoto/",
-                  headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Cookie": `PHPSESSID=${VERIFY_SESSION}`,
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
-                  },
-                  data: postData,
-                  onload: function (response) {
-                    resolve(response.responseText);
-                  },
-                  onerror: function (error) {
-                    reject(error);
-                  },
-                });
-              });
-            };
-
-            performVerification()
-              .then(data => {
-                let success = /selamat datang/i.test(data);
-                
-                // If verification failed due to auth, try login fallback
-                if (!success && (data.includes('login') || data.includes('Login'))) {
-                  return performLogin(VERIFY_SESSION)
-                    .then(() => performVerification())
-                    .then(newData => {
-                      success = /selamat datang/i.test(newData);
-                      return success;
-                    })
-                    .catch(loginErr => {
-                      console.error('Login fallback failed:', loginErr);
-                      return success;
-                    });
-                }
-                
-                return success;
-              })
-              .then(success => {
-                if (success) {
-                  verifyBtn.innerText = "✅";
-                  verifyBtn.style.background = "#9E9E9E";
-                  verifyBtn.style.cursor = "not-allowed";
-                  verifyBtn.title = "Already Verified";
-                  
-                  // Call server to update level in database
-                  const apiBase = `${API_URL}`;
-                  GM_xmlhttpRequest({
-                    method: "POST",
-                    url: `${apiBase}/verify`,
-                    headers: {
-                      "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    data: `id=${row.verificationId}&agentCode=${encodeURIComponent(row.agentCode)}`,
-                    onload: function (response) {
-                      try {
-                        const result = JSON.parse(response.responseText);
-                        let message = "User verified successfully!";
-                        if (result.levelUpdate) {
-                          message += ` Level updated: ${result.levelUpdate.oldLevel} → ${result.levelUpdate.newLevel}`;
-                        }
-                        showToast(message, "success");
-                      } catch (error) {
-                        showToast("User verified successfully!", "success");
-                      }
-                    },
-                    onerror: function () {
-                      showToast("User verified successfully!", "success");
-                    },
-                  });
-                  
-                  setTimeout(() => {
-                    closeModal();
-                  }, 1000);
-                } else {
+            // Use server endpoint for verification
+            GM_xmlhttpRequest({
+              method: "POST",
+              url: `${apiBase}/verify`,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              data: `id=${row.verificationId}&agentCode=${encodeURIComponent(row.agentCode)}&session=${VERIFY_SESSION}`,
+              onload: function (response) {
+                try {
+                  const result = JSON.parse(response.responseText);
+                  if (result.success) {
+                    verifyBtn.innerText = "✅";
+                    verifyBtn.style.background = "#9E9E9E";
+                    verifyBtn.style.cursor = "not-allowed";
+                    verifyBtn.title = "Already Verified";
+                    
+                    let message = "User verified successfully!";
+                    if (result.levelUpdate) {
+                      message += ` Level updated: ${result.levelUpdate.oldLevel} → ${result.levelUpdate.newLevel}`;
+                    }
+                    showToast(message, "success");
+                    
+                    setTimeout(() => {
+                      closeModal();
+                    }, 1000);
+                  } else {
+                    verifyBtn.innerText = "❌";
+                    showToast("Verification failed", "error");
+                    setTimeout(() => {
+                      verifyBtn.innerText = "✅";
+                      verifyBtn.disabled = false;
+                    }, 2000);
+                  }
+                } catch (error) {
+                  console.error("Error parsing verification response:", error);
                   verifyBtn.innerText = "❌";
-                  showToast("Verification failed", "error");
+                  showToast("Error verifying user", "error");
                   setTimeout(() => {
                     verifyBtn.innerText = "✅";
                     verifyBtn.disabled = false;
                   }, 2000);
                 }
-              })
-              .catch(error => {
+              },
+              onerror: function (error) {
                 console.error("Error verifying user:", error);
                 verifyBtn.innerText = "❌";
                 showToast("Error verifying user", "error");
@@ -1353,7 +1188,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
                   verifyBtn.innerText = "✅";
                   verifyBtn.disabled = false;
                 }, 2000);
-              });
+              },
+            });
           };
         }
         
@@ -1386,67 +1222,39 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           unlockBtn.disabled = true;
           unlockBtn.innerText = "⏳";
           
-          const postData = `kodeagen=${row.agentCode}&act=validkanlogin&validkanlogin=add`;
-          
-          const performUnlock = () => {
-            return new Promise((resolve, reject) => {
-              GM_xmlhttpRequest({
-                method: "POST",
-                url: "https://rmwapps.otoreport.com/admin/pencegahanpenipuan/",
-                headers: {
-                  "Content-Type": "application/x-www-form-urlencoded",
-                  "Cookie": `PHPSESSID=${VERIFY_SESSION}`,
-                  "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
-                },
-                data: postData,
-                onload: function (response) {
-                  resolve(response.responseText);
-                },
-                onerror: function (error) {
-                  reject(error);
-                },
-              });
-            });
-          };
-          
-          performUnlock()
-            .then(data => {
-              let success = /selamat datang/i.test(data);
-              
-              // If unlock failed due to auth, try login fallback
-              if (!success && (data.includes('login') || data.includes('Login'))) {
-                return performLogin(VERIFY_SESSION)
-                  .then(() => performUnlock())
-                  .then(newData => {
-                    success = /selamat datang/i.test(newData);
-                    return success;
-                  })
-                  .catch(loginErr => {
-                    console.error('Login fallback failed:', loginErr);
-                    return success;
-                  });
-              }
-              
-              return success;
-            })
-            .then(success => {
-              if (success) {
-                unlockBtn.innerText = "✅";
-                showToast("Session unlocked successfully!", "success");
-                setTimeout(() => {
-                  unlockBtn.innerText = "🔓";
-                  unlockBtn.disabled = false;
-                }, 2000);
-              } else {
+          // Use server endpoint for unlock
+          GM_xmlhttpRequest({
+            method: "POST",
+            url: `${apiBase}/unlock-session/${row.agentCode}?session=${VERIFY_SESSION}`,
+            onload: function (response) {
+              try {
+                const result = JSON.parse(response.responseText);
+                if (result.success) {
+                  unlockBtn.innerText = "✅";
+                  showToast("Session unlocked successfully!", "success");
+                  setTimeout(() => {
+                    unlockBtn.innerText = "🔓";
+                    unlockBtn.disabled = false;
+                  }, 2000);
+                } else {
+                  unlockBtn.innerText = "❌";
+                  showToast("Failed to unlock session", "error");
+                  setTimeout(() => {
+                    unlockBtn.innerText = "🔓";
+                    unlockBtn.disabled = false;
+                  }, 2000);
+                }
+              } catch (error) {
+                console.error("Error parsing unlock response:", error);
                 unlockBtn.innerText = "❌";
-                showToast("Failed to unlock session", "error");
+                showToast("Error unlocking session", "error");
                 setTimeout(() => {
                   unlockBtn.innerText = "🔓";
                   unlockBtn.disabled = false;
                 }, 2000);
               }
-            })
-            .catch(error => {
+            },
+            onerror: function (error) {
               console.error("Error unlocking session:", error);
               unlockBtn.innerText = "❌";
               showToast("Error unlocking session", "error");
@@ -1454,7 +1262,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
                 unlockBtn.innerText = "🔓";
                 unlockBtn.disabled = false;
               }, 2000);
-            });
+            },
+          });
         };
         
         buttonContainer.appendChild(unlockBtn);
@@ -1493,66 +1302,42 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           
           const reason = encodeURIComponent("mohon perbaiki verifikasi sesuai dengan instruksi foto:\nFoto kartu identitas (nampak foto, nama dan alamat)\nFoto selfie sambil memegang kartu identitas");
           
-          const postData = `status=2&statusktp=2&keterangan=${reason}&act=actionverifikasi&id=${row.verificationId}`;
-          
-          const performReupload = () => {
-            return new Promise((resolve, reject) => {
-              GM_xmlhttpRequest({
-                method: "POST",
-                url: "https://rmwapps.otoreport.com/admin/verifikasifoto/",
-                headers: {
-                  "Content-Type": "application/x-www-form-urlencoded",
-                  "Cookie": `PHPSESSID=${VERIFY_SESSION}`,
-                  "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
-                },
-                data: postData,
-                onload: function (response) {
-                  resolve(response.responseText);
-                },
-                onerror: function (error) {
-                  reject(error);
-                },
-              });
-            });
-          };
-          
-          performReupload()
-            .then(data => {
-              let success = /selamat datang/i.test(data);
-              
-              // If reupload failed due to auth, try login fallback
-              if (!success && (data.includes('login') || data.includes('Login'))) {
-                return performLogin(VERIFY_SESSION)
-                  .then(() => performReupload())
-                  .then(newData => {
-                    success = /selamat datang/i.test(newData);
-                    return success;
-                  })
-                  .catch(loginErr => {
-                    console.error('Login fallback failed:', loginErr);
-                    return success;
-                  });
-              }
-              
-              return success;
-            })
-            .then(success => {
-              if (success) {
-                reuploadBtn.innerText = "✅";
-                showToast("Reupload requested successfully!", "success");
-                setTimeout(() => {
-                  closeModal();
-                }, 1000);
-              } else {
+          // Use server endpoint for reupload request
+          GM_xmlhttpRequest({
+            method: "POST",
+            url: `${apiBase}/verify`,
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            data: `id=${row.verificationId}&agentCode=${encodeURIComponent(row.agentCode)}&status=2&statusktp=2&keterangan=${reason}&session=${VERIFY_SESSION}`,
+            onload: function (response) {
+              try {
+                const result = JSON.parse(response.responseText);
+                if (result.success) {
+                  reuploadBtn.innerText = "✅";
+                  showToast("Reupload requested successfully!", "success");
+                  setTimeout(() => {
+                    closeModal();
+                  }, 1000);
+                } else {
+                  reuploadBtn.innerText = "❌";
+                  showToast("Failed to request reupload", "error");
+                  setTimeout(() => {
+                    reuploadBtn.innerText = "🔄";
+                    reuploadBtn.disabled = false;
+                  }, 2000);
+                }
+              } catch (error) {
+                console.error("Error parsing reupload response:", error);
                 reuploadBtn.innerText = "❌";
-                showToast("Failed to request reupload", "error");
+                showToast("Error requesting reupload", "error");
                 setTimeout(() => {
                   reuploadBtn.innerText = "🔄";
                   reuploadBtn.disabled = false;
                 }, 2000);
               }
-            })
-            .catch(error => {
+            },
+            onerror: function (error) {
               console.error("Error requesting reupload:", error);
               reuploadBtn.innerText = "❌";
               showToast("Error requesting reupload", "error");
@@ -1560,7 +1345,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
                 reuploadBtn.innerText = "🔄";
                 reuploadBtn.disabled = false;
               }, 2000);
-            });
+            },
+          });
         };
         
         buttonContainer.appendChild(reuploadBtn);
