@@ -21,6 +21,8 @@ compatibility: opencode
 | "pulsa products" | `SELECT kode FROM produk WHERE catatan LIKE '%REGULER%' AND aktif = 1` |
 | "closed products" | `SELECT kode, nama, aktif, gangguan, stok FROM produk WHERE aktif = 0 OR gangguan = 1 OR ISNULL(stok, 0) = 0` |
 | "export inactive members" | `SELECT r.kode, r.saldo, COALESCE(p.pengirim, r.nomor_hp) AS NOHP, r.kode_upline, r.tgl_daftar, r.tgl_aktivitas, r.alamat FROM reseller r LEFT JOIN pengirim p ON r.kode = p.kode_reseller WHERE r.tgl_aktivitas <= DATEADD(day, -7, GETDATE())` |
+| "unpaid BPLN" or "unpaid CPLN" | Find CPLN (check) transactions without BPLN (payment) - see Unpaid PPOB Queries section |
+| "unpaid PDAMPDG" | Find CEKPDAMPDG (check) transactions without PDAMPDG (payment) - see Unpaid PPOB Queries section |
 
 ## Core Tables
 
@@ -40,21 +42,22 @@ compatibility: opencode
 **Status Descriptions for Daily Report** (from inbox.pesan):
 | Status | Category | Count | Descriptions |
 |--------|----------|-------|--------------|
-| 40 | dibatalkan/gagal | varies | GAGAL (blank reason), abandoned (cutoff in progress), Qty tidak sesuai |
+| 40 | gagal | varies | GAGAL (blank reason), abandoned (cutoff in progress), Qty tidak sesuai |
 | 43 | saldo tidak cukup | varies | PPOB inquiry transactions (not payment failures) - balance check before payment |
-| 45,50,52 | suspect | varies | Nomor tujuan salah, INVALID_ACCOUNT_NUMBER, mohon diperiksa kembali No tujuan |
+| 45,52 | suspect | varies | Nomor tujuan salah, INVALID_ACCOUNT_NUMBER, mohon diperiksa kembali No tujuan |
 | 47 | tidak ada parsing | varies | Produk sedang gangguan |
-| 55 | timeout | varies | timeout, Gagal Biller, dibatalkan, Produk sedang gangguan |
+| 50 | dibatalkan | varies | Dibatalkan, cancelled transactions |
+| 55 | timeout | varies | timeout, Gagal Biller, Produk sedang gangguan |
 | 46,49 | tujuan salah | varies | Wrong destination number |
 
 **Query for Daily Status Counts**:
 ```sql
 SELECT 
-    SUM(CASE WHEN status = 40 THEN 1 ELSE 0 END) as dibatalkan,
     SUM(CASE WHEN status = 40 THEN 1 ELSE 0 END) as gagal,
     SUM(CASE WHEN status = 43 THEN 1 ELSE 0 END) as [saldo tidak cukup],
-    SUM(CASE WHEN status IN (45, 50, 52) THEN 1 ELSE 0 END) as suspect,
+    SUM(CASE WHEN status IN (45, 52) THEN 1 ELSE 0 END) as suspect,
     SUM(CASE WHEN status = 47 THEN 1 ELSE 0 END) as [tidak ada parsing],
+    SUM(CASE WHEN status = 50 THEN 1 ELSE 0 END) as dibatalkan,
     SUM(CASE WHEN status = 55 THEN 1 ELSE 0 END) as timeout,
     SUM(CASE WHEN status IN (46, 49) THEN 1 ELSE 0 END) as [tujuan salah]
 FROM transaksi 
@@ -66,7 +69,7 @@ WHERE CAST(tgl_entri AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE)
 SELECT TOP 10 t.kode, t.status, t.kode_produk, t.tujuan, i.pesan
 FROM transaksi t
 LEFT JOIN inbox i ON t.kode = i.kode_transaksi AND i.is_jawaban = 1
-WHERE t.status = 40
+WHERE t.status = 50
   AND CAST(t.tgl_entri AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE)
 ORDER BY t.tgl_entri DESC
 ```
@@ -288,6 +291,87 @@ WHERE status >= 40
 GROUP BY status
 ORDER BY total DESC
 ```
+
+## Unpaid PPOB Queries
+
+**Pattern**: Find successful CHECK transactions (status 20) that haven't been followed by successful PAYMENT transactions.
+
+**Common PPOB Pairs**:
+- CPLN (check) → BPLN (payment) - PLN token
+- CEKPDAMPDG (check) → PDAMPDG (payment) - PDAM Padang water bill
+- CBPJS (check) → BPJS (payment) - BPJS health insurance
+- CGAS (check) → GAS (payment) - Gas bill
+
+**Query Template**:
+```sql
+-- Find unpaid transactions (last 30 days)
+SELECT TOP 10
+    t.tujuan,
+    COUNT(*) as total_unpaid
+FROM transaksi t
+WHERE t.kode_produk LIKE 'CHECK_PREFIX%'  -- e.g., 'CPLN%', 'CEKPDAMPDG%'
+  AND t.status = 20
+  AND t.tgl_entri >= DATEADD(day, -30, GETDATE())
+  AND NOT EXISTS (
+    SELECT 1 
+    FROM transaksi t2 
+    WHERE t2.tujuan = t.tujuan 
+      AND t2.kode_produk LIKE 'PAYMENT_PREFIX%'  -- e.g., 'BPLN%', 'PDAMPDG%'
+      AND t2.status = 20
+      AND t2.tgl_entri >= t.tgl_entri
+  )
+GROUP BY t.tujuan
+ORDER BY total_unpaid DESC
+```
+
+**Examples**:
+
+```sql
+-- Unpaid PLN tokens (CPLN checked but BPLN not paid)
+SELECT TOP 10
+    t.tujuan,
+    COUNT(*) as total_unpaid
+FROM transaksi t
+WHERE t.kode_produk LIKE 'CPLN%'
+  AND t.status = 20
+  AND t.tgl_entri >= DATEADD(day, -30, GETDATE())
+  AND NOT EXISTS (
+    SELECT 1 
+    FROM transaksi t2 
+    WHERE t2.tujuan = t.tujuan 
+      AND t2.kode_produk LIKE 'BPLN%'
+      AND t2.status = 20
+      AND t2.tgl_entri >= t.tgl_entri
+  )
+GROUP BY t.tujuan
+ORDER BY total_unpaid DESC
+
+-- Unpaid PDAM Padang (CEKPDAMPDG checked but PDAMPDG not paid)
+SELECT TOP 10
+    t.tujuan,
+    COUNT(*) as total_unpaid
+FROM transaksi t
+WHERE t.kode_produk LIKE 'CEKPDAMPDG%'
+  AND t.status = 20
+  AND t.tgl_entri >= DATEADD(day, -30, GETDATE())
+  AND NOT EXISTS (
+    SELECT 1 
+    FROM transaksi t2 
+    WHERE t2.tujuan = t.tujuan 
+      AND t2.kode_produk LIKE 'PDAMPDG%'
+      AND t2.status = 20
+      AND t2.tgl_entri >= t.tgl_entri
+  )
+GROUP BY t.tujuan
+ORDER BY total_unpaid DESC
+```
+
+**Usage**:
+- When user asks for "unpaid BPLN" or "unpaid CPLN" → use CPLN/BPLN pattern
+- When user asks for "unpaid PDAMPDG" → use CEKPDAMPDG/PDAMPDG pattern
+- Always use status = 20 (success) for both check and payment
+- Default time range: last 30 days
+- Returns top 10 customer IDs (tujuan) with most unpaid transactions
 
 ## Time Ranges
 ```sql
