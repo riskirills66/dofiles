@@ -283,7 +283,7 @@
             }, 2000);
           },
         });
-        
+
         // Close modal after report action
         closeModal();
       };
@@ -366,7 +366,7 @@ ${getStatusEmoji(row.status)} Status: ${row.status || ""}`;
         closeModal();
       }
     }
-    
+
     // Close modal when it loses focus
     function blurHandler(event) {
       // Check if the new focus target is outside the modal
@@ -576,7 +576,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             }, 2000);
           },
         });
-        
+
         // Close modal after submit action
         closeModal();
       };
@@ -620,7 +620,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         closeModal();
       }
     }
-    
+
     // Close modal when it loses focus
     function blurHandler(event) {
       // Check if the new focus target is outside the modal
@@ -628,7 +628,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         closeModal();
       }
     }
-    
+
     modal.setAttribute("tabindex", "-1");
     modal.addEventListener("blur", blurHandler, true);
     document.addEventListener("keydown", escapeHandler);
@@ -653,7 +653,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       showToast("Loading...", "info");
 
       // Check if it starts with APPS - if so, fetch verification data directly
-      if (selectedText.toUpperCase().startsWith('APPS')) {
+      if (selectedText.toUpperCase().startsWith("APPS")) {
         checkVerification(selectedText.toUpperCase());
         return;
       }
@@ -688,11 +688,11 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
   function checkTransactionFallback(dest) {
     // Check if it starts with APPS - if so, fetch verification data
-    if (dest.toUpperCase().startsWith('APPS')) {
+    if (dest.toUpperCase().startsWith("APPS")) {
       checkVerification(dest.toUpperCase());
       return;
     }
-    
+
     GM_xmlhttpRequest({
       method: "GET",
       url: `${apiBase}/trx?dest=${dest}`,
@@ -766,7 +766,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
 
   function checkVerification(agentCode) {
     const VERIFY_SESSION = unsafeWindow.verify_session || "";
-    
+
     if (!VERIFY_SESSION) {
       showToast("No verification session configured", "error");
       displayVerificationModal([], agentCode);
@@ -851,8 +851,8 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       justify-content: center;
       line-height: 1;
     `;
-    closeBtn.onmouseover = () => closeBtn.style.background = "#d32f2f";
-    closeBtn.onmouseout = () => closeBtn.style.background = "#f44336";
+    closeBtn.onmouseover = () => (closeBtn.style.background = "#d32f2f");
+    closeBtn.onmouseout = () => (closeBtn.style.background = "#f44336");
 
     container.appendChild(img);
     container.appendChild(closeBtn);
@@ -873,27 +873,27 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
     };
 
     overlay.onclick = closeOverlay;
-    
+
     container.onclick = (e) => {
       e.stopPropagation();
     };
-    
+
     const escapeHandler = (e) => {
       if (e.key === "Escape") {
         closeOverlay();
       }
     };
-    
+
     const blurHandler = (event) => {
       if (!overlay.contains(event.relatedTarget)) {
         closeOverlay();
       }
     };
-    
+
     overlay.setAttribute("tabindex", "-1");
     overlay.addEventListener("blur", blurHandler, true);
     document.addEventListener("keydown", escapeHandler);
-    
+
     requestAnimationFrame(() => {
       overlay.focus();
     });
@@ -971,11 +971,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       data.forEach((row) => {
         const tr = document.createElement("tr");
 
-        const rowData = [
-          row.agentCode || "",
-          row.type || "",
-          row.status || "",
-        ];
+        const rowData = [row.agentCode || "", row.type || "", row.status || ""];
 
         rowData.forEach((cellData, index) => {
           const td = document.createElement("td");
@@ -1019,7 +1015,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           width: ${columnWidths[3]};
           text-align: center;
         `;
-        
+
         if (row.imageUrl) {
           const container = document.createElement("div");
           container.style.cssText = `
@@ -1028,7 +1024,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             align-items: center;
             gap: 5px;
           `;
-          
+
           const img = document.createElement("img");
           img.src = row.imageUrl;
           img.style.cssText = `
@@ -1041,7 +1037,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             showImageOverlay(row.imageUrl);
           };
           img.title = "Click to view full size";
-          
+
           const viewBtn = document.createElement("button");
           viewBtn.innerText = "🖼️ View Full";
           viewBtn.title = "View full size image";
@@ -1055,13 +1051,13 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             cursor: pointer;
             transition: background 0.2s;
           `;
-          viewBtn.onmouseover = () => viewBtn.style.background = "#1976D2";
-          viewBtn.onmouseout = () => viewBtn.style.background = "#2196F3";
+          viewBtn.onmouseover = () => (viewBtn.style.background = "#1976D2");
+          viewBtn.onmouseout = () => (viewBtn.style.background = "#2196F3");
           viewBtn.onclick = (e) => {
             e.stopPropagation();
             showImageOverlay(row.imageUrl);
           };
-          
+
           container.appendChild(img);
           container.appendChild(viewBtn);
           imageCell.appendChild(container);
@@ -1078,18 +1074,21 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           width: ${columnWidths[4]};
           text-align: center;
         `;
-        
+
         const buttonContainer = document.createElement("div");
         buttonContainer.style.cssText = `
           display: flex;
           flex-direction: column;
           gap: 4px;
         `;
-        
+
         // Verify button
         const verifyBtn = document.createElement("button");
-        const isVerified = row.status && (row.status.toLowerCase().includes('verified') || row.status === 'Verified');
-        
+        const isVerified =
+          row.status &&
+          (row.status.toLowerCase().includes("verified") ||
+            row.status === "Verified");
+
         if (isVerified) {
           verifyBtn.innerText = "✅";
           verifyBtn.title = "Already Verified";
@@ -1127,12 +1126,12 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             }
 
             const VERIFY_SESSION = unsafeWindow.verify_session || "";
-            
+
             if (!VERIFY_SESSION) {
               showToast("No verification session configured", "error");
               return;
             }
-            
+
             verifyBtn.disabled = true;
             verifyBtn.innerText = "⏳";
 
@@ -1152,13 +1151,13 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
                     verifyBtn.style.background = "#9E9E9E";
                     verifyBtn.style.cursor = "not-allowed";
                     verifyBtn.title = "Already Verified";
-                    
+
                     let message = "User verified successfully!";
                     if (result.levelUpdate) {
                       message += ` Level updated: ${result.levelUpdate.oldLevel} → ${result.levelUpdate.newLevel}`;
                     }
                     showToast(message, "success");
-                    
+
                     setTimeout(() => {
                       closeModal();
                     }, 1000);
@@ -1192,9 +1191,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             });
           };
         }
-        
+
         buttonContainer.appendChild(verifyBtn);
-        
+
         // Unlock session button
         const unlockBtn = document.createElement("button");
         unlockBtn.innerText = "🔓";
@@ -1210,18 +1209,18 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           transition: background 0.2s;
           width: 100%;
         `;
-        
+
         unlockBtn.onclick = () => {
           const VERIFY_SESSION = unsafeWindow.verify_session || "";
-          
+
           if (!VERIFY_SESSION) {
             showToast("No verification session configured", "error");
             return;
           }
-          
+
           unlockBtn.disabled = true;
           unlockBtn.innerText = "⏳";
-          
+
           // Use server endpoint for unlock
           GM_xmlhttpRequest({
             method: "POST",
@@ -1265,9 +1264,9 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             },
           });
         };
-        
+
         buttonContainer.appendChild(unlockBtn);
-        
+
         // Request reupload button
         const reuploadBtn = document.createElement("button");
         reuploadBtn.innerText = "🔄";
@@ -1283,25 +1282,27 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
           transition: background 0.2s;
           width: 100%;
         `;
-        
+
         reuploadBtn.onclick = () => {
           if (!row.verificationId) {
             showToast("No verification ID found", "error");
             return;
           }
-          
+
           const VERIFY_SESSION = unsafeWindow.verify_session || "";
-          
+
           if (!VERIFY_SESSION) {
             showToast("No verification session configured", "error");
             return;
           }
-          
+
           reuploadBtn.disabled = true;
           reuploadBtn.innerText = "⏳";
-          
-          const reason = encodeURIComponent("mohon perbaiki verifikasi sesuai dengan instruksi foto:\nFoto kartu identitas (nampak foto, nama dan alamat)\nFoto selfie sambil memegang kartu identitas");
-          
+
+          const reason = encodeURIComponent(
+            "mohon perbaiki verifikasi sesuai dengan instruksi foto:\nFoto kartu identitas (nampak foto, nama dan alamat)\nFoto selfie sambil memegang kartu identitas",
+          );
+
           // Use server endpoint for reupload request
           GM_xmlhttpRequest({
             method: "POST",
@@ -1348,7 +1349,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
             },
           });
         };
-        
+
         buttonContainer.appendChild(reuploadBtn);
         verifyCell.appendChild(buttonContainer);
         tr.appendChild(verifyCell);
@@ -1381,13 +1382,13 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         closeModal();
       }
     }
-    
+
     function blurHandler(event) {
       if (!modal.contains(event.relatedTarget)) {
         closeModal();
       }
     }
-    
+
     modal.setAttribute("tabindex", "-1");
     modal.addEventListener("blur", blurHandler, true);
     document.addEventListener("keydown", escapeHandler);
@@ -1425,7 +1426,117 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
         console.log('[TM] "Ask for rating" button not found.');
       }
     }
+
+    // Detect Ctrl+Alt+M for mute shortcut
+    const isCtrlAltM =
+      event.ctrlKey &&
+      event.altKey &&
+      !event.shiftKey &&
+      event.key.toLowerCase() === "m";
+
+    if (isCtrlAltM) {
+      event.preventDefault();
+      handleMuteShortcut();
+    }
+
+    // Detect Ctrl+Alt+U for unmute shortcut
+    const isCtrlAltU =
+      event.ctrlKey &&
+      event.altKey &&
+      !event.shiftKey &&
+      event.key.toLowerCase() === "u";
+
+    if (isCtrlAltU) {
+      event.preventDefault();
+      handleUnmuteShortcut();
+    }
   });
+
+  function handleMuteShortcut() {
+    // Extract session ID from current URL
+    // Example URL: https://app.crisp.chat/website/1e652069-9ee7-4c7f-84df-49a6f33c8efd/inbox/session_7757edcb-5842-43bb-9a13-8adfcce1a75f/
+    const urlMatch = window.location.href.match(/session_([a-f0-9\-]+)/);
+
+    if (!urlMatch || !urlMatch[1]) {
+      showToast("Could not extract session ID from URL", "error");
+      return;
+    }
+
+    const sessionId = "session_" + urlMatch[1];
+
+    // Show loading toast
+    showToast("Muting session...", "info");
+
+    // Make the mute API call
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: "https://n8n.hexaloom.com/webhook/mute",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: JSON.stringify({
+        sessionId: sessionId,
+      }),
+      onload: function (response) {
+        try {
+          const result = JSON.parse(response.responseText);
+          showToast("Session muted successfully!", "success");
+          console.log("[TM] Mute response:", result);
+        } catch (error) {
+          // Even if response isn't JSON, the request succeeded
+          showToast("Session muted successfully!", "success");
+          console.log("[TM] Mute request completed");
+        }
+      },
+      onerror: function (error) {
+        console.error("[TM] Error muting session:", error);
+        showToast("Failed to mute session", "error");
+      },
+    });
+  }
+
+  function handleUnmuteShortcut() {
+    // Extract session ID from current URL
+    // Example URL: https://app.crisp.chat/website/1e652069-9ee7-4c7f-84df-49a6f33c8efd/inbox/session_7757edcb-5842-43bb-9a13-8adfcce1a75f/
+    const urlMatch = window.location.href.match(/session_([a-f0-9\-]+)/);
+
+    if (!urlMatch || !urlMatch[1]) {
+      showToast("Could not extract session ID from URL", "error");
+      return;
+    }
+
+    const sessionId = "session_" + urlMatch[1];
+
+    // Show loading toast
+    showToast("Unmuting session...", "info");
+
+    // Make the unmute API call
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: "https://n8n.hexaloom.com/webhook/unmute",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: JSON.stringify({
+        sessionId: sessionId,
+      }),
+      onload: function (response) {
+        try {
+          const result = JSON.parse(response.responseText);
+          showToast("Session unmuted successfully!", "success");
+          console.log("[TM] Unmute response:", result);
+        } catch (error) {
+          // Even if response isn't JSON, the request succeeded
+          showToast("Session unmuted successfully!", "success");
+          console.log("[TM] Unmute request completed");
+        }
+      },
+      onerror: function (error) {
+        console.error("[TM] Error unmuting session:", error);
+        showToast("Failed to unmute session", "error");
+      },
+    });
+  }
 
   if (!unsafeWindow.disableDetachEditor) {
     // --- Detach Crisp Chatbox Feature ---
