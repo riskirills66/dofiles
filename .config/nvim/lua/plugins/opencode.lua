@@ -15,7 +15,7 @@ return {
       local width = math.floor(vim.o.columns * 0.7)
       local height = math.floor(vim.o.lines * 0.8)
       local col = math.floor((vim.o.columns - width) / 2)
-      local row = math.floor((vim.o.lines - height) / 2)
+      local row = math.floor((vim.o.lines - height) / 2) - 1
 
       -- Reuse existing buffer if available
       local buf = opencode_buf
@@ -86,6 +86,9 @@ return {
         end
       end, { buffer = opencode_buf, desc = "Hide OpenCode" })
 
+      -- Ctrl+w in terminal mode to go to normal mode
+      vim.keymap.set("t", "<C-w>", "<C-\\><C-n>", { buffer = opencode_buf, desc = "Exit terminal insert mode" })
+
       -- Enter insert mode
       vim.cmd("startinsert")
     end
@@ -108,6 +111,7 @@ return {
     -- Keymaps
     vim.keymap.set("n", "<C-.>", opencode_toggle, { desc = "Toggle OpenCode" })
     vim.keymap.set("t", "<C-.>", opencode_toggle, { desc = "Toggle OpenCode" })
+    vim.keymap.set("n", "<leader>go", opencode_toggle, { desc = "Toggle OpenCode" })
 
     -- Configure opencode.nvim to use our custom toggle
     vim.g.opencode_opts = {
