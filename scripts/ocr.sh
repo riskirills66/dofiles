@@ -22,6 +22,9 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+height=$(magick identify -format "%h" "$filepath" 2>/dev/null)
+[ -n "$height" ] && [ "$height" -lt 256 ] && magick "$filepath" -resize -x256 "$filepath" 2>/dev/null
+
 api_key=$(cat ~/.ocrapikey)
 if [ -z "$api_key" ]; then
 	notify-send "OCR failed" "API key not found in ~/.ocrapikey"
