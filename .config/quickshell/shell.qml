@@ -32,6 +32,8 @@ ShellRoot {
     readonly property int cornerRadius: 16
     readonly property int barHeight: 32
     readonly property int fontSize: 20
+    readonly property color activeBorderColor: "#ebbcba"
+    readonly property color inactiveBorderColor: "#6e6a86"
 
     // Exclusion zones to push windows away from the frame
     Variants {
@@ -98,6 +100,7 @@ ShellRoot {
             id: win
             property var modelData
             screen: modelData
+            property bool isMonitorFocused: Hyprland.focusedMonitor && Hyprland.focusedMonitor.id === modelData.id
 
             anchors {
                 top: true
@@ -142,6 +145,21 @@ ShellRoot {
                         maskThresholdMin: 0.5
                         maskSpreadAtMin: 1
                     }
+                }
+
+                // Border around the inner hole - changes based on monitor focus
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.topMargin: root.barHeight + 1
+                    anchors.leftMargin: root.borderThickness + 1
+                    anchors.rightMargin: root.borderThickness + 1
+                    anchors.bottomMargin: root.borderThickness + 1
+                    radius: root.cornerRadius
+                    color: "transparent"
+                    border.width: 2
+                    border.color: isMonitorFocused ? root.activeBorderColor : root.inactiveBorderColor
+
+                    Component.onCompleted: console.log("isMonitorFocused:", isMonitorFocused, "modelData:", modelData ? modelData.id : null, "focused:", Hyprland.focusedMonitor ? Hyprland.focusedMonitor.id : null)
                 }
             }
 
