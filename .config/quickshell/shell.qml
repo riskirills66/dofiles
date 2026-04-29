@@ -156,8 +156,9 @@ ShellRoot {
                     anchors.bottomMargin: root.borderThickness + 1
                     radius: root.cornerRadius
                     color: "transparent"
-                    border.width: 2
+                    border.width: 0
                     border.color: isMonitorFocused ? root.activeBorderColor : root.inactiveBorderColor
+                    visible: false
 
                     Component.onCompleted: console.log("isMonitorFocused:", isMonitorFocused, "modelData:", modelData ? modelData.id : null, "focused:", Hyprland.focusedMonitor ? Hyprland.focusedMonitor.id : null)
                 }
