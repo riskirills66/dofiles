@@ -1383,14 +1383,7 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
       }
     }
 
-    function blurHandler(event) {
-      if (!modal.contains(event.relatedTarget)) {
-        closeModal();
-      }
-    }
-
     modal.setAttribute("tabindex", "-1");
-    modal.addEventListener("blur", blurHandler, true);
     document.addEventListener("keydown", escapeHandler);
   }
 
