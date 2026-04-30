@@ -900,490 +900,469 @@ ${getDepositStatusEmoji(row.status)} Status: ${row.status || ""}`;
   }
 
   function displayVerificationModal(data, agentCode) {
-    const modal = document.createElement("div");
-    modal.id = "verificationModal";
-    modal.className = "userscript-modal";
-    modal.style.cssText = `
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: white;
-      padding: 20px;
-      z-index: 10001;
-      border-radius: 16px 16px 0 0;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-      max-height: 85vh;
-      overflow-y: auto;
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
-    `;
-
-    const header = document.createElement("h3");
-    header.innerText = `Verification for ${agentCode}`;
-    header.style.cssText = `
-      margin: 0 0 15px 0;
-      color: black;
-      font-size: 18px;
-    `;
-    modal.appendChild(header);
+    let selectedCardIndex = 0;
+    let verifyBtn = null;
+    let unlockBtn = null;
+    let reuploadBtn = null;
+    let cardsContainer = null;
+    let buttonContainer = null;
 
     if (!data || data.length === 0) {
-      const noDataMsg = document.createElement("p");
-      noDataMsg.innerText = "No verification data found for this agent.";
-      noDataMsg.style.cssText = `
-        color: #666;
-        font-size: 14px;
-        text-align: center;
-        padding: 20px;
-      `;
-      modal.appendChild(noDataMsg);
-    } else {
-      const table = document.createElement("table");
-      table.style.cssText = `
-        width: 100%;
-        border-collapse: collapse;
-        color: black;
-        background-color: white;
-        table-layout: fixed;
-      `;
-
-      const headers = ["Agent Code", "Type", "Status", "Image", ""];
-      const headerRow = document.createElement("tr");
-      const columnWidths = ["20%", "15%", "25%", "30%", "10%"];
-
-      headers.forEach((headerText, index) => {
-        const th = document.createElement("th");
-        th.innerText = headerText;
-        th.style.cssText = `
-          border: 1px solid #ccc;
-          padding: 6px 8px;
-          color: black;
-          font-size: 13px;
-          width: ${columnWidths[index]};
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        `;
-        headerRow.appendChild(th);
-      });
-      table.appendChild(headerRow);
-
-      data.forEach((row) => {
-        const tr = document.createElement("tr");
-
-        const rowData = [row.agentCode || "", row.type || "", row.status || ""];
-
-        rowData.forEach((cellData, index) => {
-          const td = document.createElement("td");
-          td.innerText = cellData;
-          td.setAttribute("tabindex", "0");
-          td.setAttribute("role", "button");
-          td.style.cssText = `
-            border: 1px solid #ccc;
-            padding: 6px 8px;
-            color: black;
-            font-size: 12px;
-            width: ${columnWidths[index]};
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.3;
-            cursor: pointer;
-            transition: background 0.2s;
-          `;
-          td.title = "Click to copy";
-          td.onclick = () => {
-            navigator.clipboard
-              .writeText(cellData)
-              .catch((error) => console.error("Error copying cell:", error));
-            closeModal();
-          };
-          td.onmouseenter = () => {
-            td.style.background = "#f0f0f0";
-          };
-          td.onmouseleave = () => {
-            td.style.background = "";
-          };
-          tr.appendChild(td);
-        });
-
-        // Image cell
-        const imageCell = document.createElement("td");
-        imageCell.style.cssText = `
-          border: 1px solid #ccc;
-          padding: 6px 8px;
-          width: ${columnWidths[3]};
-          text-align: center;
-        `;
-
-        if (row.imageUrl) {
-          const container = document.createElement("div");
-          container.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-          `;
-
-          const img = document.createElement("img");
-          img.src = row.imageUrl;
-          img.style.cssText = `
-            max-width: 100%;
-            max-height: 60px;
-            cursor: pointer;
-            border-radius: 4px;
-          `;
-          img.onclick = () => {
-            showImageOverlay(row.imageUrl);
-          };
-          img.title = "Click to view full size";
-
-          const viewBtn = document.createElement("button");
-          viewBtn.innerText = "🖼️ View Full";
-          viewBtn.title = "View full size image";
-          viewBtn.style.cssText = `
-            background: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 4px 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-          `;
-          viewBtn.onmouseover = () => (viewBtn.style.background = "#1976D2");
-          viewBtn.onmouseout = () => (viewBtn.style.background = "#2196F3");
-          viewBtn.onclick = (e) => {
-            e.stopPropagation();
-            showImageOverlay(row.imageUrl);
-          };
-
-          container.appendChild(img);
-          container.appendChild(viewBtn);
-          imageCell.appendChild(container);
-        } else {
-          imageCell.innerText = "-";
-        }
-        tr.appendChild(imageCell);
-
-        // Action buttons cell
-        const verifyCell = document.createElement("td");
-        verifyCell.style.cssText = `
-          border: 1px solid #ccc;
-          padding: 4px;
-          width: ${columnWidths[4]};
-          text-align: center;
-        `;
-
-        const buttonContainer = document.createElement("div");
-        buttonContainer.style.cssText = `
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        `;
-
-        // Verify button
-        const verifyBtn = document.createElement("button");
-        const isVerified =
-          row.status &&
-          (row.status.toLowerCase().includes("verified") ||
-            row.status === "Verified");
-
-        if (isVerified) {
-          verifyBtn.innerText = "✅";
-          verifyBtn.title = "Already Verified";
-          verifyBtn.disabled = true;
-          verifyBtn.style.cssText = `
-            background: #9E9E9E;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 5px 7px;
-            font-size: 18px;
-            cursor: not-allowed;
-            width: 100%;
-            opacity: 0.6;
-          `;
-        } else {
-          verifyBtn.innerText = "✅";
-          verifyBtn.title = "Verify User";
-          verifyBtn.style.cssText = `
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 5px 7px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background 0.2s;
-            width: 100%;
-          `;
-
-          verifyBtn.onclick = () => {
-            if (!row.verificationId) {
-              showToast("No verification ID found", "error");
-              return;
-            }
-
-            const VERIFY_SESSION = unsafeWindow.verify_session || "";
-
-            if (!VERIFY_SESSION) {
-              showToast("No verification session configured", "error");
-              return;
-            }
-
-            verifyBtn.disabled = true;
-            verifyBtn.innerText = "⏳";
-
-            // Use server endpoint for verification
-            GM_xmlhttpRequest({
-              method: "POST",
-              url: `${apiBase}/verify`,
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-              },
-              data: `id=${row.verificationId}&agentCode=${encodeURIComponent(row.agentCode)}&session=${VERIFY_SESSION}`,
-              onload: function (response) {
-                try {
-                  const result = JSON.parse(response.responseText);
-                  if (result.success) {
-                    verifyBtn.innerText = "✅";
-                    verifyBtn.style.background = "#9E9E9E";
-                    verifyBtn.style.cursor = "not-allowed";
-                    verifyBtn.title = "Already Verified";
-
-                    let message = "User verified successfully!";
-                    if (result.levelUpdate) {
-                      message += ` Level updated: ${result.levelUpdate.oldLevel} → ${result.levelUpdate.newLevel}`;
-                    }
-                    showToast(message, "success");
-
-                    setTimeout(() => {
-                      closeModal();
-                    }, 1000);
-                  } else {
-                    verifyBtn.innerText = "❌";
-                    showToast("Verification failed", "error");
-                    setTimeout(() => {
-                      verifyBtn.innerText = "✅";
-                      verifyBtn.disabled = false;
-                    }, 2000);
-                  }
-                } catch (error) {
-                  console.error("Error parsing verification response:", error);
-                  verifyBtn.innerText = "❌";
-                  showToast("Error verifying user", "error");
-                  setTimeout(() => {
-                    verifyBtn.innerText = "✅";
-                    verifyBtn.disabled = false;
-                  }, 2000);
-                }
-              },
-              onerror: function (error) {
-                console.error("Error verifying user:", error);
-                verifyBtn.innerText = "❌";
-                showToast("Error verifying user", "error");
-                setTimeout(() => {
-                  verifyBtn.innerText = "✅";
-                  verifyBtn.disabled = false;
-                }, 2000);
-              },
-            });
-          };
-        }
-
-        buttonContainer.appendChild(verifyBtn);
-
-        // Unlock session button
-        const unlockBtn = document.createElement("button");
-        unlockBtn.innerText = "🔓";
-        unlockBtn.title = "Unlock Session";
-        unlockBtn.style.cssText = `
-          background: #FF9800;
-          color: white;
-          border: none;
-          border-radius: 3px;
-          padding: 5px 7px;
-          font-size: 18px;
-          cursor: pointer;
-          transition: background 0.2s;
-          width: 100%;
-        `;
-
-        unlockBtn.onclick = () => {
-          const VERIFY_SESSION = unsafeWindow.verify_session || "";
-
-          if (!VERIFY_SESSION) {
-            showToast("No verification session configured", "error");
-            return;
-          }
-
-          unlockBtn.disabled = true;
-          unlockBtn.innerText = "⏳";
-
-          // Use server endpoint for unlock
-          GM_xmlhttpRequest({
-            method: "POST",
-            url: `${apiBase}/unlock-session/${row.agentCode}?session=${VERIFY_SESSION}`,
-            onload: function (response) {
-              try {
-                const result = JSON.parse(response.responseText);
-                if (result.success) {
-                  unlockBtn.innerText = "✅";
-                  showToast("Session unlocked successfully!", "success");
-                  setTimeout(() => {
-                    unlockBtn.innerText = "🔓";
-                    unlockBtn.disabled = false;
-                  }, 2000);
-                } else {
-                  unlockBtn.innerText = "❌";
-                  showToast("Failed to unlock session", "error");
-                  setTimeout(() => {
-                    unlockBtn.innerText = "🔓";
-                    unlockBtn.disabled = false;
-                  }, 2000);
-                }
-              } catch (error) {
-                console.error("Error parsing unlock response:", error);
-                unlockBtn.innerText = "❌";
-                showToast("Error unlocking session", "error");
-                setTimeout(() => {
-                  unlockBtn.innerText = "🔓";
-                  unlockBtn.disabled = false;
-                }, 2000);
-              }
-            },
-            onerror: function (error) {
-              console.error("Error unlocking session:", error);
-              unlockBtn.innerText = "❌";
-              showToast("Error unlocking session", "error");
-              setTimeout(() => {
-                unlockBtn.innerText = "🔓";
-                unlockBtn.disabled = false;
-              }, 2000);
-            },
-          });
-        };
-
-        buttonContainer.appendChild(unlockBtn);
-
-        // Request reupload button
-        const reuploadBtn = document.createElement("button");
-        reuploadBtn.innerText = "🔄";
-        reuploadBtn.title = "Request Reupload";
-        reuploadBtn.style.cssText = `
-          background: #9C27B0;
-          color: white;
-          border: none;
-          border-radius: 3px;
-          padding: 5px 7px;
-          font-size: 18px;
-          cursor: pointer;
-          transition: background 0.2s;
-          width: 100%;
-        `;
-
-        reuploadBtn.onclick = () => {
-          if (!row.verificationId) {
-            showToast("No verification ID found", "error");
-            return;
-          }
-
-          const VERIFY_SESSION = unsafeWindow.verify_session || "";
-
-          if (!VERIFY_SESSION) {
-            showToast("No verification session configured", "error");
-            return;
-          }
-
-          reuploadBtn.disabled = true;
-          reuploadBtn.innerText = "⏳";
-
-          const reason = encodeURIComponent(
-            "mohon perbaiki verifikasi sesuai dengan instruksi foto:\nFoto kartu identitas (nampak foto, nama dan alamat)\nFoto selfie sambil memegang kartu identitas",
-          );
-
-          // Use server endpoint for reupload request
-          GM_xmlhttpRequest({
-            method: "POST",
-            url: `${apiBase}/verify`,
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            data: `id=${row.verificationId}&agentCode=${encodeURIComponent(row.agentCode)}&status=2&statusktp=2&keterangan=${reason}&session=${VERIFY_SESSION}`,
-            onload: function (response) {
-              try {
-                const result = JSON.parse(response.responseText);
-                if (result.success) {
-                  reuploadBtn.innerText = "✅";
-                  showToast("Reupload requested successfully!", "success");
-                  setTimeout(() => {
-                    closeModal();
-                  }, 1000);
-                } else {
-                  reuploadBtn.innerText = "❌";
-                  showToast("Failed to request reupload", "error");
-                  setTimeout(() => {
-                    reuploadBtn.innerText = "🔄";
-                    reuploadBtn.disabled = false;
-                  }, 2000);
-                }
-              } catch (error) {
-                console.error("Error parsing reupload response:", error);
-                reuploadBtn.innerText = "❌";
-                showToast("Error requesting reupload", "error");
-                setTimeout(() => {
-                  reuploadBtn.innerText = "🔄";
-                  reuploadBtn.disabled = false;
-                }, 2000);
-              }
-            },
-            onerror: function (error) {
-              console.error("Error requesting reupload:", error);
-              reuploadBtn.innerText = "❌";
-              showToast("Error requesting reupload", "error");
-              setTimeout(() => {
-                reuploadBtn.innerText = "🔄";
-                reuploadBtn.disabled = false;
-              }, 2000);
-            },
-          });
-        };
-
-        buttonContainer.appendChild(reuploadBtn);
-        verifyCell.appendChild(buttonContainer);
-        tr.appendChild(verifyCell);
-
-        table.appendChild(tr);
-      });
-
-      modal.appendChild(table);
+      showToast("No verification data found", "error");
+      return;
     }
 
+    cardsContainer = document.createElement("div");
+    cardsContainer.id = "verificationModal";
+    cardsContainer.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10001;
+      display: grid;
+      grid-auto-flow: column;
+      gap: 12px;
+      justify-content: center;
+      max-width: 95vw;
+      padding-bottom: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    `;
+
+    data.forEach((row, index) => {
+      const card = document.createElement("div");
+      card.style.cssText = `
+        width: 300px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      `;
+
+      const isVerified =
+        row.status &&
+        (row.status.toLowerCase().includes("verified") ||
+          row.status === "Verified");
+      if (isVerified) {
+        card.style.opacity = "0.6";
+      }
+
+      if (index === 0) {
+        card.style.borderColor = "#4CAF50";
+        card.style.boxShadow = "0 0 8px rgba(76, 175, 80, 0.4)";
+      }
+
+      card.onclick = () => {
+        selectedCardIndex = index;
+        cardsContainer.querySelectorAll(":scope > div").forEach((c, i) => {
+          c.style.borderColor = i === index ? "#4CAF50" : "#ccc";
+          c.style.boxShadow =
+            i === index ? "0 0 8px rgba(76, 175, 80, 0.4)" : "0 4px 12px rgba(0,0,0,0.15)";
+        });
+      };
+
+      if (row.imageUrl) {
+        const imgContainer = document.createElement("div");
+        imgContainer.style.cssText = `
+          width: 100%;
+          height: 320px;
+          overflow: hidden;
+          border-radius: 4px;
+          margin-bottom: 10px;
+          cursor: pointer;
+        `;
+        imgContainer.onclick = (e) => {
+          e.stopPropagation();
+          showImageOverlay(row.imageUrl);
+        };
+
+        const img = document.createElement("img");
+        img.src = row.imageUrl;
+        img.style.cssText = `
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        `;
+        imgContainer.appendChild(img);
+        card.appendChild(imgContainer);
+      }
+
+      const infoContainer = document.createElement("div");
+      infoContainer.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        color: #333;
+      `;
+
+      const statusEl = document.createElement("div");
+      statusEl.innerHTML = `<strong>Status:</strong> ${row.status || "-"}`;
+      statusEl.style.cssText = `
+        padding: 2px 4px;
+        border-radius: 3px;
+        background: ${isVerified ? "#e8f5e9" : "#fff3e0"};
+      `;
+      infoContainer.appendChild(statusEl);
+
+      const typeEl = document.createElement("div");
+      typeEl.innerHTML = `<strong>Type:</strong> ${row.type || "-"}`;
+      infoContainer.appendChild(typeEl);
+
+      const agentEl = document.createElement("div");
+      agentEl.innerHTML = `<strong>Agent:</strong> ${row.agentCode || "-"}`;
+      agentEl.style.cssText = `
+        cursor: pointer;
+      `;
+      agentEl.title = "Click to copy";
+      agentEl.onclick = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(row.agentCode || "");
+      };
+      infoContainer.appendChild(agentEl);
+
+      card.appendChild(infoContainer);
+      cardsContainer.appendChild(card);
+    });
+
+    document.body.appendChild(cardsContainer);
+
+    buttonContainer = document.createElement("div");
+    buttonContainer.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10002;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      padding: 10px 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    `;
+
+    const selectedRow = () => data[selectedCardIndex];
+
+    verifyBtn = document.createElement("button");
+    const initialVerified =
+      selectedRow().status &&
+      (selectedRow().status.toLowerCase().includes("verified") ||
+        selectedRow().status === "Verified");
+
+    if (initialVerified) {
+      verifyBtn.innerText = "✅ Verified";
+      verifyBtn.disabled = true;
+      verifyBtn.style.cssText = `
+        background: #9E9E9E;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: not-allowed;
+        opacity: 0.6;
+      `;
+    } else {
+      verifyBtn.innerText = "✅ Verify";
+      verifyBtn.title = "Verify User";
+      verifyBtn.style.cssText = `
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+      `;
+
+      verifyBtn.onclick = () => {
+        const row = selectedRow();
+        if (!row.verificationId) {
+          showToast("No verification ID found", "error");
+          return;
+        }
+
+        const VERIFY_SESSION = unsafeWindow.verify_session || "";
+        if (!VERIFY_SESSION) {
+          showToast("No verification session configured", "error");
+          return;
+        }
+
+        verifyBtn.disabled = true;
+        verifyBtn.innerText = "⏳ Verifying...";
+
+        GM_xmlhttpRequest({
+          method: "POST",
+          url: `${apiBase}/verify`,
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          data: `id=${row.verificationId}&agentCode=${encodeURIComponent(row.agentCode)}&session=${VERIFY_SESSION}`,
+          onload: function (response) {
+            try {
+              const result = JSON.parse(response.responseText);
+              if (result.success) {
+                verifyBtn.innerText = "✅ Verified";
+                verifyBtn.style.background = "#9E9E9E";
+                verifyBtn.style.cursor = "not-allowed";
+
+                let message = "User verified successfully!";
+                if (result.levelUpdate) {
+                  message += ` Level: ${result.levelUpdate.oldLevel} → ${result.levelUpdate.newLevel}`;
+                }
+                showToast(message, "success");
+
+                setTimeout(() => closeModal(), 1000);
+              } else {
+                verifyBtn.innerText = "❌ Failed";
+                showToast("Verification failed", "error");
+                setTimeout(() => {
+                  verifyBtn.innerText = "✅ Verify";
+                  verifyBtn.disabled = false;
+                }, 2000);
+              }
+            } catch (error) {
+              console.error("Error parsing verification response:", error);
+              verifyBtn.innerText = "❌ Error";
+              showToast("Error verifying user", "error");
+              setTimeout(() => {
+                verifyBtn.innerText = "✅ Verify";
+                verifyBtn.disabled = false;
+              }, 2000);
+            }
+          },
+          onerror: function (error) {
+            console.error("Error verifying user:", error);
+            verifyBtn.innerText = "❌ Error";
+            showToast("Error verifying user", "error");
+            setTimeout(() => {
+              verifyBtn.innerText = "✅ Verify";
+              verifyBtn.disabled = false;
+            }, 2000);
+          },
+        });
+      };
+    }
+    buttonContainer.appendChild(verifyBtn);
+
+    unlockBtn = document.createElement("button");
+    unlockBtn.innerText = "🔓 Unlock";
+    unlockBtn.title = "Unlock Session";
+    unlockBtn.style.cssText = `
+      background: #FF9800;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+
+    unlockBtn.onclick = () => {
+      const row = selectedRow();
+      const VERIFY_SESSION = unsafeWindow.verify_session || "";
+      if (!VERIFY_SESSION) {
+        showToast("No verification session configured", "error");
+        return;
+      }
+
+      unlockBtn.disabled = true;
+      unlockBtn.innerText = "⏳ Unlocking...";
+
+      GM_xmlhttpRequest({
+        method: "POST",
+        url: `${apiBase}/unlock-session/${row.agentCode}?session=${VERIFY_SESSION}`,
+        onload: function (response) {
+          try {
+            const result = JSON.parse(response.responseText);
+            if (result.success) {
+              unlockBtn.innerText = "✅ Unlocked";
+              showToast("Session unlocked!", "success");
+              setTimeout(() => {
+                unlockBtn.innerText = "🔓 Unlock";
+                unlockBtn.disabled = false;
+              }, 2000);
+            } else {
+              unlockBtn.innerText = "❌ Failed";
+              showToast("Failed to unlock session", "error");
+              setTimeout(() => {
+                unlockBtn.innerText = "🔓 Unlock";
+                unlockBtn.disabled = false;
+              }, 2000);
+            }
+          } catch (error) {
+            console.error("Error parsing unlock response:", error);
+            unlockBtn.innerText = "❌ Error";
+            showToast("Error unlocking session", "error");
+            setTimeout(() => {
+              unlockBtn.innerText = "🔓 Unlock";
+              unlockBtn.disabled = false;
+            }, 2000);
+          }
+        },
+        onerror: function (error) {
+          console.error("Error unlocking session:", error);
+          unlockBtn.innerText = "❌ Error";
+          showToast("Error unlocking session", "error");
+          setTimeout(() => {
+            unlockBtn.innerText = "🔓 Unlock";
+            unlockBtn.disabled = false;
+          }, 2000);
+        },
+      });
+    };
+    buttonContainer.appendChild(unlockBtn);
+
+    reuploadBtn = document.createElement("button");
+    reuploadBtn.innerText = "🔄 Reupload";
+    reuploadBtn.title = "Request Reupload";
+    reuploadBtn.style.cssText = `
+      background: #9C27B0;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+
+    reuploadBtn.onclick = () => {
+      const row = selectedRow();
+      if (!row.verificationId) {
+        showToast("No verification ID found", "error");
+        return;
+      }
+
+      const VERIFY_SESSION = unsafeWindow.verify_session || "";
+      if (!VERIFY_SESSION) {
+        showToast("No verification session configured", "error");
+        return;
+      }
+
+      reuploadBtn.disabled = true;
+      reuploadBtn.innerText = "⏳ Requesting...";
+
+      const reason = encodeURIComponent(
+        "mohon perbaiki verifikasi sesuai dengan instruksi foto:\nFoto kartu identitas (nampak foto, nama dan alamat)\nFoto selfie sambil memegang kartu identitas",
+      );
+
+      GM_xmlhttpRequest({
+        method: "POST",
+        url: `${apiBase}/verify`,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data: `id=${row.verificationId}&agentCode=${encodeURIComponent(row.agentCode)}&status=2&statusktp=2&keterangan=${reason}&session=${VERIFY_SESSION}`,
+        onload: function (response) {
+          try {
+            const result = JSON.parse(response.responseText);
+            if (result.success) {
+              reuploadBtn.innerText = "✅ Sent";
+              showToast("Reupload requested!", "success");
+              setTimeout(() => closeModal(), 1000);
+            } else {
+              reuploadBtn.innerText = "❌ Failed";
+              showToast("Failed to request reupload", "error");
+              setTimeout(() => {
+                reuploadBtn.innerText = "🔄 Reupload";
+                reuploadBtn.disabled = false;
+              }, 2000);
+            }
+          } catch (error) {
+            console.error("Error parsing reupload response:", error);
+            reuploadBtn.innerText = "❌ Error";
+            showToast("Error requesting reupload", "error");
+            setTimeout(() => {
+              reuploadBtn.innerText = "🔄 Reupload";
+              reuploadBtn.disabled = false;
+            }, 2000);
+          }
+        },
+        onerror: function (error) {
+          console.error("Error requesting reupload:", error);
+          reuploadBtn.innerText = "❌ Error";
+          showToast("Error requesting reupload", "error");
+          setTimeout(() => {
+            reuploadBtn.innerText = "🔄 Reupload";
+            reuploadBtn.disabled = false;
+          }, 2000);
+        },
+      });
+    };
+    buttonContainer.appendChild(reuploadBtn);
+
+    document.body.appendChild(buttonContainer);
+
+    requestAnimationFrame(() => {
+      cardsContainer.style.opacity = "1";
+      buttonContainer.style.opacity = "1";
+    });
+
     function closeModal() {
-      modal.style.transform = "translateY(100%)";
+      cardsContainer.style.opacity = "0";
+      buttonContainer.style.opacity = "0";
       setTimeout(() => {
-        modal.remove();
+        cardsContainer.remove();
+        buttonContainer.remove();
       }, 300);
       document.removeEventListener("keydown", escapeHandler);
       window.closeUserscriptModal = null;
     }
     window.closeUserscriptModal = closeModal;
 
-    document.body.appendChild(modal);
-
-    requestAnimationFrame(() => {
-      modal.style.transform = "translateY(0)";
-      modal.focus();
-    });
-
     function escapeHandler(event) {
       if (event.key === "Escape") {
         closeModal();
       }
+
+      const isOnlyCtrlC =
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "c";
+
+      if (isOnlyCtrlC) {
+        event.preventDefault();
+        if (reuploadBtn && !reuploadBtn.disabled) {
+          reuploadBtn.click();
+          showToast("Requesting reupload...", "info");
+        }
+      }
+
+      const isOnlyCtrlR =
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "r";
+
+      if (isOnlyCtrlR) {
+        event.preventDefault();
+        if (verifyBtn && !verifyBtn.disabled) {
+          verifyBtn.click();
+          showToast("Verifying user...", "info");
+          setTimeout(() => {
+            if (unlockBtn && !unlockBtn.disabled) {
+              unlockBtn.click();
+              showToast("Unlocking session...", "info");
+            }
+          }, 1500);
+        }
+      }
     }
 
-    modal.setAttribute("tabindex", "-1");
     document.addEventListener("keydown", escapeHandler);
   }
 
