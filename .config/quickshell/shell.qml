@@ -244,35 +244,88 @@ ShellRoot {
                 Item {
                     id: clockContainer
                     anchors.centerIn: parent
-                    width: clock.width
-                    height: clock.height
+                    width: clockRow.width
+                    height: clockRow.height
 
-                    Text {
-                        id: clock
+                    Row {
+                        id: clockRow
                         anchors.centerIn: parent
-                        color: root.textColor
-                        font.family: baseFont
-                        font.pixelSize: 13
-                        font.bold: true
-                        property string time: ""
+                        spacing: 6
 
-                        Process {
-                            id: clockProcess
-                            command: ["date", "+%A, %H:%M - %d-%m-%Y"]
-                            running: true
-                            stdout: SplitParser {
-                                onRead: data => clock.time = data
+                        Text {
+                            id: clock
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: root.textColor
+                            font.family: baseFont
+                            font.pixelSize: 13
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                            property string timeStr: ""
+                            property string dateStr: ""
+                            property string weatherIcon: "󰖙"
+
+                            Process {
+                                id: clockProcess
+                                command: ["date", "+%A, %H:%M|%d-%m-%Y"]
+                                running: true
+                                stdout: SplitParser {
+                                    onRead: data => {
+                                        const parts = data.split("|")
+                                        clock.timeStr = parts[0] || ""
+                                        clock.dateStr = parts[1] || ""
+                                    }
+                                }
                             }
+
+                            Timer {
+                                interval: 1000
+                                running: true
+                                repeat: true
+                                onTriggered: clockProcess.running = true
+                            }
+
+                            Process {
+                                id: weatherProcess
+                                command: ["sh", "-c", "curl -s 'wttr.in/Ulakkarang+Padang+Utara?format=%C' 2>/dev/null || echo Unknown"]
+                                running: true
+                                stdout: SplitParser {
+                                    onRead: data => {
+                                        clock.weatherIcon = clock.mapWeather(data.trim())
+                                    }
+                                }
+                            }
+
+                            Timer {
+                                interval: 600000
+                                running: true
+                                repeat: true
+                                onTriggered: weatherProcess.running = true
+                            }
+
+                            function mapWeather(condition) {
+                                const c = condition.toLowerCase()
+                                if (c.includes("sunny") || c.includes("clear")) return "󰖙"
+                                if (c.includes("partly cloudy")) return "󰖒"
+                                if (c.includes("cloudy") || c.includes("overcast")) return "󰖐"
+                                if (c.includes("fog") || c.includes("mist")) return "󰼯"
+                                if (c.includes("thunder") || c.includes("lightning")) return "󰖘"
+                                if (c.includes("snow") || c.includes("sleet") || c.includes("ice")) return "󰖖"
+                                if (c.includes("rain") || c.includes("drizzle")) return "󰖗"
+                                return "󰖙"
+                            }
+
+                            text: timeStr + " - " + dateStr
                         }
 
-                        Timer {
-                            interval: 1000
-                            running: true
-                            repeat: true
-                            onTriggered: clockProcess.running = true
+                        Text {
+                            id: weatherIconText
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: root.textColor
+                            font.family: baseFont
+                            font.pixelSize: root.fontSize
+                            verticalAlignment: Text.AlignVCenter
+                            text: clock.weatherIcon
                         }
-
-                        text: time
                     }
 
                     MouseArea {
