@@ -27,7 +27,7 @@ ueberzug_offset = [ 0, 0, 0, 0 ]
 
 [opener]
 edit = [
-	{ run = "${EDITOR:-nvim} %s", desc = "$EDITOR",      for = "unix", block = true },
+	{ run = "${EDITOR:-vim} %s", desc = "$EDITOR",      for = "unix", block = true },
 	{ run = "nvim %s",          desc = "code",         for = "windows", orphan = true },
 	{ run = "nvim -w %s",       desc = "code (block)", for = "windows", block = true },
 ]

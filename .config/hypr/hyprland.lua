@@ -203,9 +203,65 @@ hl.bind(mainMod .. " + SHIFT + k", hl.dsp.window.move({ direction = "up" }))
 hl.bind(mainMod .. " + SHIFT + a", hl.dsp.workspace.move({ monitor = "l" }))
 hl.bind(mainMod .. " + SHIFT + f", hl.dsp.workspace.move({ monitor = "r" }))
 
+-- Toggle a workspace between the focused monitor and the "other" monitor.
+-- Replaces ~/.config/hypr/scripts/toggle_ws.sh
+local function toggle_ws(id)
+    local orig = hl.get_active_monitor()
+    if not orig then
+        return
+    end
+
+    -- "Other" monitor: first one that isn't the focused one
+    local other
+    for _, m in ipairs(hl.get_monitors()) do
+        if m.name ~= orig.name then
+            other = m
+            break
+        end
+    end
+
+    -- Monitor currently holding this workspace (if it exists)
+    local ws_mon
+    for _, ws in ipairs(hl.get_workspaces()) do
+        if ws.id == id then
+            ws_mon = ws.monitor
+            break
+        end
+    end
+
+    if not ws_mon then
+        -- Doesn't exist yet -> spawn/move it to the focused monitor and focus it
+        hl.dispatch(hl.dsp.workspace.move({ workspace = id, monitor = orig.name }))
+        hl.dispatch(hl.dsp.focus({ workspace = id }))
+        return
+    end
+
+    if ws_mon.name ~= orig.name then
+        -- On another monitor -> bring it here and focus it
+        hl.dispatch(hl.dsp.workspace.move({ workspace = id, monitor = orig.name }))
+        hl.dispatch(hl.dsp.focus({ workspace = id }))
+        return
+    end
+
+    local active = hl.get_active_workspace(orig)
+    if not active or active.id ~= id then
+        -- Here but not active -> just focus it
+        hl.dispatch(hl.dsp.focus({ workspace = id }))
+        return
+    end
+
+    -- Here AND active -> send it to the other monitor, keep focus here
+    if other then
+        hl.dispatch(hl.dsp.workspace.move({ workspace = id, monitor = other.name }))
+        hl.dispatch(hl.dsp.focus({ monitor = orig.name }))
+    end
+end
+
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
-    hl.bind(mainMod .. " + " .. key, hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle_ws.sh " .. i))
+    hl.bind(mainMod .. " + " .. key, function()
+        toggle_ws(i)
+    end)
 end
 
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
