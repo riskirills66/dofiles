@@ -36,15 +36,15 @@ OTHER_MONITOR=$(
 
 if [ -z "$WS_MONITOR" ]; then
   # Workspace doesn't exist yet -> spawn/move it to current monitor and focus it
-  hyprctl dispatch moveworkspacetomonitor "${WS_ID} ${ORIG_MONITOR}"
-  hyprctl dispatch workspace "${WS_ID}"
+  hyprctl dispatch "hl.dsp.workspace.move({ workspace = ${WS_ID}, monitor = '${ORIG_MONITOR}' })"
+  hyprctl dispatch "hl.dsp.focus({ workspace = ${WS_ID} })"
   exit 0
 fi
 
 if [ "$WS_MONITOR" != "$ORIG_MONITOR" ]; then
   # Workspace is on another monitor -> bring it here and focus it
-  hyprctl dispatch moveworkspacetomonitor "${WS_ID} ${ORIG_MONITOR}"
-  hyprctl dispatch workspace "${WS_ID}"
+  hyprctl dispatch "hl.dsp.workspace.move({ workspace = ${WS_ID}, monitor = '${ORIG_MONITOR}' })"
+  hyprctl dispatch "hl.dsp.focus({ workspace = ${WS_ID} })"
   exit 0
 fi
 
@@ -52,7 +52,7 @@ fi
 
 if [ "$ACTIVE_WS_ID" != "$WS_ID" ]; then
   # It's here but not active -> just focus it, don't move it away
-  hyprctl dispatch workspace "${WS_ID}"
+  hyprctl dispatch "hl.dsp.focus({ workspace = ${WS_ID} })"
   exit 0
 fi
 
@@ -60,9 +60,9 @@ fi
 # => send it to the other monitor, but keep focus on this monitor.
 
 if [ -n "$OTHER_MONITOR" ]; then
-  hyprctl dispatch moveworkspacetomonitor "${WS_ID} ${OTHER_MONITOR}"
+  hyprctl dispatch "hl.dsp.workspace.move({ workspace = ${WS_ID}, monitor = '${OTHER_MONITOR}' })"
 
-  # moveworkspacetomonitor will try to drag focus along,
+  # workspace.move will try to drag focus along,
   # so we immediately push focus back to the original monitor.
-  hyprctl dispatch focusmonitor "${ORIG_MONITOR}"
+  hyprctl dispatch "hl.dsp.focus({ monitor = '${ORIG_MONITOR}' })"
 fi
