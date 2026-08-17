@@ -86,8 +86,7 @@ return {
         end
       end, { buffer = opencode_buf, desc = "Hide OpenCode" })
 
-      -- Ctrl+w in terminal mode to go to normal mode
-      vim.keymap.set("t", "<C-w>", "<C-\\><C-n>", { buffer = opencode_buf, desc = "Exit terminal insert mode" })
+      
 
       -- Enter insert mode
       vim.cmd("startinsert")
