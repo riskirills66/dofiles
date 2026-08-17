@@ -5,3 +5,4 @@
 .config/btop/btop.log
 .config/hypr/hyprpaper.conf
 .config/opencode/opencode.jsonc
+.config/hypr/monitors.lua
